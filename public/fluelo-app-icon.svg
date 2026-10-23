@@ -1,0 +1,10 @@
+<svg width="240" height="240" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- App Icon Squircle Base -->
+  <rect x="12" y="12" width="216" height="216" rx="56" fill="#FFFFFF"/>
+  <!-- Lingkaran Luar (Fresh Soft Lilac) -->
+  <circle cx="120" cy="120" r="92" fill="#B899FF"/>
+  <!-- Cincin Tengah (Vibrant Violet) -->
+  <circle cx="120" cy="120" r="68" fill="#8F5BFF"/>
+  <!-- Lingkaran Inti Dalam (Icy Lavender White) -->
+  <circle cx="120" cy="120" r="51" fill="#F5F0FF"/>
+</svg>

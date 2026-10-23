@@ -1,29 +1,35 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Caveat, Plus_Jakarta_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const plusJakarta = Plus_Jakarta_Sans({
+  variable: "--font-plus-jakarta",
   subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const caveat = Caveat({
+  variable: "--font-caveat",
   subsets: ["latin"],
+  weight: ["600", "700"],
 });
 
 export const metadata: Metadata = {
-  title: "FluentPath AI - Speak with confidence",
-  description: "Latihan speaking bahasa Inggris dan persiapan TOEFL berbasis AI suara real-time.",
+  title: "Fluelo | Room Talk & English Learning",
+  description:
+    "Practice daily AI voice conversations with Sarah, Emma, Sophia, David, and Kenji in Room Talk. Fluent English with live feedback.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="id"
-      className={[geistSans.variable, geistMono.variable, "h-full antialiased"].join(" ")}
+      suppressHydrationWarning
+      className={[plusJakarta.variable, caveat.variable, "h-full antialiased"].join(" ")}
     >
-      <body className="min-h-full flex flex-col bg-[#f5f7fb]">{children}</body>
+      <body suppressHydrationWarning className="min-h-screen">
+        {children}
+      </body>
     </html>
   );
 }

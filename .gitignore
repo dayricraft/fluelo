@@ -23,6 +23,8 @@
 # misc
 .DS_Store
 *.pem
+desktop.ini
+anti-slop-main/
 
 # debug
 npm-debug.log*

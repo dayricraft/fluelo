@@ -1,0 +1,1878 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FluentWork — English Learning Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-outer-1: #DDE2FC;
+      --bg-outer-2: #E8E6FF;
+      --surface-main: #FFFFFF;
+      --surface-muted: #F7F8FC;
+      --text-primary: #181823;
+      --text-secondary: #7E8190;
+      --text-muted: #A0A3B1;
+      --accent-purple: #6C5CE7;
+      --accent-purple-light: #F2EFFF;
+      --accent-orange: #E58E3C;
+      --accent-orange-light: #FDF3E7;
+      --card-peach: #FDF3E7;
+      --card-Peach-badge: #F3E2CE;
+      --card-Peach-text: #6E4823;
+      --card-lavender: #EFEAFF;
+      --card-lavender-badge: #DFD5FA;
+      --card-lavender-text: #4E3883;
+      --card-pink-illus: #FCEBF2;
+      --card-cream-illus: #FDF5E6;
+      --card-blue-illus: #EBF0FF;
+      --card-ice: #F3F7FD;
+      --card-blush: #FDF1F6;
+      --card-friends: #EDF2FF;
+      --card-study-top: #FBF9D8;
+      --sidebar-dark: #1B1A22;
+      --border-soft: #ECEEF5;
+      --radius-shell: 34px;
+      --radius-card: 24px;
+      --radius-inner: 18px;
+      --radius-pill: 999px;
+      --shadow-shell: 0 28px 70px rgba(72, 79, 150, 0.14), 0 4px 16px rgba(72, 79, 150, 0.05);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, var(--bg-outer-1) 0%, var(--bg-outer-2) 55%, #D5DCFA 100%);
+      color: var(--text-primary);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 24px;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Subtle geometric background lines like the reference image */
+    body::before,
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+      background-image:
+        linear-gradient(125deg, transparent 24%, rgba(138, 130, 220, 0.18) 24.2%, transparent 24.5%),
+        linear-gradient(145deg, transparent 72%, rgba(138, 130, 220, 0.18) 72.2%, transparent 72.5%),
+        linear-gradient(65deg, transparent 60%, rgba(138, 130, 220, 0.14) 60.2%, transparent 60.5%);
+    }
+
+    .app-shell {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 1340px;
+      background: var(--surface-main);
+      border-radius: var(--radius-shell);
+      box-shadow: var(--shadow-shell);
+      padding: 28px 34px 32px 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* ================= TOP HEADER ================= */
+    .top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .user-welcome {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .brand-logo {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #392E4E;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 6px 14px rgba(57, 46, 78, 0.22);
+    }
+
+    .welcome-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+    }
+
+    .welcome-text p {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      font-weight: 500;
+    }
+
+    .welcome-text p span {
+      color: var(--accent-purple);
+      font-weight: 600;
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .btn-pill-outline {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 18px;
+      border-radius: var(--radius-pill);
+      border: 1px solid var(--border-soft);
+      background: #FFFFFF;
+      color: var(--text-primary);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .btn-pill-outline:hover {
+      background: var(--surface-muted);
+      border-color: #DCDFE8;
+    }
+
+    .btn-circle-dark {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: var(--sidebar-dark);
+      color: #FFFFFF;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .btn-circle-dark:hover {
+      transform: scale(1.05);
+    }
+
+    .btn-circle-soft {
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      border: none;
+      background: var(--surface-muted);
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .btn-circle-soft:hover {
+      background: #ECEDF5;
+    }
+
+    .profile-pill {
+      display: flex;
+      align-items: center;
+      background: #FAFBFD;
+      border: 1.5px solid #F3B67F;
+      border-radius: var(--radius-pill);
+      padding: 3px 4px 3px 10px;
+      gap: 8px;
+      margin-left: 4px;
+    }
+
+    .streak-badge {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #E58E3C;
+    }
+
+    .avatar-img {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #F6D365 0%, #FDA085 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 14px;
+      color: #392E4E;
+      overflow: hidden;
+    }
+
+    /* ================= BODY LAYOUT (SIDEBAR + MAIN) ================= */
+    .dashboard-body {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 26px;
+      align-items: stretch;
+    }
+
+    /* ================= LEFT GOOEY SIDEBAR ================= */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding-top: 2px;
+    }
+
+    .sidebar-top-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .gooey-dock {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+    }
+
+    .dock-home-bubble {
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      background: var(--sidebar-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 2;
+      cursor: pointer;
+    }
+
+    .dock-home-inner {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #3F3161;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #B497FF;
+    }
+
+    /* Organic connector neck between top bubble and vertical pill */
+    .dock-neck {
+      width: 22px;
+      height: 14px;
+      background: var(--sidebar-dark);
+      margin-top: -5px;
+      margin-bottom: -5px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .dock-neck::before,
+    .dock-neck::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 10px;
+      height: 14px;
+      background: #FFFFFF;
+    }
+
+    .dock-neck::before {
+      left: -8px;
+      border-radius: 0 12px 12px 0;
+    }
+
+    .dock-neck::after {
+      right: -8px;
+      border-radius: 12px 0 0 12px;
+    }
+
+    .dock-main-pill {
+      width: 50px;
+      background: var(--sidebar-dark);
+      border-radius: 28px;
+      padding: 18px 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 24px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .dock-icon-btn {
+      background: transparent;
+      border: none;
+      color: #7D7C8B;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .dock-icon-btn:hover,
+    .dock-icon-btn.active {
+      color: #FFFFFF;
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    .notif-btn {
+      margin-top: 14px;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--surface-muted);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7E8190;
+      position: relative;
+      cursor: pointer;
+    }
+
+    .notif-dot {
+      position: absolute;
+      top: 4px;
+      right: 6px;
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #EE6B5E;
+    }
+
+    .logout-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--surface-muted);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #7E8190;
+      cursor: pointer;
+    }
+
+    /* ================= MAIN CONTENT AREA ================= */
+    .main-area {
+      display: flex;
+      flex-direction: column;
+      gap: 22px;
+    }
+
+    /* Sub-header row: Dashboard title + 5 Menu Pills + Search */
+    .sub-header {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr 1.15fr;
+      gap: 22px;
+      align-items: center;
+    }
+
+    .title-and-tabs {
+      grid-column: 1 / 3;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .page-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+    }
+
+    .menu-pills {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .menu-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      padding: 9px 15px;
+      border-radius: var(--radius-pill);
+      font-size: 12.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 1.5px solid transparent;
+      user-select: none;
+    }
+
+    .menu-pill.pill-cefr {
+      background: #F4F5FF;
+      border-color: #7A82EB;
+      color: #555CE0;
+    }
+
+    .menu-pill.pill-vocab {
+      background: #FFF8F1;
+      border-color: #F4DFC8;
+      color: #E28739;
+    }
+
+    .menu-pill.pill-tenses {
+      background: #F7F5FF;
+      border-color: #E4DDFC;
+      color: #755FE2;
+    }
+
+    .menu-pill.pill-all {
+      background: #F7F8FC;
+      border-color: #ECEEF5;
+      color: var(--text-primary);
+    }
+
+    .menu-pill:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .search-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      width: 100%;
+    }
+
+    .search-box {
+      flex: 1;
+      background: var(--surface-muted);
+      border-radius: var(--radius-pill);
+      padding: 12px 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-secondary);
+    }
+
+    .search-box input {
+      border: none;
+      background: transparent;
+      outline: none;
+      font-family: inherit;
+      font-size: 13px;
+      color: var(--text-primary);
+      width: 100%;
+    }
+
+    .search-box input::placeholder {
+      color: #9FA2B2;
+    }
+
+    /* ================= 3-COLUMN BENTO GRID ================= */
+    .bento-grid {
+      display: grid;
+      grid-template-columns: 1.55fr 1fr 1.15fr;
+      gap: 22px;
+      align-items: stretch;
+    }
+
+    /* --- COLUMN 1 (LEFT) --- */
+    .col-left {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .progress-outer-card {
+      background: #FAFAFE;
+      border: 1px solid #F1F2F8;
+      border-radius: var(--radius-card);
+      padding: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-head-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .icon-badge-soft {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #EDF3FF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4A78E0;
+    }
+
+    .section-title-sm {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .icon-circle-xs {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: none;
+      background: #F2F4F9;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .progress-cards-pair {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+
+    .p-card {
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+    }
+
+    .p-card.peach {
+      background: var(--card-peach);
+    }
+
+    .p-card.lavender {
+      background: var(--card-lavender);
+    }
+
+    .p-card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .p-card-label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .p-badge {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 9px;
+      border-radius: var(--radius-pill);
+    }
+
+    .peach .p-badge {
+      background: var(--card-Peach-badge);
+      color: var(--card-Peach-text);
+    }
+
+    .lavender .p-badge {
+      background: var(--card-lavender-badge);
+      color: var(--card-lavender-text);
+    }
+
+    .p-metric-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 2px 0;
+    }
+
+    .p-percent {
+      font-size: 27px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+    }
+
+    .peach .p-percent {
+      color: #6B4722;
+    }
+
+    .lavender .p-percent {
+      color: #4D3782;
+    }
+
+    .p-desc-title {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    .p-desc-text {
+      font-size: 10.5px;
+      line-height: 1.45;
+      color: #7A7885;
+    }
+
+    .dots-indicator {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      margin-top: 2px;
+    }
+
+    .dots-indicator span {
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: #D5D7E3;
+    }
+
+    .dots-indicator span.active {
+      background: #23232F;
+      width: 6px;
+      height: 6px;
+    }
+
+    /* Popular Courses (Menu Belajar) */
+    .courses-section {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .courses-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2px;
+    }
+
+    .courses-header h3 {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .courses-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 12px;
+    }
+
+    .course-card {
+      background: #FFFFFF;
+      border: 1px solid #F1F2F8;
+      border-radius: 22px;
+      padding: 10px 10px 14px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 6px 18px rgba(30, 35, 70, 0.03);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      cursor: pointer;
+    }
+
+    .course-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 12px 24px rgba(30, 35, 70, 0.07);
+    }
+
+    .course-illus {
+      height: 112px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .course-illus.pink {
+      background: var(--card-pink-illus);
+    }
+
+    .course-illus.cream {
+      background: var(--card-cream-illus);
+    }
+
+    .course-illus.blue {
+      background: var(--card-blue-illus);
+    }
+
+    .course-info {
+      padding: 0 4px;
+    }
+
+    .course-info h4 {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .course-sub {
+      font-size: 10.5px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .course-rating {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-top: 6px;
+    }
+
+    /* Bottom Row: Speaking Partners (Menu 5) + Stats */
+    .bottom-left-row {
+      display: grid;
+      grid-template-columns: 1.05fr 1fr;
+      gap: 12px;
+    }
+
+    .friends-card {
+      background: var(--card-friends);
+      border-radius: 22px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .friends-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .friends-top h4 {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .avatar-stack {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .friend-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 800;
+      color: #FFFFFF;
+      border: 2.5px solid #FFFFFF;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .stats-mini-card {
+      background: #FAFAFE;
+      border: 1px solid #F1F2F8;
+      border-radius: 22px;
+      padding: 14px 16px;
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .stat-col {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .stat-col span.label {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .stat-col strong.val {
+      font-size: 20px;
+      font-weight: 800;
+      color: var(--text-primary);
+      letter-spacing: -0.03em;
+    }
+
+    .mini-course-bubbles {
+      display: flex;
+      align-items: center;
+    }
+
+    .mini-bubble {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 11px;
+      border: 2px solid #FFFFFF;
+    }
+
+    .mini-bubble.b1 {
+      background: #5E6AD2;
+      color: #FFF;
+    }
+
+    .mini-bubble.b2 {
+      background: #8CE063;
+      color: #1B3B10;
+      margin-left: -6px;
+    }
+
+    /* --- COLUMN 2 (MIDDLE: AI LEARNING PLAN & SCHEDULE) --- */
+    .col-middle {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 14px;
+    }
+
+    .plan-header h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+      letter-spacing: -0.02em;
+    }
+
+    .ai-highlight {
+      display: inline-block;
+      background: #7772F6;
+      color: #FFFFFF;
+      padding: 2px 10px;
+      border-radius: 999px;
+      font-size: 16px;
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    .grade-pills {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+
+    .grade-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      background: var(--surface-muted);
+      color: var(--text-secondary);
+      font-size: 11.5px;
+      font-weight: 600;
+      white-space: nowrap;
+      cursor: pointer;
+      border: none;
+    }
+
+    .grade-pill.active {
+      background: var(--sidebar-dark);
+      color: #FFFFFF;
+    }
+
+    .week-box {
+      border-radius: 22px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .week-box.ice {
+      background: var(--card-ice);
+    }
+
+    .week-box.blush {
+      background: var(--card-blush);
+    }
+
+    .week-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .week-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+      background: rgba(255, 255, 255, 0.75);
+      color: var(--text-primary);
+    }
+
+    .subjects-count {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--text-secondary);
+    }
+
+    .week-items-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      text-align: center;
+    }
+
+    .week-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .week-icon-wrap {
+      width: 46px;
+      height: 46px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .week-item h5 {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .week-item p {
+      font-size: 10px;
+      color: var(--text-secondary);
+    }
+
+    .add-subject-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #E4ECF7;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      color: var(--text-primary);
+      cursor: pointer;
+    }
+
+    /* Schedule Section */
+    .schedule-block {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .schedule-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .schedule-head h4 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .schedule-actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-plus-yellow {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      border: none;
+      background: #F6F4D2;
+      color: var(--text-primary);
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .schedule-item {
+      background: var(--card-ice);
+      border-radius: 16px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .schedule-item-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .schedule-time {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    /* --- COLUMN 3 (RIGHT: FEATURED TALL STUDY CRAFT / SHADOWING CARD) --- */
+    .col-right {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .study-craft-card {
+      flex: 1;
+      background: linear-gradient(180deg, var(--card-study-top) 0%, #FCFBE9 58%, #FFFFFF 100%);
+      border-radius: 28px;
+      padding: 22px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      border: 1px solid #F3F1D5;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .study-top-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      z-index: 2;
+    }
+
+    .study-top-bar h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.02em;
+    }
+
+    .btn-study-menu {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(235, 233, 195, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .mascot-stage {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 250px;
+      margin: 6px 0;
+    }
+
+    .floating-left-icons {
+      position: absolute;
+      left: 0;
+      top: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .float-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+    }
+
+    .float-circle.orange {
+      background: #F7E8D8;
+      border: 1.5px solid #FFFFFF;
+    }
+
+    .float-circle.purple {
+      background: #E9E6FA;
+      border: 1.5px solid #FFFFFF;
+    }
+
+    .floating-rank-pill {
+      position: absolute;
+      right: 0;
+      top: 16px;
+      background: #F4F2CE;
+      border: 1.5px solid #FFFFFF;
+      padding: 6px 12px;
+      border-radius: var(--radius-pill);
+      font-size: 11.5px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      color: #5C4B28;
+    }
+
+    .study-info-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 6px;
+    }
+
+    .study-info-row h4 {
+      font-size: 21px;
+      font-weight: 700;
+      color: var(--text-primary);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      letter-spacing: -0.02em;
+    }
+
+    .laurel-badge {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px dashed #3A3846;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 13px;
+      font-weight: 800;
+      color: var(--text-primary);
+      background: #FFFFFF;
+    }
+
+    .study-desc {
+      font-size: 12px;
+      line-height: 1.55;
+      color: #6E707E;
+      margin-bottom: 16px;
+    }
+
+    .study-metrics-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .study-metric-box {
+      background: #F4F5F9;
+      border-radius: 20px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .study-metric-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+
+    .study-metric-val {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--text-primary);
+    }
+
+    /* Interactive Modal/Toast Banner for the 5 Menus */
+    .active-menu-banner {
+      background: linear-gradient(90deg, #F4F3FF 0%, #FDF3E7 100%);
+      border: 1px solid #E5E2FF;
+      border-radius: 16px;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12.5px;
+      color: #3A3266;
+    }
+
+    .active-menu-banner strong {
+      color: var(--accent-purple);
+    }
+
+    @media (max-width: 1120px) {
+      .sub-header,
+      .bento-grid {
+        grid-template-columns: 1fr;
+      }
+      .title-and-tabs {
+        grid-column: 1 / -1;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-shell">
+    <!-- ================= TOP HEADER ================= -->
+    <header class="top-bar">
+      <div class="user-welcome">
+        <div class="brand-logo" title="FluentWork English App">
+          <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 10v6M2 10l10-5 10 5-10 5z"/>
+            <path d="M6 12v5c3 3 9 3 12 0v-5"/>
+          </svg>
+        </div>
+        <div class="welcome-text">
+          <h1>Hello, Liam</h1>
+          <p>16 Oktober, <span>5 menu belajar aktif hari ini</span></p>
+        </div>
+      </div>
+
+      <div class="top-actions">
+        <button class="btn-pill-outline" onclick="resetHighlight()">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+            <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+          </svg>
+          Refresh data
+        </button>
+        <button class="btn-pill-outline">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+          </svg>
+          Export CEFR
+        </button>
+        <button class="btn-circle-dark" title="Tambah Sesi Latihan">+</button>
+        <button class="btn-circle-soft" title="Semua Modul">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <rect x="3" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="3" width="7" height="7" rx="1.5"/>
+            <rect x="3" y="14" width="7" height="7" rx="1.5"/>
+            <rect x="14" y="14" width="7" height="7" rx="1.5"/>
+          </svg>
+        </button>
+        <div class="profile-pill">
+          <div class="streak-badge">⚡ 15m</div>
+          <div class="avatar-img">L</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- ================= MAIN BODY (SIDEBAR + CONTENT) ================= -->
+    <div class="dashboard-body">
+      <!-- LEFT GOOEY SIDEBAR DOCK (5 Learning Menus + Home) -->
+      <aside class="sidebar">
+        <div class="sidebar-top-group">
+          <div class="gooey-dock">
+            <div class="dock-home-bubble" title="Dashboard Utama" onclick="selectMenu(0)">
+              <div class="dock-home-inner">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
+                  <path d="M12 3l9 8h-3v9h-5v-6h-2v6H6v-9H3l9-8z"/>
+                </svg>
+              </div>
+            </div>
+            <div class="dock-neck"></div>
+            <div class="dock-main-pill">
+              <!-- Menu 1: Uji Level Awal (CEFR) -->
+              <button class="dock-icon-btn" title="1. Uji Level Awal (Placement Test CEFR)" onclick="selectMenu(1)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
+                  <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                </svg>
+              </button>
+              <!-- Menu 2: 500 Kosakata Aktif -->
+              <button class="dock-icon-btn" title="2. Kuasai 500 Kosakata Aktif" onclick="selectMenu(2)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/>
+                  <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>
+                </svg>
+              </button>
+              <!-- Menu 3: Pahami 3 Tenses Utama -->
+              <button class="dock-icon-btn" title="3. Pahami 3 Tenses Utama" onclick="selectMenu(3)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/>
+                </svg>
+              </button>
+              <!-- Menu 4: Comprehensible Input & Shadowing -->
+              <button class="dock-icon-btn" title="4. Comprehensible Input & Shadowing (15m/hari)" onclick="selectMenu(4)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/>
+                </svg>
+              </button>
+              <!-- Menu 5: Praktik Berbicara Komunikasi Dua Arah -->
+              <button class="dock-icon-btn" title="5. Praktik Berbicara Komunikasi Dua Arah" onclick="selectMenu(5)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                  <circle cx="12" cy="7" r="4"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <button class="notif-btn" title="Reminder Latihan 15 Menit">
+            <span class="notif-dot"></span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
+              <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+            </svg>
+          </button>
+        </div>
+
+        <button class="logout-btn" title="Keluar">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+        </button>
+      </aside>
+
+      <!-- MAIN AREA -->
+      <main class="main-area">
+        <!-- SUB-HEADER: Title + Category Pills + Search -->
+        <div class="sub-header">
+          <div class="title-and-tabs">
+            <h2 class="page-title">Dashboard</h2>
+            <div class="menu-pills">
+              <div class="menu-pill pill-cefr" onclick="selectMenu(1)">
+                <span>🧭</span> 1. CEFR Test
+              </div>
+              <div class="menu-pill pill-vocab" onclick="selectMenu(2)">
+                <span>📊</span> 2. 500 Active Vocab
+              </div>
+              <div class="menu-pill pill-tenses" onclick="selectMenu(3)">
+                <span>⚡</span> 3. 3 Core Tenses
+              </div>
+              <div class="menu-pill pill-all" onclick="selectMenu(4)">
+                <span>🎧</span> 4–5. Shadowing & Speak
+              </div>
+            </div>
+          </div>
+
+          <div class="search-row">
+            <div class="search-box">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
+              </svg>
+              <input type="text" placeholder="Cari kosakata bisnis, tenses, partner..." />
+            </div>
+            <button class="btn-circle-soft" title="Filter">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="4" y1="21" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="3"/>
+                <line x1="12" y1="21" x2="12" y2="12"/><line x1="12" y1="8" x2="12" y2="3"/>
+                <line x1="20" y1="21" x2="20" y2="16"/><line x1="20" y1="12" x2="20" y2="3"/>
+                <line x1="1" y1="14" x2="7" y2="14"/><line x1="9" y1="8" x2="15" y2="8"/>
+                <line x1="17" y1="16" x2="23" y2="16"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Status Info Banner (Interactive Feedback when clicking a menu) -->
+        <div class="active-menu-banner" id="menuBanner">
+          <div>
+            <strong>Kurikulum Fokus 5 Menu:</strong> (1) Uji Level CEFR • (2) 500 Kosakata Aktif Bisnis • (3) 3 Tenses Kantor • (4) 15m Comprehensible Input & Shadowing • (5) Praktik Bicara 2 Arah
+          </div>
+          <span style="font-weight:700; font-size:11.5px;">Level Saat Ini: B1 Intermediate</span>
+        </div>
+
+        <!-- 3-COLUMN BENTO GRID -->
+        <div class="bento-grid">
+          <!-- ================= COLUMN 1 (LEFT) ================= -->
+          <section class="col-left">
+            <!-- Learning Progress Container -->
+            <div class="progress-outer-card">
+              <div class="section-head">
+                <div class="section-head-left">
+                  <div class="icon-badge-soft">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z"/>
+                    </svg>
+                  </div>
+                  <span class="section-title-sm">Learning progress</span>
+                </div>
+                <button class="icon-circle-xs">›</button>
+              </div>
+
+              <div class="progress-cards-pair">
+                <!-- Peach Card: Menu 2 (500 Active Vocab) -->
+                <div class="p-card peach" onclick="selectMenu(2)">
+                  <div class="p-card-top">
+                    <div class="p-card-label">
+                      <span>👥</span> 500 Active Vocab
+                    </div>
+                    <span class="p-badge">312/500</span>
+                  </div>
+                  <div class="p-metric-row">
+                    <span class="p-percent">62%</span>
+                    <svg width="92" height="32" viewBox="0 0 92 32" fill="none">
+                      <path d="M2 26 C18 26, 22 12, 36 16 C50 20, 58 6, 72 8 C80 9, 86 20, 90 22" stroke="#D39B63" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="p-desc-title">Kata Kerja & Frasa Bisnis</div>
+                    <p class="p-desc-text">Fokus kata kerja operasional & frasa bisnis harian, bukan menghafal kamus acak.</p>
+                  </div>
+                </div>
+
+                <!-- Lavender Card: Menu 3 (3 Tenses Utama) -->
+                <div class="p-card lavender" onclick="selectMenu(3)">
+                  <div class="p-card-top">
+                    <div class="p-card-label">
+                      <span>⚡</span> 3 Tenses Utama
+                    </div>
+                    <span class="p-badge">2.5/3</span>
+                  </div>
+                  <div class="p-metric-row">
+                    <span class="p-percent">84%</span>
+                    <svg width="92" height="32" viewBox="0 0 92 32" fill="none">
+                      <path d="M2 24 C16 24, 24 14, 38 18 C52 22, 60 6, 74 10 C82 12, 86 18, 90 20" stroke="#8C7AE6" stroke-width="2" fill="none" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <div class="p-desc-title">Komunikasi Kantor</div>
+                    <p class="p-desc-text">Kuasai Simple Present, Simple Past, dan Simple Future untuk kebutuhan kerja.</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="dots-indicator">
+                <span class="active"></span>
+                <span></span>
+                <span></span>
+              </div>
+            </div>
+
+            <!-- Popular Courses / Core Learning Modules (Menus 1, 2, 3) -->
+            <div class="courses-section">
+              <div class="courses-header">
+                <h3>Core learning modules</h3>
+                <button class="icon-circle-xs">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/>
+                  </svg>
+                </button>
+              </div>
+
+              <div class="courses-grid">
+                <!-- Card 1: Uji Level Awal (Placement Test CEFR) -->
+                <div class="course-card" onclick="selectMenu(1)">
+                  <div class="course-illus pink">
+                    <!-- Rocket & Planet SVG matching reference -->
+                    <svg width="86" height="86" viewBox="0 0 100 100" fill="none">
+                      <circle cx="66" cy="34" r="20" fill="#F686BD" opacity="0.85"/>
+                      <path d="M28 72 L46 36 C54 22 70 18 74 22 C78 26 74 42 60 50 L28 72 Z" fill="#8C7AE6" stroke="#2D2346" stroke-width="2.5"/>
+                      <circle cx="55" cy="40" r="6" fill="#FFFFFF" stroke="#2D2346" stroke-width="2.5"/>
+                      <path d="M26 74 L16 84 M34 78 L26 88 M22 66 L12 74" stroke="#F59E0B" stroke-width="3" stroke-linecap="round"/>
+                    </svg>
+                  </div>
+                  <div class="course-info">
+                    <h4>1. Uji Level (CEFR)</h4>
+                    <p class="course-sub">Placement Test A1–C2</p>
+                    <div class="course-rating">⭐ 4.9</div>
+                  </div>
+                </div>
+
+                <!-- Card 2: Kuasai 500 Kosakata Aktif -->
+                <div class="course-card" onclick="selectMenu(2)">
+                  <div class="course-illus cream">
+                    <!-- Laptop & Lamp SVG matching reference -->
+                    <svg width="86" height="86" viewBox="0 0 100 100" fill="none">
+                      <path d="M26 70 H78 L84 78 H20 L26 70 Z" fill="#2D2346"/>
+                      <rect x="30" y="40" width="44" height="30" rx="4" fill="#3B3054" stroke="#2D2346" stroke-width="2.5"/>
+                      <circle cx="46" cy="54" r="5" fill="#F59E0B"/>
+                      <rect x="55" y="49" width="10" height="10" rx="2" fill="#8C7AE6"/>
+                      <path d="M36 40 L28 24 L40 20" stroke="#F43F5E" stroke-width="2.5" stroke-linecap="round"/>
+                      <polygon points="38,16 48,22 40,28" fill="#F43F5E"/>
+                    </svg>
+                  </div>
+                  <div class="course-info">
+                    <h4>2. 500 Kosakata Aktif</h4>
+                    <p class="course-sub">Kata Kerja & Frasa Bisnis</p>
+                    <div class="course-rating">⭐ 4.8</div>
+                  </div>
+                </div>
+
+                <!-- Card 3: Pahami 3 Tenses Utama -->
+                <div class="course-card" onclick="selectMenu(3)">
+                  <div class="course-illus blue">
+                    <!-- 3D Book SVG matching reference -->
+                    <svg width="86" height="86" viewBox="0 0 100 100" fill="none">
+                      <path d="M34 26 L68 18 L76 68 L42 78 Z" fill="#8C7AE6" stroke="#2D2346" stroke-width="2.5"/>
+                      <path d="M28 30 L62 22 L70 72 L36 82 Z" fill="#A29BFE" stroke="#2D2346" stroke-width="2.5"/>
+                      <rect x="38" y="34" width="20" height="8" rx="2" transform="rotate(-12 38 34)" fill="#FFFFFF"/>
+                      <circle cx="52" cy="58" r="9" stroke="#2D2346" stroke-width="2"/>
+                      <circle cx="52" cy="58" r="3" fill="#2D2346"/>
+                    </svg>
+                  </div>
+                  <div class="course-info">
+                    <h4>3. 3 Tenses Utama</h4>
+                    <p class="course-sub">Present, Past & Future</p>
+                    <div class="course-rating">⭐ 4.9</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Bottom Row: Speaking Partners (Menu 5) & Metrics -->
+            <div class="bottom-left-row">
+              <div class="friends-card" onclick="selectMenu(5)" style="cursor:pointer;">
+                <div class="friends-top">
+                  <h4>5. Lawan Bicara (2 Arah)</h4>
+                  <span style="font-size:13px; color:#555CE0; font-weight:700;">👤+</span>
+                </div>
+                <div class="avatar-stack">
+                  <div class="friend-avatar" style="background:#EC4899;">A</div>
+                  <div class="friend-avatar" style="background:#10B981;">R</div>
+                  <div class="friend-avatar" style="background:#F59E0B;">D</div>
+                  <div class="friend-avatar" style="background:#8B5CF6;">S</div>
+                  <div class="friend-avatar" style="background:#3B82F6;">K</div>
+                </div>
+              </div>
+
+              <div class="stats-mini-card">
+                <div class="stat-col">
+                  <span class="label">Menu</span>
+                  <div class="mini-course-bubbles">
+                    <div class="mini-bubble b1">5</div>
+                    <div class="mini-bubble b2">✓</div>
+                  </div>
+                </div>
+                <div class="stat-col">
+                  <span class="label">Active Vocab</span>
+                  <strong class="val">312</strong>
+                </div>
+                <div class="stat-col">
+                  <span class="label">Peers B1</span>
+                  <strong class="val">881</strong>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================= COLUMN 2 (MIDDLE: AI PERSONAL PLAN) ================= -->
+          <section class="col-middle">
+            <div>
+              <div class="plan-header">
+                <h3>Your personal learning plan</h3>
+                <span class="ai-highlight">Created by AI</span>
+              </div>
+
+              <!-- CEFR Level Pills (Replacing Grade 1, Grade 2, Grade 3) -->
+              <div class="grade-pills" style="margin-top: 12px;">
+                <button class="grade-pill">🌱 CEFR A2</button>
+                <button class="grade-pill active">🚀 CEFR B1</button>
+                <button class="grade-pill">💼 CEFR B2</button>
+                <button class="grade-pill">🏆 C1</button>
+              </div>
+            </div>
+
+            <!-- Week Box 1: Foundational Assessment & Tenses -->
+            <div class="week-box ice">
+              <div class="week-top">
+                <span class="week-tag">Tahap 1</span>
+                <span class="subjects-count">👑 3 Menu Inti</span>
+              </div>
+              <div class="week-items-grid">
+                <div class="week-item" onclick="selectMenu(1)" style="cursor:pointer;">
+                  <div class="week-icon-wrap" style="background:#FDEBD8;">
+                    <span style="font-size:22px;">🌍</span>
+                  </div>
+                  <h5>CEFR Test</h5>
+                  <p>Uji Level Awal</p>
+                </div>
+                <div class="week-item" onclick="selectMenu(3)" style="cursor:pointer;">
+                  <div class="week-icon-wrap" style="background:#FEF5D8;">
+                    <span style="font-size:22px;">🧊</span>
+                  </div>
+                  <h5>3 Tenses</h5>
+                  <p>14 jam latihan</p>
+                </div>
+                <div class="week-item">
+                  <div class="add-subject-circle">+</div>
+                  <h5>Add</h5>
+                  <p>Target baru</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Week Box 2: Daily Practice (Vocab, Shadowing, Speaking) -->
+            <div class="week-box blush">
+              <div class="week-top">
+                <span class="week-tag">Tahap 2</span>
+                <span class="subjects-count">🌸 Rutinitas Harian</span>
+              </div>
+              <div class="week-items-grid">
+                <div class="week-item" onclick="selectMenu(4)" style="cursor:pointer;">
+                  <div class="week-icon-wrap" style="background:#E6EFFC;">
+                    <span style="font-size:20px;">🎧</span>
+                  </div>
+                  <h5>Shadowing</h5>
+                  <p>15 menit/hari</p>
+                </div>
+                <div class="week-item" onclick="selectMenu(2)" style="cursor:pointer;">
+                  <div class="week-icon-wrap" style="background:#FDE8DF;">
+                    <span style="font-size:20px;">📖</span>
+                  </div>
+                  <h5>500 Vocab</h5>
+                  <p>Frasa Bisnis</p>
+                </div>
+                <div class="week-item" onclick="selectMenu(5)" style="cursor:pointer;">
+                  <div class="week-icon-wrap" style="background:#EAE8FC;">
+                    <span style="font-size:20px;">⚛️</span>
+                  </div>
+                  <h5>2-Way Speak</h5>
+                  <p>8 jam/minggu</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Schedule Block -->
+            <div class="schedule-block">
+              <div class="schedule-head">
+                <h4>Schedule</h4>
+                <div class="schedule-actions">
+                  <button class="btn-plus-yellow">+</button>
+                  <button class="icon-circle-xs">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <line x1="4" y1="6" x2="20" y2="6"/><line x1="7" y1="12" x2="17" y2="12"/><line x1="10" y1="18" x2="14" y2="18"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+
+              <div class="schedule-list">
+                <div class="schedule-item" onclick="selectMenu(4)" style="cursor:pointer;">
+                  <div class="schedule-item-left">
+                    <span>🎧</span> Comprehensible Input & Shadowing
+                  </div>
+                  <div class="schedule-time">
+                    <span style="color:#7A82EB;">🕒</span> 09:30
+                  </div>
+                </div>
+                <div class="schedule-item" onclick="selectMenu(5)" style="cursor:pointer;">
+                  <div class="schedule-item-left">
+                    <span>🗣️</span> Praktik Bicara 2 Arah (Office)
+                  </div>
+                  <div class="schedule-time">
+                    <span style="color:#7A82EB;">🕒</span> 10:30
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <!-- ================= COLUMN 3 (RIGHT: STUDY CRAFT / MENU 4 & 5 FOCUS) ================= -->
+          <section class="col-right">
+            <div class="study-craft-card">
+              <div class="study-top-bar">
+                <h3>Shadowing Craft</h3>
+                <button class="btn-study-menu">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/>
+                    <circle cx="8" cy="7" r="2" fill="#181823"/><circle cx="16" cy="12" r="2" fill="#181823"/><circle cx="10" cy="17" r="2" fill="#181823"/>
+                  </svg>
+                </button>
+              </div>
+
+              <!-- Mascot Stage (Replicating the Cat Professor with Glasses & Pointer) -->
+              <div class="mascot-stage">
+                <div class="floating-left-icons">
+                  <div class="float-circle orange" title="3 Tenses Utama">🧊</div>
+                  <div class="float-circle purple" title="Ekosistem Bicara 2 Arah">⚛️</div>
+                </div>
+
+                <div class="floating-rank-pill">
+                  🎖️ #1 Metode Aktif
+                </div>
+
+                <!-- Custom SVG Cat Professor Matching Reference Image -->
+                <svg width="210" height="215" viewBox="0 0 220 220" fill="none">
+                  <!-- Floating text like E=mc2 in reference, adapted to CEFR / 15m -->
+                  <text x="150" y="65" fill="#E09145" font-size="15" font-weight="800" transform="rotate(-12 150 65)">15m/day</text>
+                  <text x="48" y="122" fill="#E55A5A" font-size="18" font-weight="800">-</text>
+                  <text x="115" y="42" fill="#B5C489" font-size="16" font-weight="800">+</text>
+
+                  <!-- Tail -->
+                  <path d="M68 175 C42 172 38 145 52 138" stroke="#F5CBA7" stroke-width="12" stroke-linecap="round"/>
+
+                  <!-- Ears -->
+                  <polygon points="78,76 84,48 102,68" fill="#E59866"/>
+                  <polygon points="142,76 136,48 118,68" fill="#E59866"/>
+
+                  <!-- Body / Head Rounded Cat Shape -->
+                  <rect x="70" y="65" width="80" height="112" rx="38" fill="#F5B971"/>
+                  <rect x="82" y="130" width="56" height="46" rx="16" fill="#FDEBD0"/>
+
+                  <!-- Red Glasses -->
+                  <rect x="80" y="84" width="26" height="17" rx="4" stroke="#E74C3C" stroke-width="3.5" fill="#FFFFFF" fill-opacity="0.4"/>
+                  <rect x="114" y="84" width="26" height="17" rx="4" stroke="#E74C3C" stroke-width="3.5" fill="#FFFFFF" fill-opacity="0.4"/>
+                  <line x1="106" y1="92" x2="114" y2="92" stroke="#E74C3C" stroke-width="3.5"/>
+
+                  <!-- Eyes inside glasses -->
+                  <path d="M88 93 Q93 89 98 93" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+                  <path d="M122 93 Q127 89 132 93" stroke="#5D4037" stroke-width="2.5" stroke-linecap="round"/>
+
+                  <!-- Cute Cat Nose & Whiskers -->
+                  <polygon points="107,105 113,105 110,109" fill="#8D4925"/>
+                  <path d="M104 113 Q107 116 110 112 Q113 116 116 113" stroke="#8D4925" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="65" y1="106" x2="77" y2="108" stroke="#D38B5D" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="65" y1="113" x2="77" y2="113" stroke="#D38B5D" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="143" y1="108" x2="155" y2="106" stroke="#D38B5D" stroke-width="2" stroke-linecap="round"/>
+                  <line x1="143" y1="113" x2="155" y2="113" stroke="#D38B5D" stroke-width="2" stroke-linecap="round"/>
+
+                  <!-- Suspenders & Shirt -->
+                  <path d="M72 145 Q110 152 148 145 L150 175 L70 175 Z" fill="#F39C12"/>
+                  <line x1="90" y1="132" x2="90" y2="175" stroke="#5C4B51" stroke-width="6"/>
+                  <line x1="130" y1="132" x2="130" y2="175" stroke="#5C4B51" stroke-width="6"/>
+
+                  <!-- Blue Bowtie -->
+                  <polygon points="98,130 110,136 98,142" fill="#546DE5"/>
+                  <polygon points="122,130 110,136 122,142" fill="#546DE5"/>
+                  <circle cx="110" cy="136" r="3.5" fill="#3DC1D3"/>
+
+                  <!-- Pointer Stick -->
+                  <line x1="148" y1="145" x2="168" y2="95" stroke="#6D4C41" stroke-width="3.5" stroke-linecap="round"/>
+
+                  <!-- Paws / Feet -->
+                  <ellipse cx="90" cy="182" rx="10" ry="6" fill="#F5B971"/>
+                  <ellipse cx="130" cy="182" rx="10" ry="6" fill="#F5B971"/>
+                </svg>
+              </div>
+
+              <!-- Bottom Description & Metrics -->
+              <div>
+                <div class="study-info-row">
+                  <h4>4. Input & Shadowing 🎓</h4>
+                  <div class="laurel-badge">5.0</div>
+                </div>
+                <p class="study-desc">
+                  Dengarkan audio bahasa Inggris <strong>15 menit sehari</strong> (Comprehensible Input), tirukan pengucapannya secara langsung, lalu praktikkan bersama lawan bicara selevel!
+                </p>
+
+                <div class="study-metrics-grid">
+                  <div class="study-metric-box">
+                    <div class="study-metric-top">
+                      <span>Audio / Hari</span>
+                      <span style="color:#7A82EB;">🕒</span>
+                    </div>
+                    <div class="study-metric-val">15m</div>
+                  </div>
+
+                  <div class="study-metric-box">
+                    <div class="study-metric-top">
+                      <span>Kosakata Aktif</span>
+                      <span style="color:#EC4899;">📖</span>
+                    </div>
+                    <div class="study-metric-val">500</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+    const menuDetails = {
+      0: "<strong>Kurikulum Fokus 5 Menu:</strong> (1) Uji Level CEFR • (2) 500 Kosakata Aktif Bisnis • (3) 3 Tenses Kantor • (4) 15m Comprehensible Input & Shadowing • (5) Praktik Bicara 2 Arah",
+      1: "<strong>Menu 1 — Uji Level Awal (Placement Test):</strong> Ketahui posisi kemampuan dasar berdasarkan standar Common European Framework of Reference for Languages (CEFR A1–C2).",
+      2: "<strong>Menu 2 — Kuasai 500 Kosakata Aktif (Active Vocabulary):</strong> Fokus pada kata kerja operasional dan frasa bisnis harian, bukan menghafal kamus secara acak.",
+      3: "<strong>Menu 3 — Pahami 3 Tenses Utama:</strong> Cukup kuasai Simple Present, Simple Past, dan Simple Future untuk kebutuhan komunikasi kantor.",
+      4: "<strong>Menu 4 — Metode Comprehensible Input & Shadowing:</strong> Dengarkan audio bahasa Inggris 15 menit sehari dan tirukan pengucapannya secara langsung.",
+      5: "<strong>Menu 5 — Praktik Berbicara Komunikasi Dua Arah:</strong> Cari lawan bicara selevel atau bergabung dalam ekosistem belajar tatap muka."
+    };
+
+    function selectMenu(id) {
+      const banner = document.getElementById('menuBanner');
+      banner.innerHTML = `<div>${menuDetails[id]}</div><span style="font-weight:700; font-size:11.5px;">Menu #${id === 0 ? 'All' : id} Aktif</span>`;
+    }
+
+    function resetHighlight() {
+      selectMenu(0);
+    }
+  </script>
+</body>
+</html>

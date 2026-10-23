@@ -38,6 +38,8 @@ export interface StartLiveSessionOptions {
   topicId?: string;
   lessonId?: string;
   topicTitle: string;
+  partnerId?: string;
+  partnerName?: string;
 }
 
 export interface UseLiveSessionResult {
@@ -487,6 +489,7 @@ export function useLiveSession(): UseLiveSessionResult {
             level: options.level,
             topicId: options.topicId,
             lessonId: options.lessonId,
+            partnerId: options.partnerId,
           }),
           signal: run.tokenAbort.signal,
         });

@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { useListenRepeat } from "@/hooks/useListenRepeat";
 import type { CefrLevel } from "@/lib/levels";
 import { Icon } from "./icon";
+import { LueloMascot } from "./mascots";
 
 interface ListenRepeatRoomProps {
   level: CefrLevel;
@@ -13,12 +14,12 @@ interface ListenRepeatRoomProps {
 
 const STATUS_TEXT = {
   idle: "Menyiapkan latihan",
-  loading: "Membuat set latihan…",
-  ready: "Dengarkan lalu ulangi",
-  playing: "Dengarkan baik-baik…",
-  "requesting-microphone": "Meminta akses mikrofon…",
-  recording: "Sedang merekam jawabanmu",
-  scoring: "Menilai jawaban…",
+  loading: "Membuat set latihan...",
+  ready: "Dengarkan lalu tirukan",
+  playing: "Dengarkan baik-baik...",
+  "requesting-microphone": "Meminta izin mikrofon...",
+  recording: "Sedang merekam suaramu...",
+  scoring: "Menilai pelafalan...",
   completed: "Latihan selesai",
   error: "Terjadi kendala",
 } as const;
@@ -34,55 +35,59 @@ export function ListenRepeatRoom({ level, onClose }: ListenRepeatRoomProps) {
 
   if (session.completedSession) {
     return (
-      <section className="animate-rise min-h-[calc(100vh-3rem)] overflow-hidden rounded-[2rem] bg-[#13213b] p-5 text-white shadow-[0_28px_80px_rgba(16,27,52,0.28)] sm:p-9">
-        <div className="mx-auto flex min-h-[calc(100vh-7.5rem)] max-w-3xl flex-col items-center justify-center text-center">
-          <div className="grid size-20 place-items-center rounded-3xl bg-emerald-400/15 text-emerald-300">
-            <Icon name="check" className="size-10" />
-          </div>
-          <p className="mt-6 text-xs font-extrabold uppercase tracking-[0.18em] text-emerald-300">7 dari 7 selesai</p>
-          <h1 className="mt-2 text-3xl font-black tracking-[-0.04em] sm:text-4xl">Nice work! Latihan selesai.</h1>
-          <p className="mt-3 max-w-xl text-sm leading-6 text-slate-300">
-            Kamu sudah menyelesaikan satu set TOEFL Listen & Repeat. Hasilnya otomatis tersimpan di riwayat.
+      <section className="animate-rise min-h-[calc(100vh-3rem)] overflow-hidden rounded-3xl border border-slate-200 bg-white p-6 shadow-xl sm:p-10 flex flex-col items-center justify-center text-center">
+        <div className="max-w-xl mx-auto">
+          <LueloMascot state="celebrating" size={130} className="mx-auto" />
+          <span className="mt-4 inline-block rounded-full bg-emerald-100 border border-emerald-200 px-3 py-1 text-xs font-black text-emerald-800">
+            7 dari 7 Kalimat Selesai
+          </span>
+          <h1 className="mt-2 text-3xl font-black text-slate-900 sm:text-4xl">
+            Luar biasa! Latihan selesai.
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+            Kamu telah menyelesaikan satu set TOEFL Listen & Repeat. Hasil akurasi telah otomatis tersimpan di riwayat latihanmu.
           </p>
 
-          <div className="mt-8 grid w-full gap-3 sm:grid-cols-[190px_1fr]">
-            <div className="rounded-3xl bg-white/8 p-6">
-              <div className="text-5xl font-black tracking-[-0.06em] text-[#72e1c3]">{average}%</div>
-              <div className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">Rata-rata akurasi</div>
+          <div className="mt-8 grid gap-4 sm:grid-cols-[180px_1fr] items-center text-left">
+            <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-6 text-center">
+              <div className="text-5xl font-black text-indigo-700">{average}%</div>
+              <div className="mt-1 text-xs font-bold uppercase tracking-wider text-slate-500">
+                Rata-rata Akurasi
+              </div>
             </div>
-            <div className="grid grid-cols-7 gap-2 rounded-3xl bg-white/8 p-5">
+            <div className="grid grid-cols-7 gap-1.5 rounded-2xl border border-slate-200 bg-slate-50 p-4">
               {session.results.map((item, index) => (
-                <div className="flex flex-col items-center justify-center gap-2" key={index}>
+                <div className="flex flex-col items-center justify-center gap-1.5" key={index}>
                   <div
-                    className="grid size-9 place-items-center rounded-xl text-xs font-extrabold"
-                    style={{
-                      backgroundColor: item && item.accuracy >= 75 ? "rgba(52,211,153,.18)" : "rgba(251,191,36,.16)",
-                      color: item && item.accuracy >= 75 ? "#6ee7c5" : "#fcd06b",
-                    }}
+                    className={`grid size-9 place-items-center rounded-xl text-xs font-black ${
+                      item && item.accuracy >= 75
+                        ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                        : "bg-amber-100 text-amber-900 border border-amber-200"
+                    }`}
                   >
                     {item?.accuracy ?? 0}
                   </div>
-                  <span className="text-[10px] text-slate-500">{index + 1}</span>
+                  <span className="text-[10px] font-bold text-slate-400">{index + 1}</span>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="mt-8 flex w-full flex-col justify-center gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <button
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-white/10 px-6 py-3.5 text-sm font-bold transition hover:bg-white/15"
+              className="rounded-2xl border border-slate-300 bg-white px-6 py-3.5 text-xs font-black text-slate-700 hover:bg-slate-50 transition"
               onClick={onClose}
               type="button"
             >
-              Kembali ke beranda
+              Selesai
             </button>
             <button
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#6e55df] px-6 py-3.5 text-sm font-bold shadow-lg shadow-violet-950/30 transition hover:bg-[#7d65ec]"
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3.5 text-xs font-black text-white hover:bg-indigo-700 transition shadow-xs"
               onClick={() => void session.loadSet()}
               type="button"
             >
               <Icon name="repeat" className="size-4" />
-              Set baru
+              Latihan Set Baru
             </button>
           </div>
         </div>
@@ -91,45 +96,54 @@ export function ListenRepeatRoom({ level, onClose }: ListenRepeatRoomProps) {
   }
 
   return (
-    <section className="animate-rise min-h-[calc(100vh-3rem)] overflow-hidden rounded-[2rem] bg-[#13213b] text-white shadow-[0_28px_80px_rgba(16,27,52,0.28)]">
-      <header className="flex items-center justify-between gap-4 border-b border-white/10 px-5 py-4 sm:px-8">
+    <section className="animate-rise min-h-[calc(100vh-3rem)] overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl flex flex-col">
+      <header className="flex items-center justify-between gap-4 border-b border-slate-200 px-6 py-4 bg-slate-50">
         <div className="min-w-0">
-          <p className="text-[11px] font-extrabold uppercase tracking-[0.18em] text-[#81e5c8]">TOEFL · Listen & Repeat</p>
-          <h1 className="mt-1 truncate text-lg font-bold">
-            {session.exercise?.scenario ?? "Latihan kalimat kampus"}
+          <p className="text-[11px] font-black uppercase tracking-wider text-amber-700">
+            TOEFL Pronunciation Drill
+          </p>
+          <h1 className="mt-0.5 truncate text-lg font-black text-slate-900">
+            {session.exercise?.scenario ?? "Latihan Kalimat Kampus"}
           </h1>
         </div>
         <button
           aria-label="Tutup latihan"
-          className="grid size-10 shrink-0 place-items-center rounded-full bg-white/10 text-white/75 transition hover:bg-white/15 hover:text-white"
+          className="grid size-9 shrink-0 place-items-center rounded-full bg-slate-200/80 text-slate-600 transition hover:bg-slate-300"
           onClick={onClose}
           type="button"
         >
-          <Icon name="x" className="size-5" />
+          <Icon name="x" className="size-4" />
         </button>
       </header>
 
-      <div className="mx-auto max-w-5xl p-5 sm:p-8">
-        <div className="flex items-center justify-between gap-4">
+      <div className="mx-auto w-full max-w-5xl p-6 sm:p-8 flex-1 flex flex-col">
+        {/* Progress header */}
+        <div className="flex items-center justify-between text-xs font-bold text-slate-600">
           <div>
-            <p className="text-xs font-bold text-slate-400">Progress sesi</p>
-            <p className="mt-1 text-sm font-extrabold">
-              {session.progress.completed} dari {session.progress.total} kalimat dinilai
-            </p>
+            <span className="font-black text-slate-900 text-sm">
+              {session.progress.completed} dari {session.progress.total}
+            </span>{" "}
+            kalimat selesai
           </div>
-          <span className="rounded-full bg-white/8 px-3 py-1.5 text-xs font-bold text-slate-300">
+          <span className="rounded-lg bg-indigo-50 border border-indigo-100 px-2.5 py-1 text-xs font-black text-indigo-700">
             Level {level}
           </span>
         </div>
-        <div className="mt-4 flex gap-2">
+
+        {/* Step dots */}
+        <div className="mt-3 flex gap-2">
           {Array.from({ length: session.progress.total }, (_, index) => {
             const itemResult = session.results[index];
             const selected = index === session.currentIndex;
             return (
               <button
                 aria-label={"Buka kalimat " + (index + 1)}
-                className={`h-2 flex-1 rounded-full transition ${
-                  itemResult ? "bg-emerald-400" : selected ? "bg-violet-400" : "bg-white/12"
+                className={`h-2 flex-1 rounded-full transition-all ${
+                  itemResult
+                    ? "bg-emerald-500"
+                    : selected
+                    ? "bg-indigo-600 ring-2 ring-indigo-200"
+                    : "bg-slate-200"
                 }`}
                 disabled={!session.canNavigate}
                 key={index}
@@ -141,191 +155,142 @@ export function ListenRepeatRoom({ level, onClose }: ListenRepeatRoomProps) {
         </div>
 
         {session.status === "loading" || session.status === "idle" ? (
-          <div className="grid min-h-[480px] place-items-center text-center">
+          <div className="grid flex-1 place-items-center text-center py-20">
             <div>
-              <div className="mx-auto grid size-20 place-items-center rounded-3xl bg-white/8">
-                <Icon name="repeat" className="size-9 animate-spin text-violet-300" />
-              </div>
-              <p className="mt-5 text-lg font-extrabold">{STATUS_TEXT[session.status]}</p>
-              <p className="mt-2 text-sm text-slate-400">Emma sedang menyiapkan tujuh kalimat yang sesuai levelmu.</p>
+              <LueloMascot state="thinking" size={90} className="mx-auto" />
+              <p className="mt-4 text-base font-black text-slate-900">{STATUS_TEXT[session.status]}</p>
+              <p className="mt-1 text-xs text-slate-500">Menyiapkan tujuh kalimat kampus untukmu.</p>
             </div>
           </div>
         ) : (
-          <div className="mt-7 grid gap-5 lg:grid-cols-[1fr_320px]">
-            <div className="flex min-h-[470px] flex-col rounded-[1.8rem] border border-white/10 bg-white/[0.05] p-5 sm:p-8">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <span className="text-xs font-extrabold uppercase tracking-[0.14em] text-violet-300">
-                    Kalimat {session.currentItem?.number ?? 1}
-                  </span>
-                  <p className="mt-1 text-sm text-slate-400">Speaker: {session.exercise?.speaker ?? "Campus staff"}</p>
-                </div>
-                <span className={`rounded-full px-3 py-1.5 text-xs font-bold ${
-                  session.status === "recording"
-                    ? "animate-pulse bg-rose-400/15 text-rose-300"
-                    : "bg-white/8 text-slate-300"
-                }`}>
+          <div className="mt-6 grid flex-1 gap-6 lg:grid-cols-[1fr_320px]">
+            {/* Practice Card */}
+            <div className="flex flex-col justify-between rounded-3xl border border-slate-200 bg-slate-50/50 p-6 sm:p-8 text-center">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-extrabold text-indigo-700 bg-indigo-50 px-3 py-1 rounded-full border border-indigo-100">
+                  Kalimat {session.currentItem?.number ?? 1}
+                </span>
+                <span className="font-bold text-slate-500">
                   {STATUS_TEXT[session.status]}
                 </span>
               </div>
 
-              <div className="flex flex-1 flex-col items-center justify-center text-center">
+              <div className="my-auto py-8">
+                {/* Audio Play Button */}
                 <button
-                  aria-label="Putar kalimat"
-                  className="group relative grid size-24 place-items-center rounded-full bg-[#6e55df] shadow-[0_0_55px_rgba(110,85,223,.35)] transition hover:scale-105 disabled:cursor-not-allowed disabled:opacity-50"
+                  aria-label="Putar audio kalimat"
+                  className="mx-auto grid size-20 place-items-center rounded-full bg-indigo-600 text-white shadow-md shadow-indigo-600/25 hover:bg-indigo-700 transition hover:scale-105 active:scale-95 disabled:opacity-50"
                   disabled={!session.canPlay}
                   onClick={session.playCurrentSentence}
                   type="button"
                 >
-                  <span className="absolute inset-[-12px] rounded-full border border-violet-300/20 transition group-hover:inset-[-17px]" />
-                  <Icon name={session.status === "playing" ? "volume" : "play"} className="size-9" />
+                  <Icon
+                    name={session.status === "playing" ? "volume" : "play"}
+                    className="size-8"
+                  />
                 </button>
-                <h2 className="mt-7 text-xl font-black tracking-[-0.03em]">Dengarkan satu kali, lalu ulangi.</h2>
-                <p className="mt-2 max-w-md text-sm leading-6 text-slate-400">
-                  Perhatikan setiap kata, tekanan, dan ritme pembicara. Tekan mikrofon saat siap.
+
+                <h2 className="mt-5 text-xl font-black text-slate-900">
+                  Dengarkan baik-baik, lalu tirukan.
+                </h2>
+                <p className="mt-1 text-xs text-slate-500 max-w-sm mx-auto">
+                  Perhatikan pelafalan kata, intonasi, dan ritme kalimat pembicara.
                 </p>
 
+                {/* Target Sentence Display */}
                 {(result || session.speechSupport === "unsupported") && session.currentItem && (
-                  <div className="mt-6 w-full max-w-xl rounded-2xl border border-white/10 bg-black/10 px-5 py-4 text-left">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Target sentence</p>
-                    <p className="mt-2 text-base font-semibold leading-7 text-white">“{session.currentItem.sentence}”</p>
+                  <div className="mt-6 mx-auto max-w-lg rounded-2xl border border-indigo-100 bg-white p-4 shadow-xs text-left">
+                    <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                      Kalimat Target
+                    </p>
+                    <p className="mt-1 text-sm font-black text-slate-900 leading-relaxed">
+                      &ldquo;{session.currentItem.sentence}&rdquo;
+                    </p>
                   </div>
                 )}
 
-                <div className="mt-8 flex h-12 items-center justify-center gap-1" aria-hidden="true">
-                  {Array.from({ length: 19 }, (_, index) => (
-                    <span
-                      className={`w-1.5 rounded-full transition-all ${
-                        session.status === "recording" ? "bg-rose-400" : "bg-[#6edebe]"
-                      }`}
-                      key={index}
-                      style={{
-                        height:
-                          session.status === "recording"
-                            ? Math.max(7, 8 + session.micLevel * 110 * (0.35 + Math.abs(Math.sin(index))))
-                            : 8 + ((index * 9) % 25),
-                      }}
-                    />
-                  ))}
-                </div>
-
-                {session.canStopRecording ? (
-                  <button
-                    className="mt-5 inline-flex min-w-56 items-center justify-center gap-2 rounded-2xl bg-rose-500 px-6 py-4 text-sm font-extrabold shadow-lg shadow-rose-950/25 transition hover:bg-rose-400"
-                    onClick={() => void session.stopRecording()}
-                    type="button"
-                  >
-                    <span className="size-3 rounded-sm bg-white" />
-                    Selesai merekam
-                  </button>
-                ) : (
-                  <button
-                    className="mt-5 inline-flex min-w-56 items-center justify-center gap-2 rounded-2xl bg-[#38c49c] px-6 py-4 text-sm font-extrabold text-[#102d27] shadow-lg shadow-emerald-950/20 transition hover:bg-[#54d6b1] disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={!session.canRecord}
-                    onClick={() => void session.startRecording()}
-                    type="button"
-                  >
-                    <Icon name="mic" className="size-5" />
-                    {session.status === "scoring" ? "Sedang menilai…" : "Mulai mengulang"}
-                  </button>
-                )}
-              </div>
-
-              {(session.error || session.notice) && (
-                <div className={`mt-5 rounded-2xl border px-4 py-3 text-sm ${
-                  session.error
-                    ? "border-rose-400/25 bg-rose-400/10 text-rose-100"
-                    : "border-amber-300/20 bg-amber-300/10 text-amber-100"
-                }`}>
-                  <div className="flex items-start justify-between gap-3">
-                    <span>{session.error ?? session.notice}</span>
-                    <button aria-label="Tutup pesan" onClick={session.dismissMessage} type="button">
-                      <Icon name="x" className="size-4" />
+                {/* Mic Action */}
+                <div className="mt-8">
+                  {session.canStopRecording ? (
+                    <button
+                      className="inline-flex min-w-56 items-center justify-center gap-2 rounded-2xl bg-rose-600 px-6 py-3.5 text-xs font-black text-white shadow-md shadow-rose-900/15 hover:bg-rose-700 transition"
+                      onClick={() => void session.stopRecording()}
+                      type="button"
+                    >
+                      <span className="size-2.5 rounded-sm bg-white animate-pulse" />
+                      Selesai Merekam
                     </button>
-                  </div>
-                  {session.error && !session.exercise && (
-                    <button className="mt-3 text-xs font-extrabold underline" onClick={() => void session.loadSet()} type="button">
-                      Coba lagi
+                  ) : (
+                    <button
+                      className="inline-flex min-w-56 items-center justify-center gap-2 rounded-2xl bg-amber-500 px-6 py-3.5 text-xs font-black text-white shadow-md shadow-amber-900/15 hover:bg-amber-600 transition disabled:opacity-50"
+                      disabled={!session.canRecord}
+                      onClick={() => void session.startRecording()}
+                      type="button"
+                    >
+                      <Icon name="mic" className="size-4" />
+                      {session.status === "scoring" ? "Menilai Ucapan..." : "Mulai Mengulang"}
                     </button>
                   )}
+                </div>
+              </div>
+
+              {session.error && (
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-3 text-xs text-rose-700">
+                  {session.error}
                 </div>
               )}
             </div>
 
-            <aside className="rounded-[1.8rem] border border-white/10 bg-white/[0.05] p-5">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-extrabold">Hasil kalimat ini</h3>
-                {result && (
-                  <span className={`rounded-lg px-2.5 py-1 text-sm font-black ${
-                    result.accuracy >= 75 ? "bg-emerald-400/15 text-emerald-300" : "bg-amber-300/15 text-amber-200"
-                  }`}>
-                    {result.accuracy}%
-                  </span>
+            {/* Result Sidebar */}
+            <aside className="rounded-3xl border border-slate-200 bg-white p-6 flex flex-col justify-between shadow-2xs">
+              <div>
+                <h3 className="text-sm font-black text-slate-900">Hasil Kalimat Ini</h3>
+                {result ? (
+                  <div className="mt-5 space-y-4">
+                    <div className="p-4 rounded-2xl bg-indigo-50/60 border border-indigo-100 text-center">
+                      <p className="text-3xl font-black text-indigo-700">{result.accuracy}%</p>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-500 mt-0.5">
+                        Tingkat Akurasi
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 rounded-2xl bg-slate-50 border border-slate-100 text-left">
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        Yang Terdengar
+                      </p>
+                      <p className="mt-1 text-xs text-slate-700 italic">
+                        &ldquo;{result.heard || "Tidak ada suara terdeteksi"}&rdquo;
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="mt-8 text-center py-6 text-slate-400">
+                    <LueloMascot state="idle" size={80} className="mx-auto opacity-70" />
+                    <p className="mt-3 text-xs font-bold">Hasil akurasi akan muncul setelah kamu selesai merekam.</p>
+                  </div>
                 )}
               </div>
 
-              {!result ? (
-                <div className="grid min-h-72 place-items-center text-center">
-                  <div>
-                    <Icon name="bar-chart" className="mx-auto size-8 text-white/15" />
-                    <p className="mt-3 text-sm leading-6 text-slate-500">Hasil dan tips pelafalan akan muncul setelah rekaman dinilai.</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="mt-5 space-y-5">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Yang terdengar</p>
-                    <p className="mt-2 text-sm leading-6 text-slate-200">“{result.heard || "Tidak ada ucapan terdeteksi."}”</p>
-                  </div>
-                  {result.missedWords.length > 0 && (
-                    <div>
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Kata terlewat</p>
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {result.missedWords.map((word) => (
-                          <span className="rounded-lg bg-rose-400/12 px-2 py-1 text-xs font-bold text-rose-200" key={word}>{word}</span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {result.pronunciationIssues.length > 0 && (
-                    <div className="space-y-2">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-slate-500">Pelafalan</p>
-                      {result.pronunciationIssues.map((issue, index) => (
-                        <div className="rounded-xl bg-white/6 p-3" key={index}>
-                          <span className="text-xs font-extrabold text-violet-200">{issue.word}</span>
-                          <p className="mt-1 text-xs leading-5 text-slate-400">{issue.issue}</p>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  <div className="rounded-2xl bg-[#6e55df]/15 p-4">
-                    <p className="flex items-center gap-2 text-xs font-extrabold text-violet-200">
-                      <Icon name="lightbulb" className="size-4" />
-                      Tip Emma
-                    </p>
-                    <p className="mt-2 text-xs leading-5 text-slate-300">{result.tip}</p>
-                  </div>
+              {session.canNavigate && (
+                <div className="mt-6 pt-4 border-t border-slate-100 flex gap-2">
+                  <button
+                    type="button"
+                    onClick={session.previousItem}
+                    disabled={session.currentIndex === 0}
+                    className="flex-1 rounded-xl border border-slate-200 py-2.5 text-xs font-bold text-slate-700 hover:bg-slate-50 disabled:opacity-40"
+                  >
+                    Sebelumnya
+                  </button>
+                  <button
+                    type="button"
+                    onClick={session.nextItem}
+                    disabled={session.currentIndex >= session.progress.total - 1}
+                    className="flex-1 rounded-xl bg-indigo-600 py-2.5 text-xs font-black text-white hover:bg-indigo-700 disabled:opacity-40"
+                  >
+                    Berikutnya
+                  </button>
                 </div>
               )}
-
-              <div className="mt-6 grid grid-cols-2 gap-2 border-t border-white/10 pt-5">
-                <button
-                  className="rounded-xl bg-white/8 px-3 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-white/12 disabled:opacity-30"
-                  disabled={!session.canNavigate || session.currentIndex === 0}
-                  onClick={session.previousItem}
-                  type="button"
-                >
-                  Sebelumnya
-                </button>
-                <button
-                  className="rounded-xl bg-white/8 px-3 py-2.5 text-xs font-bold text-slate-300 transition hover:bg-white/12 disabled:opacity-30"
-                  disabled={!session.canNavigate || session.currentIndex >= session.progress.total - 1}
-                  onClick={session.nextItem}
-                  type="button"
-                >
-                  Berikutnya
-                </button>
-              </div>
             </aside>
           </div>
         )}

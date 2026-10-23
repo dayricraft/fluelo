@@ -1,13 +1,27 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  Check,
+  Clock,
+  History,
+  Home,
+  Mic,
+  Search,
+  Target,
+  Users,
+} from "lucide-react";
 
 import {
   useLiveSession,
   type LiveSessionMode,
   type StartLiveSessionOptions,
 } from "@/hooks/useLiveSession";
-import { LEVELS, type CefrLevel } from "@/lib/levels";
+import {
+  AI_SPEAKING_PARTNERS,
+  type SpeakingPartnerProfile,
+} from "@/lib/fluelo-5menus";
+import { formatBand, type CefrLevel } from "@/lib/levels";
 import {
   getSpeakingMission,
   type SpeakingMission,
@@ -16,60 +30,31 @@ import {
   updateProfile,
   useAppData,
 } from "@/lib/storage";
-import type { Topic } from "@/lib/topics";
+import { PRACTICE_TOPICS, type Topic } from "@/lib/topics";
 import type { Feedback, SessionRecord } from "@/lib/types";
-import { DashboardHome } from "./dashboard-home";
 import { FeedbackView } from "./feedback-view";
-import { Icon, type IconName } from "./icon";
-import { LearningPath } from "./learning-path";
-import { ListenRepeatRoom } from "./listen-repeat-room";
+import { Menu5SpeakingWorkspace } from "./five-menu-workspaces";
+import { FlueloBrand, FlueloLogoIcon } from "./fluelo-brand";
+import { FlueloLandingPage } from "./fluelo-landing-page";
+import { LueloMascot } from "./mascots";
 import { ProfileModal } from "./profile-modal";
-import { ProgressViews } from "./progress-views";
 import { VoiceRoom } from "./voice-room";
 
-type AppScreen = "dashboard" | "voice" | "listen-repeat";
-type DashboardView = "home" | "learn" | "progress" | "history";
-
-const NAV_ITEMS: Array<{ view: DashboardView; label: string; icon: IconName }> = [
-  { view: "home", label: "Beranda", icon: "home" },
-  { view: "learn", label: "Belajar", icon: "book-open" },
-  { view: "progress", label: "Progres", icon: "bar-chart" },
-  { view: "history", label: "Riwayat", icon: "history" },
-];
-
-const VIEW_LABELS: Record<DashboardView, string> = {
-  home: "Dashboard belajar",
-  learn: "Jalur belajar A1–A2",
-  progress: "Analisis performa",
-  history: "Riwayat sesi",
-};
+type AppScreen = "landing" | "dashboard" | "voice";
+type TalkToAiTab = "partners" | "interview" | "missions" | "history";
 
 function ShellLoader() {
   return (
-    <div className="grid min-h-screen place-items-center bg-[#f5f7fb]">
-      <div className="text-center">
-        <div className="mx-auto grid size-14 place-items-center rounded-2xl bg-[#172440] text-xl font-black text-white shadow-xl">
-          F<span className="text-[#63d5b5]">.</span>
+    <div className="fluelo-outer-wrap">
+      <div className="rounded-[34px] bg-white p-10 text-center shadow-xl">
+        <LueloMascot state="thinking" size={96} className="mx-auto" />
+        <div className="mt-4 flex items-center justify-center">
+          <FlueloBrand size="md" theme="light" showTagline={false} />
         </div>
-        <p className="mt-4 text-sm font-extrabold text-slate-700">Menyiapkan FluentPath</p>
-        <div className="mx-auto mt-3 h-1.5 w-28 overflow-hidden rounded-full bg-slate-200">
-          <div className="h-full w-1/2 animate-pulse rounded-full bg-[#6e55df]" />
-        </div>
+        <p className="mt-2 text-xs font-extrabold text-[#7E8190]">
+          Menyiapkan Fluelo Talk to AI Studio...
+        </p>
       </div>
-    </div>
-  );
-}
-
-function Brand() {
-  return (
-    <div className="flex items-center gap-3">
-      <span className="grid size-10 place-items-center rounded-[0.9rem] bg-white text-lg font-black text-[#172440] shadow-sm">
-        F<span className="text-[#34bd97]">.</span>
-      </span>
-      <span>
-        <span className="block text-sm font-black tracking-[-0.03em] text-white">FluentPath</span>
-        <span className="block text-[9px] font-bold uppercase tracking-[0.18em] text-slate-400">AI Speaking Coach</span>
-      </span>
     </div>
   );
 }
@@ -77,16 +62,22 @@ function Brand() {
 export function FluentPathApp() {
   const data = useAppData();
   const live = useLiveSession();
-  const [screen, setScreen] = useState<AppScreen>("dashboard");
-  const [view, setView] = useState<DashboardView>("home");
+
+  const [screen, setScreen] = useState<AppScreen>("landing");
+  const [talkTab, setTalkTab] = useState<TalkToAiTab>("partners");
+  const [selectedPartnerId, setSelectedPartnerId] = useState<string>("partner-emma");
+  const [searchQuery, setSearchQuery] = useState("");
   const [profileOpen, setProfileOpen] = useState(false);
-  const [profileDismissed, setProfileDismissed] = useState(false);
   const [activeSession, setActiveSession] = useState<StartLiveSessionOptions | null>(null);
   const [historyRecord, setHistoryRecord] = useState<SessionRecord | null>(null);
-  const [returnLessonId, setReturnLessonId] = useState<string | undefined>();
   const appliedPlacementRef = useRef<Feedback | null>(null);
 
   const level: CefrLevel = data.profile.level ?? "B1";
+  const rawName = data.profile.name?.trim();
+  const displayName =
+    !rawName || rawName === "Liam" || rawName === "Hariri" || rawName.includes("Tamu")
+      ? "Ahmad Hariri"
+      : rawName;
 
   useEffect(() => {
     if (
@@ -102,25 +93,33 @@ export function FluentPathApp() {
     });
   }, [activeSession?.mode, live.feedback]);
 
-  useEffect(() => {
-    if (screen !== "dashboard" || view !== "learn" || !returnLessonId) return;
-
-    // The child reads this value during its mount after a mission. Clear the
-    // hand-off on the next frame so later visits follow the user's chosen path.
-    const frame = window.requestAnimationFrame(() => setReturnLessonId(undefined));
-    return () => window.cancelAnimationFrame(frame);
-  }, [returnLessonId, screen, view]);
-
   if (!data.hydrated) return <ShellLoader />;
 
-  const startVoice = (mode: LiveSessionMode, topic?: Topic) => {
+  const startVoice = (
+    mode: LiveSessionMode,
+    topic?: Topic,
+    partner?: SpeakingPartnerProfile,
+  ) => {
+    const defaultTopic =
+      PRACTICE_TOPICS.find((t) => t.id === "work") ?? PRACTICE_TOPICS[0];
+    const chosenTopic = topic ?? defaultTopic;
+    const chosenPartner =
+      partner ??
+      AI_SPEAKING_PARTNERS.find((p) => p.id === selectedPartnerId) ??
+      AI_SPEAKING_PARTNERS[0];
+
     const options: StartLiveSessionOptions = {
       mode,
       level,
-      topicId: topic?.id,
+      topicId: mode === "placement" ? undefined : chosenTopic.id,
       topicTitle:
-        mode === "placement" ? "Placement Test" : topic?.title ?? "Speaking Practice",
+        mode === "placement"
+          ? "Placement Test (CEFR A1 ke C2)"
+          : chosenTopic.title,
+      partnerId: mode === "practice" ? chosenPartner.id : undefined,
+      partnerName: mode === "practice" ? chosenPartner.name : "Emma",
     };
+    live.resetSession();
     setHistoryRecord(null);
     setActiveSession(options);
     setScreen("voice");
@@ -137,59 +136,66 @@ export function FluentPathApp() {
       lessonId: canonicalMission.lessonId,
       topicTitle: canonicalMission.lessonTitle,
     };
+    live.resetSession();
     setHistoryRecord(null);
-    setReturnLessonId(canonicalMission.lessonId);
     setActiveSession(options);
     setScreen("voice");
     void live.startSession(options);
   };
 
   const closeLive = () => {
-    const returnToLesson = activeSession?.mode === "speaking-mission";
     live.resetSession();
     setActiveSession(null);
     setScreen("dashboard");
-    setView(returnToLesson ? "learn" : "home");
   };
 
   const replayLive = () => {
     if (!activeSession || activeSession.mode === "placement") return;
     const options = activeSession;
     live.resetSession();
+    setScreen("voice");
     void live.startSession(options);
   };
 
-  const openSession = (session: SessionRecord) => {
-    if (session.feedback) {
-      setHistoryRecord(session);
-      return;
-    }
-    setView("history");
-  };
-
-  if (screen === "listen-repeat") {
+  /* ================= LANDING PAGE SCREEN ================= */
+  if (screen === "landing") {
     return (
-      <main className="min-h-screen bg-[#e9edf5] p-3 sm:p-6">
-        <ListenRepeatRoom level={level} onClose={() => setScreen("dashboard")} />
-      </main>
+      <FlueloLandingPage
+        onStartLearning={() => {
+          setTalkTab("partners");
+          setScreen("dashboard");
+        }}
+        onSelectPartner={(partnerId) => {
+          setSelectedPartnerId(partnerId);
+          setTalkTab("partners");
+          setScreen("dashboard");
+        }}
+        onSelectPath={() => {
+          setTalkTab("partners");
+          setScreen("dashboard");
+        }}
+      />
     );
   }
 
+  /* ================= FULLSCREEN VOICE ROOM ================= */
   if (screen === "voice") {
     const activeMission = activeSession?.lessonId
       ? getSpeakingMission(activeSession.lessonId)
       : undefined;
+
     if (live.feedback && activeSession) {
       return (
-        <main className="min-h-screen bg-[#e9edf5] p-3 sm:p-6">
-          <div className="mx-auto max-w-6xl">
+        <main className="fluelo-outer-wrap">
+          <div className="mx-auto w-full max-w-6xl p-6">
             <FeedbackView
-              closeLabel={activeSession.mode === "speaking-mission" ? "Kembali ke lesson" : undefined}
+              closeLabel="Selesai"
               feedback={live.feedback}
               onClose={closeLive}
               onPracticeAgain={activeSession.mode === "placement" ? undefined : replayLive}
               topicTitle={activeSession.topicTitle}
               warning={live.saveWarning}
+              partnerName={activeSession.partnerName ?? "Emma"}
             />
           </div>
         </main>
@@ -197,226 +203,345 @@ export function FluentPathApp() {
     }
 
     return (
-      <main className="min-h-screen bg-[#e9edf5] p-3 sm:p-6">
-        <VoiceRoom
-          elapsedSec={live.elapsedSec}
-          error={live.error}
-          eyebrow={
-            activeSession?.mode === "placement"
-              ? "Adaptive placement test"
-              : activeSession?.mode === "toefl-interview"
-                ? "TOEFL · Take an Interview"
-                : activeSession?.mode === "speaking-mission"
-                  ? "Lesson Speaking Mission"
-                  : "Free Talk with Emma"
-          }
-          inputLevel={live.inputLevel}
-          interview={
-            activeSession?.mode === "toefl-interview"
-              ? {
-                  questionNumber: live.questionNumber,
-                  answerRemainingSec: live.answerRemainingSec,
-                }
-              : undefined
-          }
-          mission={activeMission}
-          muted={live.muted}
-          onEnd={() => {
-            if (
-              live.status === "idle" ||
-              live.status === "connecting" ||
-              live.status === "error" ||
-              live.status === "complete"
-            ) {
-              closeLive();
+      <main className="fixed inset-0 z-50 h-screen w-screen overflow-hidden bg-[#F6F7FB] p-2.5 sm:p-4 flex flex-col justify-center items-center">
+        <div className="w-full h-full max-w-6xl flex flex-col min-h-0">
+          <VoiceRoom
+            elapsedSec={live.elapsedSec}
+            error={live.error}
+            partnerName={activeSession?.partnerName ?? "Emma"}
+            eyebrow={
+              activeSession?.mode === "placement"
+                ? "CEFR Adaptive Placement Test"
+                : activeSession?.mode === "toefl-interview"
+                  ? "Talk to AI: TOEFL Interview Simulation"
+                  : activeSession?.mode === "speaking-mission"
+                    ? "Talk to AI: Roleplay Speaking Mission"
+                    : `Talk to AI bersama ${activeSession?.partnerName ?? "Emma"}`
             }
-            else void live.endSession();
-          }}
-          onToggleMute={live.toggleMute}
-          status={live.status}
-          title={activeSession?.topicTitle ?? "Speaking Session"}
-          transcript={live.transcript}
-        />
+            inputLevel={live.inputLevel}
+            interview={
+              activeSession?.mode === "toefl-interview"
+                ? {
+                    questionNumber: live.questionNumber,
+                    answerRemainingSec: live.answerRemainingSec,
+                  }
+                : undefined
+            }
+            mission={activeMission}
+            muted={live.muted}
+            onEnd={() => {
+              if (
+                live.status === "idle" ||
+                live.status === "connecting" ||
+                live.status === "error" ||
+                live.status === "complete"
+              ) {
+                closeLive();
+              } else {
+                void live.endSession();
+                setScreen("dashboard");
+              }
+            }}
+            onToggleMute={live.toggleMute}
+            status={live.status}
+            title={activeSession?.topicTitle ?? "Speaking Session"}
+            transcript={live.transcript}
+          />
+        </div>
       </main>
     );
   }
 
   const report = historyRecord?.feedback;
+  const currentPartner =
+    AI_SPEAKING_PARTNERS.find((p) => p.id === selectedPartnerId) ?? AI_SPEAKING_PARTNERS[0];
 
   return (
-    <div className="min-h-screen bg-[#f5f7fb] lg:flex">
-      <aside className="hidden w-[244px] shrink-0 flex-col bg-[#172440] p-5 text-white lg:flex">
-        <Brand />
-        <nav className="mt-10 space-y-1.5">
-          {NAV_ITEMS.map((item) => (
+    <div className="fluelo-outer-wrap">
+      <div className="app-layout">
+        {/* ================= SIDEBAR KIRI (FOKUS TALK TO AI) ================= */}
+        <aside className="sidebar" aria-label="Navigasi Talk to AI Fluelo">
+          <div>
+            {/* Top Brand Header */}
             <button
-              className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition ${
-                view === item.view
-                  ? "bg-white/11 text-white"
-                  : "text-slate-400 hover:bg-white/6 hover:text-white"
-              }`}
-              key={item.view}
+              type="button"
               onClick={() => {
                 setHistoryRecord(null);
-                setView(item.view);
+                setScreen("landing");
               }}
-              type="button"
+              className="sidebar-brand border-none bg-transparent p-0 text-left cursor-pointer transition-transform hover:scale-102 w-full flex items-center gap-3"
+              title="Kembali ke Landing Page Fluelo"
+              aria-label="Kembali ke Landing Page Fluelo"
             >
-              <Icon name={item.icon} className="size-5" />
-              {item.label}
-              {view === item.view && <span className="ml-auto size-1.5 rounded-full bg-[#5fd7b5]" />}
-            </button>
-          ))}
-        </nav>
-
-        <div className="mt-8 border-t border-white/8 pt-6">
-          <p className="px-3 text-[9px] font-extrabold uppercase tracking-[0.17em] text-slate-500">Akun</p>
-          <button
-            className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold text-slate-400 transition hover:bg-white/6 hover:text-white"
-            onClick={() => setProfileOpen(true)}
-            type="button"
-          >
-            <Icon name="settings" className="size-5" />
-            Pengaturan
-          </button>
-        </div>
-
-        <div className="mt-auto rounded-2xl border border-white/8 bg-white/[0.045] p-4">
-          <div className="flex items-center gap-2 text-xs font-bold text-slate-300">
-            <Icon name="lock" className="size-3.5 text-[#63d5b5]" />
-            Data tetap privat
-          </div>
-          <p className="mt-2 text-[10px] leading-4 text-slate-500">Profil, riwayat, XP, dan progres disimpan hanya di browser perangkat ini.</p>
-        </div>
-      </aside>
-
-      <div className="min-w-0 flex-1">
-        <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-[#f5f7fb]/90 px-4 py-3 backdrop-blur-xl sm:px-6 lg:px-9">
-          <div className="mx-auto flex max-w-[1320px] items-center justify-between gap-4">
-            <div className="lg:hidden">
-              <div className="flex items-center gap-2">
-                <span className="grid size-9 place-items-center rounded-xl bg-[#172440] text-sm font-black text-white">
-                  F<span className="text-[#5fd7b5]">.</span>
-                </span>
-                <span className="text-sm font-black text-slate-900">FluentPath</span>
+              <div className="brand-icon-box">
+                <FlueloLogoIcon size={24} />
               </div>
-            </div>
-            <div className="hidden lg:block">
-              <p className="text-xs font-bold text-slate-400">{VIEW_LABELS[view]}</p>
-            </div>
-            <div className="flex items-center gap-2 sm:gap-3">
-              <span className="hidden items-center gap-1.5 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-black text-amber-800 min-[430px]:inline-flex">
-                <Icon className="size-3.5" name="star" />
-                {data.learning.totalXp} XP
-              </span>
-              <label className="relative hidden sm:block">
-                <span className="sr-only">Pilih level</span>
-                <select
-                  className="appearance-none rounded-xl border border-slate-200 bg-white py-2.5 pl-3 pr-9 text-xs font-extrabold text-slate-700 outline-none transition hover:border-violet-300 focus:border-violet-400"
-                  onChange={(event) => {
-                    void updateProfile({ level: event.target.value as CefrLevel }).catch((error) => {
-                      console.error("Gagal menyimpan level:", error);
-                    });
-                  }}
-                  value={level}
-                >
-                  {Object.keys(LEVELS).map((item) => (
-                    <option key={item} value={item}>{item} · {LEVELS[item as CefrLevel].nameId}</option>
-                  ))}
-                </select>
-                <Icon name="chevron-down" className="pointer-events-none absolute right-3 top-1/2 size-3.5 -translate-y-1/2 text-slate-400" />
-              </label>
+              <span className="brand-title-text">Fluelo</span>
+            </button>
+
+            {/* Nav Group: Talk to AI Studio */}
+            <div className="nav-group">
+              <span className="nav-label">Talk to AI Studio</span>
               <button
-                className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white p-1.5 pr-2.5 transition hover:border-violet-300"
-                onClick={() => setProfileOpen(true)}
                 type="button"
+                className={`sidebar-nav-btn ${talkTab === "partners" ? "active" : ""}`}
+                onClick={() => {
+                  setHistoryRecord(null);
+                  setTalkTab("partners");
+                }}
               >
-                <span className="grid size-8 place-items-center rounded-lg bg-gradient-to-br from-[#7960e6] to-[#42c6a1] text-xs font-black text-white">
-                  {(data.profile.name || "L").slice(0, 1).toUpperCase()}
-                </span>
-                <span className="hidden text-left sm:block">
-                  <span className="block max-w-28 truncate text-xs font-extrabold text-slate-800">{data.profile.name || "Learner"}</span>
-                  <span className="block text-[9px] font-bold text-slate-400">CEFR {level}</span>
-                </span>
+                <Users className="size-4 shrink-0" aria-hidden="true" />
+                <span>Mitra Bicara & Topik</span>
+              </button>
+
+              <button
+                type="button"
+                className={`sidebar-nav-btn ${talkTab === "interview" ? "active" : ""}`}
+                onClick={() => {
+                  setHistoryRecord(null);
+                  setTalkTab("interview");
+                }}
+              >
+                <Clock className="size-4 shrink-0" aria-hidden="true" />
+                <span>Simulasi Interview</span>
+              </button>
+
+              <button
+                type="button"
+                className={`sidebar-nav-btn ${talkTab === "missions" ? "active" : ""}`}
+                onClick={() => {
+                  setHistoryRecord(null);
+                  setTalkTab("missions");
+                }}
+              >
+                <Target className="size-4 shrink-0" aria-hidden="true" />
+                <span>18 Misi Roleplay</span>
+              </button>
+
+              <button
+                type="button"
+                className={`sidebar-nav-btn ${talkTab === "history" ? "active" : ""}`}
+                onClick={() => {
+                  setHistoryRecord(null);
+                  setTalkTab("history");
+                }}
+              >
+                <History className="size-4 shrink-0" aria-hidden="true" />
+                <span>Riwayat & Evaluasi</span>
+              </button>
+            </div>
+
+            {/* Nav Group: Navigasi */}
+            <div className="nav-group">
+              <span className="nav-label">Navigasi</span>
+              <button
+                type="button"
+                className="sidebar-nav-btn cursor-pointer"
+                onClick={() => {
+                  setHistoryRecord(null);
+                  setScreen("landing");
+                }}
+                title="Kembali ke Landing Page"
+              >
+                <Home className="size-4 shrink-0 text-[#A6A5B8]" aria-hidden="true" />
+                <span>Landing Page</span>
               </button>
             </div>
           </div>
-        </header>
 
-        <main className="mx-auto max-w-[1320px] px-4 pb-28 pt-6 sm:px-6 lg:px-9 lg:pb-12 lg:pt-8">
+          {/* Sidebar Footer: Target Bicara Harian */}
+          <div className="sidebar-footer">
+            <span>Target Harian</span>
+            <strong>⚡ 15 Menit Suara</strong>
+          </div>
+        </aside>
+
+        {/* ================= AREA KONTEN UTAMA ================= */}
+        <main className="main-area">
+          {/* SUB-HEADER: Dynamic Title + Search + Quick Start + Profile Pill */}
+          <div className="sub-header">
+            <div className="title-and-tabs">
+              <div className="flex items-center gap-2">
+                <h1 className="page-title">
+                  {talkTab === "partners"
+                    ? "Mitra Bicara & Topik Harian"
+                    : talkTab === "interview"
+                      ? "Simulasi Interview (Timer 45d)"
+                      : talkTab === "missions"
+                        ? "18 Roleplay Speaking Missions"
+                        : "Riwayat Sesi & Evaluasi AI"}
+                </h1>
+                <span className="rounded-full bg-[#EFEAFF] px-2.5 py-0.5 text-[11px] font-extrabold text-[#6C5CE7]">
+                  Talk to AI
+                </span>
+              </div>
+              <p className="text-xs font-semibold text-[#7E8190]">
+                {talkTab === "partners"
+                  ? "Pilih partner AI selevel (Emma, Sarah, David, Sofia, Kenji) dan mulai percakapan suara 2 arah real-time"
+                  : talkTab === "interview"
+                    ? "Latihan menjawab pertanyaan wawancara kerja dan TOEFL dengan timer respons 45 detik"
+                    : talkTab === "missions"
+                      ? "Selesaikan skenario percakapan nyata dengan target kosakata terstruktur"
+                      : "Laporan skor CEFR & TOEFL, akurasi tata bahasa, dan analisis percakapan kamu"}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 flex-wrap">
+              <search className="search-row">
+                <div className="search-box">
+                  <Search className="size-4 shrink-0" aria-hidden="true" />
+                  <input
+                    type="search"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    aria-label="Cari partner bicara, topik, atau misi"
+                    placeholder="Cari partner, topik, misi..."
+                  />
+                </div>
+              </search>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const topic =
+                    PRACTICE_TOPICS.find((t) => t.id === currentPartner.defaultTopicId) ??
+                    PRACTICE_TOPICS[0];
+                  startVoice("practice", topic, currentPartner);
+                }}
+                className="inline-flex items-center gap-1.5 rounded-full bg-[#6C5CE7] px-4 py-2 text-xs font-bold text-white shadow-xs transition hover:bg-[#5848DE] cursor-pointer"
+                title={`Mulai bicara langsung dengan ${currentPartner.name}`}
+              >
+                <Mic className="size-3.5" aria-hidden="true" />
+                <span>Bicara ({currentPartner.name})</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setProfileOpen(true)}
+                className="profile-pill cursor-pointer hover:border-[#6C5CE7] transition"
+                title="Pengaturan Profil"
+                aria-label="Buka Pengaturan Profil"
+              >
+                <span className="px-1.5 text-xs font-extrabold text-[#181823]">
+                  {displayName}
+                </span>
+                <div className="avatar-img">
+                  {displayName.slice(0, 1).toUpperCase()}
+                </div>
+              </button>
+            </div>
+          </div>
+
+          {/* NON-BLOCKING BACKGROUND AI EVALUATION BANNER */}
+          {live.status === "evaluating" && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-[#E5E2FF] bg-[#F4F5FF] px-4 py-3 text-xs font-bold text-[#181823]"
+            >
+              <div className="flex items-center gap-2.5">
+                <span className="size-2.5 shrink-0 animate-pulse rounded-full bg-[#6C5CE7]" />
+                <span>
+                  Evaluasi AI untuk sesi{" "}
+                  <strong className="text-[#6C5CE7]">
+                    {activeSession?.topicTitle ?? "Speaking"}
+                  </strong>{" "}
+                  sedang diproses di latar belakang.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={closeLive}
+                className="rounded-full border border-[#DCDFE8] bg-white px-3.5 py-1.5 text-[11px] font-bold text-[#7E8190] transition hover:text-[#181823]"
+              >
+                Lewati Evaluasi
+              </button>
+            </div>
+          )}
+
+          {live.status === "complete" && live.feedback && activeSession && (
+            <div
+              role="status"
+              aria-live="polite"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-emerald-200 bg-emerald-50/80 px-4 py-3 text-xs font-bold text-[#181823]"
+            >
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-600 px-2.5 py-0.5 text-[11px] font-bold text-white">
+                  <Check className="size-3" aria-hidden="true" />
+                  Evaluasi Selesai
+                </span>
+                <span>
+                  {activeSession.topicTitle}: Skor TOEFL{" "}
+                  <strong className="text-emerald-800">
+                    Band {formatBand(live.feedback.overallBand)}
+                  </strong>{" "}
+                  (CEFR {live.feedback.cefr})
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setScreen("voice")}
+                  className="rounded-full bg-[#1B1A22] px-4 py-1.5 text-[11px] font-bold text-white transition hover:opacity-90"
+                >
+                  Lihat Laporan Evaluasi
+                </button>
+                <button
+                  type="button"
+                  onClick={closeLive}
+                  className="rounded-full border border-emerald-300 bg-white px-3.5 py-1.5 text-[11px] font-bold text-emerald-900"
+                >
+                  Tutup
+                </button>
+              </div>
+            </div>
+          )}
+
+          {live.status === "error" && live.error && (
+            <div
+              role="alert"
+              className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-bold text-rose-800"
+            >
+              <span>{live.error}</span>
+              <button
+                type="button"
+                onClick={closeLive}
+                className="rounded-full border border-rose-300 bg-white px-3.5 py-1.5 text-[11px] font-bold text-rose-800"
+              >
+                Tutup
+              </button>
+            </div>
+          )}
+
+          {/* BODY CONTENT: Session Feedback Report OR Talk to AI Studio */}
           {report && historyRecord ? (
             <FeedbackView
-              closeLabel={view === "history" ? "Kembali ke riwayat" : "Kembali ke beranda"}
+              closeLabel="Tutup Evaluasi"
               feedback={report}
               onClose={() => setHistoryRecord(null)}
               topicTitle={historyRecord.topicTitle}
             />
-          ) : view === "home" ? (
-            <DashboardHome
-              learning={data.learning}
-              level={level}
-              onOpenHistory={() => setView("history")}
-              onOpenLearn={() => setView("learn")}
-              onOpenSession={openSession}
-              onStartListenRepeat={() => setScreen("listen-repeat")}
-              onStartPlacement={() => startVoice("placement")}
-              onStartVoice={startVoice}
-              profile={data.profile}
-              sessions={data.sessions}
-            />
-          ) : view === "learn" ? (
-            <LearningPath
-              activeLevel={level}
-              initialLessonId={returnLessonId}
-              key={level}
-              learning={data.learning}
-              onStartMission={startMission}
-              sessions={data.sessions}
-            />
           ) : (
-            <ProgressViews
-              learning={data.learning}
-              level={level}
-              onOpenLearn={() => setView("learn")}
-              onOpenSession={openSession}
-              onStartPractice={() => {
-                setView("home");
-                window.scrollTo({ top: 0, behavior: "smooth" });
-              }}
+            <Menu5SpeakingWorkspace
+              currentLevel={level}
               sessions={data.sessions}
-              targetBand={data.profile.targetBand}
-              view={view}
+              onStartVoice={startVoice}
+              onStartMission={startMission}
+              onOpenSessionReport={(session) => setHistoryRecord(session)}
+              activeTab={talkTab}
+              onTabChange={setTalkTab}
+              selectedPartnerId={selectedPartnerId}
+              onSelectPartnerId={setSelectedPartnerId}
+              searchQuery={searchQuery}
             />
           )}
         </main>
       </div>
 
-      <nav className="fixed inset-x-3 bottom-3 z-40 flex items-center justify-around rounded-2xl border border-white/70 bg-[#172440]/95 p-2 shadow-[0_18px_50px_rgba(20,31,55,.3)] backdrop-blur-xl lg:hidden">
-        {NAV_ITEMS.map((item) => (
-          <button
-            className={`flex min-w-0 flex-1 flex-col items-center gap-1 rounded-xl px-1 py-2 text-[10px] font-bold transition ${
-              view === item.view ? "bg-white/10 text-white" : "text-slate-400"
-            }`}
-            key={item.view}
-            onClick={() => {
-              setHistoryRecord(null);
-              setView(item.view);
-            }}
-            type="button"
-          >
-            <Icon name={item.icon} className="size-4" />
-            {item.label}
-          </button>
-        ))}
-      </nav>
-
-      {(profileOpen || (!data.profile.name && !profileDismissed)) && (
+      {profileOpen && (
         <ProfileModal
-          onClose={() => {
-            setProfileOpen(false);
-            setProfileDismissed(true);
-          }}
           profile={data.profile}
+          onClose={() => setProfileOpen(false)}
         />
       )}
     </div>

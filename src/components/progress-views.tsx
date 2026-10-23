@@ -314,9 +314,9 @@ export function ProgressViews({
 
       <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {[
-          { label: "Total sesi", value: sessions.length.toString(), detail: "Semua mode", icon: "history" as const, color: "bg-violet-50 text-violet-600" },
-          { label: "Waktu bicara", value: `${stats.minutes}m`, detail: "Akumulasi", icon: "clock" as const, color: "bg-emerald-50 text-emerald-600" },
-          { label: "Rata-rata band", value: stats.average ? formatBand(stats.average) : "—", detail: `${stats.evaluated} sesi dinilai`, icon: "bar-chart" as const, color: "bg-amber-50 text-amber-600" },
+          { label: "Total sesi", value: sessions.length.toString(), detail: "Semua mode", icon: "history" as const, color: "bg-indigo-50 text-indigo-600" },
+          { label: "Waktu bicara", value: `${stats.minutes}m`, detail: "Akumulasi", icon: "clock" as const, color: "bg-teal-50 text-teal-600" },
+          { label: "Rata-rata band", value: stats.average ? formatBand(stats.average) : "0.0", detail: `${stats.evaluated} sesi dinilai`, icon: "bar-chart" as const, color: "bg-amber-50 text-amber-600" },
           { label: "Target", value: targetBand.toFixed(1), detail: `Level aktif ${level}`, icon: "target" as const, color: "bg-sky-50 text-sky-600" },
         ].map((item) => (
           <div className="rounded-3xl border border-slate-200/80 bg-white p-5 shadow-sm" key={item.label}>
@@ -345,7 +345,7 @@ export function ProgressViews({
                 <span className="text-[10px] font-bold text-slate-400">{day.count || ""}</span>
                 <div className="flex h-36 w-full items-end justify-center rounded-xl bg-slate-50">
                   <div
-                    className="w-[55%] min-w-3 rounded-t-lg bg-gradient-to-t from-[#5d45ca] to-[#8a75eb] transition-[height]"
+                    className="w-[55%] min-w-3 rounded-t-lg bg-indigo-600 transition-[height]"
                     style={{ height: day.count ? `${Math.max(14, (day.count / maxDay) * 100)}%` : "5%" }}
                   />
                 </div>
@@ -363,11 +363,11 @@ export function ProgressViews({
               <div key={criterion.name}>
                 <div className="mb-2 flex items-center justify-between text-xs">
                   <span className="font-bold text-slate-600">{CRITERION_LABELS[criterion.name]}</span>
-                  <span className="font-black text-slate-900">{criterion.value ? formatBand(criterion.value) : "—"}</span>
+                  <span className="font-black text-slate-900">{criterion.value ? formatBand(criterion.value) : "0.0"}</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className="h-full rounded-full bg-gradient-to-r from-[#32bc95] to-[#7157dc]"
+                    className="h-full rounded-full bg-gradient-to-r from-teal-500 to-indigo-600"
                     style={{ width: `${criterion.value ? (criterion.value / 6) * 100 : 0}%` }}
                   />
                 </div>

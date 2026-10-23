@@ -9,12 +9,14 @@ import {
 import { getSpeakingMission } from "@/lib/speaking-missions";
 import { findTopic, PRACTICE_TOPICS, TOEFL_INTERVIEW_TOPICS } from "@/lib/topics";
 import { errorResponse, getGenAI, LIVE_MODEL, LIVE_VOICE } from "@/lib/server/gemini";
+import { findSpeakingPartner } from "@/lib/speaking-partners";
 
 interface TokenRequest {
   mode: "practice" | "placement" | "toefl-interview" | "speaking-mission";
   level?: CefrLevel;
   topicId?: string;
   lessonId?: string;
+  partnerId?: string;
 }
 
 const TOKEN_MODES: readonly TokenRequest["mode"][] = [
@@ -66,6 +68,7 @@ export async function POST(request: Request) {
     const mode = body.mode as TokenRequest["mode"];
 
     let systemPrompt: string;
+    let voiceName = LIVE_VOICE;
     if (mode === "speaking-mission") {
       if (
         typeof body.lessonId !== "string" ||
@@ -96,26 +99,33 @@ export async function POST(request: Request) {
       if (mode === "placement") {
         systemPrompt = buildPlacementPrompt();
       } else {
-        if (typeof body.topicId !== "string" || body.topicId.length > 100) {
-          throw new ValidationError("topicId wajib diisi untuk mode latihan ini.");
-        }
-        const topic = findTopic(body.topicId);
+        const partner = findSpeakingPartner(
+          typeof body.partnerId === "string" ? body.partnerId : undefined,
+        );
+        const resolvedTopicId =
+          typeof body.topicId === "string" && body.topicId.trim().length > 0
+            ? body.topicId.trim()
+            : partner.defaultTopicId || (mode === "toefl-interview" ? "t-online-learning" : "intro");
+
+        const topic = findTopic(resolvedTopicId);
         const allowedTopics =
           mode === "toefl-interview" ? TOEFL_INTERVIEW_TOPICS : PRACTICE_TOPICS;
         if (!topic || !allowedTopics.some((item) => item.id === topic.id)) {
           throw new ValidationError("Topik tidak ditemukan untuk mode yang dipilih.");
         }
-        systemPrompt =
-          mode === "toefl-interview"
-            ? buildToeflInterviewPrompt(level, topic)
-            : buildPracticePrompt(level, topic);
+        if (mode === "toefl-interview") {
+          systemPrompt = buildToeflInterviewPrompt(level, topic);
+        } else {
+          voiceName = partner.voiceName || LIVE_VOICE;
+          systemPrompt = buildPracticePrompt(level, topic, partner);
+        }
       }
     }
 
     const config = {
       responseModalities: [Modality.AUDIO],
       systemInstruction: { parts: [{ text: systemPrompt }] },
-      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: LIVE_VOICE } } },
+      speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName } } },
       inputAudioTranscription: {},
       outputAudioTranscription: {},
     };

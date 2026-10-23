@@ -3,6 +3,7 @@
 import { CRITERION_LABELS, type Feedback } from "@/lib/types";
 import { formatBand } from "@/lib/levels";
 import { Icon } from "./icon";
+import { LueloMascot } from "./mascots";
 
 interface FeedbackViewProps {
   feedback: Feedback;
@@ -11,41 +12,51 @@ interface FeedbackViewProps {
   closeLabel?: string;
   onPracticeAgain?: () => void;
   warning?: string | null;
+  partnerName?: string;
 }
 
 function scoreColor(score: number) {
-  if (score >= 5) return "#7459e8";
-  if (score >= 4) return "#20b98b";
-  if (score >= 3) return "#f0a44d";
-  return "#ef6b78";
+  if (score >= 5) return "#4f46e5";
+  if (score >= 4) return "#0d9488";
+  if (score >= 3) return "#d97706";
+  return "#e11d48";
 }
 
 export function FeedbackView({
   feedback,
   topicTitle,
   onClose,
-  closeLabel = "Kembali ke beranda",
+  closeLabel = "Selesai",
   onPracticeAgain,
   warning,
+  partnerName,
 }: FeedbackViewProps) {
   const color = scoreColor(feedback.overallBand);
   const progress = Math.max(0, Math.min(100, (feedback.overallBand / 6) * 100));
   const mission = feedback.missionAssessment;
+  const isGoodScore = feedback.overallBand >= 4.0 || (mission && mission.passed);
 
   return (
-    <section className="animate-rise overflow-hidden rounded-[2rem] border border-slate-200/80 bg-white shadow-[0_24px_70px_rgba(28,38,65,0.13)]">
-      <div className="relative overflow-hidden bg-[#172440] px-5 py-7 text-white sm:px-8 sm:py-9">
-        <div className="feedback-glow absolute -right-20 -top-24 size-64 rounded-full" />
+    <section className="animate-rise overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl">
+      {/* Header Banner */}
+      <div className="relative overflow-hidden bg-slate-900 px-6 py-8 text-white sm:px-8">
         <div className="relative flex items-start justify-between gap-5">
-          <div>
-            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white/85">
-              <Icon name="sparkles" className="size-3.5" />
-              {mission ? "Speaking Mission selesai" : "Evaluasi selesai"}
+          <div className="flex items-center gap-4">
+            <LueloMascot
+              state={isGoodScore ? "celebrating" : "thinking"}
+              size={70}
+              className="shrink-0"
+            />
+            <div>
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3 py-1 text-xs font-bold text-teal-300">
+                <Icon name="check" className="size-3.5" />
+                {mission ? "Speaking Mission Selesai" : "Sesi Bicara Selesai"}
+              </div>
+              <h2 className="text-2xl font-black tracking-tight sm:text-3xl">
+                {mission ? "Hasil Misi Speaking Kamu" : "Laporan Evaluasi Suara"}
+              </h2>
+              <p className="mt-1 text-sm text-slate-300">{topicTitle}</p>
             </div>
-            <h2 className="text-2xl font-bold tracking-[-0.03em] sm:text-3xl">
-              {mission ? "Hasil misi speaking kamu" : "Laporan speaking kamu"}
-            </h2>
-            <p className="mt-2 text-sm text-slate-300">{topicTitle}</p>
           </div>
           <button
             aria-label="Tutup laporan"
@@ -60,110 +71,172 @@ export function FeedbackView({
 
       {warning && (
         <div
-          className="mx-5 mt-5 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900 sm:mx-8"
+          className="mx-6 mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-relaxed text-amber-900"
           role="alert"
         >
           {warning}
         </div>
       )}
 
-      <div className="grid gap-7 p-5 sm:p-8 lg:grid-cols-[230px_1fr]">
+      <div className="grid gap-8 p-6 sm:p-8 lg:grid-cols-[260px_1fr]">
+        {/* Left Sidebar: Score Summary */}
         <aside>
-          <div className="rounded-3xl bg-slate-50 p-5 text-center">
+          <div className="rounded-3xl border border-slate-200/90 bg-slate-50 p-6 text-center shadow-2xs">
             <div
-              className="relative mx-auto grid size-40 place-items-center rounded-full"
-              style={{ background: `conic-gradient(${color} ${progress}%, #e7eaf1 ${progress}% 100%)` }}
+              className="relative mx-auto grid size-44 place-items-center rounded-full"
+              style={{
+                background: `conic-gradient(${color} ${progress}%, #e2e8f0 ${progress}% 100%)`,
+              }}
             >
-              <div className="grid size-[8.3rem] place-items-center rounded-full bg-white shadow-inner">
+              <div className="grid size-[8.8rem] place-items-center rounded-full bg-white shadow-xs">
                 <div>
-                  <div className="text-4xl font-extrabold tracking-[-0.05em] text-slate-900">
+                  <div className="text-4xl font-black tracking-tight text-slate-900">
                     {formatBand(feedback.overallBand)}
                   </div>
-                  <div className="mt-1 text-xs font-bold uppercase tracking-[0.16em] text-slate-400">dari 6.0</div>
+                  <div className="mt-0.5 text-xs font-bold uppercase tracking-wider text-slate-400">
+                    Skor TOEFL (Maks 6.0)
+                  </div>
                 </div>
               </div>
             </div>
+
             <div className="mt-5 flex items-center justify-center gap-2">
-              <span className="rounded-lg bg-[#e9e3ff] px-3 py-1 text-sm font-extrabold text-[#6047d4]">{feedback.cefr}</span>
-              <span className="text-sm font-semibold text-slate-500">Estimasi CEFR</span>
+              <span className="rounded-xl bg-indigo-100 px-3 py-1 text-sm font-black text-indigo-800">
+                {feedback.cefr}
+              </span>
+              <span className="text-xs font-bold text-slate-600">Estimasi Level CEFR</span>
             </div>
+
             {mission && (
-              <div className="mt-4 rounded-2xl border border-violet-100 bg-violet-50 p-3">
-                <p className="text-[10px] font-black uppercase tracking-[0.13em] text-violet-500">
-                  Skor misi
+              <div className="mt-5 rounded-2xl border border-indigo-100 bg-indigo-50/70 p-4">
+                <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">
+                  Skor Misi Pelajaran
                 </p>
-                <p className="mt-1 text-2xl font-black text-violet-800">
-                  {mission.score}<span className="text-sm text-violet-400">/100</span>
+                <p className="mt-1 text-3xl font-black text-indigo-950">
+                  {mission.score}
+                  <span className="text-sm font-bold text-indigo-400">/100</span>
                 </p>
-                <p className={`mt-1 text-xs font-extrabold ${mission.passed ? "text-emerald-700" : "text-amber-700"}`}>
-                  {mission.passed ? "Target misi tercapai" : "Belum tercapai — coba sekali lagi"}
+                <p
+                  className={`mt-1.5 text-xs font-black ${
+                    mission.passed ? "text-emerald-700" : "text-amber-800"
+                  }`}
+                >
+                  {mission.passed ? "Target tercapai!" : "Belum tercapai: coba ulangi sekali lagi"}
                 </p>
               </div>
             )}
+
             {!feedback.pronunciationFromAudio && (
-              <p className="mt-4 rounded-xl bg-amber-50 px-3 py-2 text-left text-xs leading-5 text-amber-800">
-                Skor pelafalan diperkirakan dari transkrip karena audio tidak tersedia.
+              <p className="mt-4 rounded-xl bg-amber-50 border border-amber-200/60 p-3 text-left text-xs leading-relaxed text-amber-800">
+                Skor pelafalan diperkirakan dari transkrip ucapan karena data audio tidak terekam langsung.
               </p>
             )}
           </div>
         </aside>
 
+        {/* Right Section: Detailed Breakdown */}
         <div className="min-w-0 space-y-7">
+          {/* Mission Evidence Checklist */}
           {mission && (
             <section
               aria-labelledby="mission-assessment-title"
-              className="rounded-2xl border border-violet-200 bg-gradient-to-br from-violet-50 to-white p-5"
+              className="rounded-3xl border border-indigo-100 bg-gradient-to-br from-indigo-50/40 via-white to-white p-6 shadow-2xs"
             >
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.14em] text-violet-500">
-                    Evidence dari ucapanmu
+                  <p className="text-[10px] font-black uppercase tracking-wider text-indigo-600">
+                    Bukti dari Ucapanmu
                   </p>
-                  <h3 className="mt-1 text-base font-black text-slate-900" id="mission-assessment-title">
-                    Checklist target lesson
+                  <h3
+                    className="mt-0.5 text-base font-black text-slate-900"
+                    id="mission-assessment-title"
+                  >
+                    Checklist Kriteria Speaking Mission
                   </h3>
                 </div>
-                <span className={`rounded-full px-3 py-1.5 text-xs font-black ${mission.passed ? "bg-emerald-100 text-emerald-800" : "bg-amber-100 text-amber-800"}`}>
-                  {mission.criteria.filter((item) => item.status === "achieved").length}/{mission.criteria.length} tercapai
+                <span
+                  className={`rounded-full px-3 py-1 text-xs font-black ${
+                    mission.passed
+                      ? "bg-emerald-100 text-emerald-800 border border-emerald-200"
+                      : "bg-amber-100 text-amber-800 border border-amber-200"
+                  }`}
+                >
+                  {mission.criteria.filter((item) => item.status === "achieved").length} dari{" "}
+                  {mission.criteria.length} kriteria terpenuhi
                 </span>
               </div>
+
               <div className="mt-4 space-y-2.5">
                 {mission.criteria.map((item) => {
                   const achieved = item.status === "achieved";
                   const partial = item.status === "partial";
                   return (
-                    <div className="rounded-xl border border-white bg-white/85 p-3 shadow-sm" key={item.criterion}>
-                      <div className="flex items-start gap-2.5">
-                        <span className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full ${achieved ? "bg-emerald-100 text-emerald-700" : partial ? "bg-amber-100 text-amber-700" : "bg-slate-100 text-slate-400"}`}>
+                    <div
+                      className="rounded-2xl border border-slate-200/80 bg-white p-3.5 shadow-2xs"
+                      key={item.criterion}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className={`mt-0.5 grid size-6 shrink-0 place-items-center rounded-full ${
+                            achieved
+                              ? "bg-emerald-100 text-emerald-700"
+                              : partial
+                              ? "bg-amber-100 text-amber-700"
+                              : "bg-slate-100 text-slate-400"
+                          }`}
+                        >
                           <Icon className="size-3.5" name={achieved ? "check" : "target"} />
                         </span>
                         <div>
-                          <p className="text-xs font-extrabold leading-5 text-slate-800">{item.criterion}</p>
-                          <p className="mt-0.5 text-[11px] leading-5 text-slate-500">{item.evidence}</p>
+                          <p className="text-xs font-black leading-snug text-slate-800">
+                            {item.criterion}
+                          </p>
+                          <p className="mt-1 text-xs leading-relaxed text-slate-600">
+                            {item.evidence}
+                          </p>
                         </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
-              <p className="mt-4 text-xs font-semibold leading-5 text-violet-900/75">{mission.summary}</p>
+
+              <p className="mt-4 text-xs font-bold leading-relaxed text-slate-700 bg-indigo-50/60 p-3 rounded-xl border border-indigo-100">
+                {mission.summary}
+              </p>
+
               {(mission.targetVocabularyUsed.length > 0 || mission.grammarUsed.length > 0) && (
-                <div className="mt-4 border-t border-violet-100 pt-4">
+                <div className="mt-5 border-t border-slate-100 pt-4 space-y-3">
                   {mission.targetVocabularyUsed.length > 0 && (
                     <div>
-                      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">Kosakata target terdeteksi</p>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        Kosakata Target yang Berhasil Digunakan
+                      </p>
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {mission.targetVocabularyUsed.map((item) => (
-                          <span className="rounded-lg bg-emerald-100 px-2 py-1 text-[10px] font-bold text-emerald-800" key={item}>{item}</span>
+                          <span
+                            className="rounded-lg bg-emerald-100/80 border border-emerald-200 px-2.5 py-1 text-xs font-black text-emerald-800"
+                            key={item}
+                          >
+                            {item}
+                          </span>
                         ))}
                       </div>
                     </div>
                   )}
+
                   {mission.grammarUsed.length > 0 && (
-                    <div className="mt-3">
-                      <p className="text-[10px] font-black uppercase tracking-[0.12em] text-slate-400">Pola bahasa terdeteksi</p>
-                      <ul className="mt-2 space-y-1 text-[11px] leading-5 text-slate-600">
-                        {mission.grammarUsed.map((item) => <li key={item}>• {item}</li>)}
+                    <div>
+                      <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">
+                        Pola Tata Bahasa yang Terdeteksi
+                      </p>
+                      <ul className="mt-1.5 space-y-1 text-xs leading-relaxed text-slate-600">
+                        {mission.grammarUsed.map((item) => (
+                          <li key={item} className="flex items-center gap-2">
+                            <span className="size-1.5 rounded-full bg-indigo-500" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
                       </ul>
                     </div>
                   )}
@@ -172,113 +245,178 @@ export function FeedbackView({
             </section>
           )}
 
-          <div>
-            <h3 className="text-sm font-extrabold uppercase tracking-[0.13em] text-slate-400">Skor per kriteria</h3>
+          {/* Criteria Scores */}
+          <section>
+            <h3 className="text-xs font-black uppercase tracking-wider text-slate-400">
+              Skor Berdasarkan 5 Kriteria TOEFL
+            </h3>
             <div className="mt-4 space-y-4">
               {feedback.criteria.map((criterion) => {
                 const criterionColor = scoreColor(criterion.band);
                 return (
-                  <div key={criterion.name}>
-                    <div className="mb-1.5 flex items-center justify-between gap-4 text-sm">
-                      <span className="font-bold text-slate-700">{CRITERION_LABELS[criterion.name]}</span>
-                      <span className="font-extrabold text-slate-900">{formatBand(criterion.band)}</span>
+                  <div
+                    key={criterion.name}
+                    className="p-4 rounded-2xl bg-white border border-slate-200/90 shadow-2xs"
+                  >
+                    <div className="mb-2 flex items-center justify-between text-sm">
+                      <span className="font-black text-slate-800">
+                        {CRITERION_LABELS[criterion.name]}
+                      </span>
+                      <span className="font-black text-slate-900">
+                        {formatBand(criterion.band)} <span className="text-xs text-slate-400 font-bold">/ 6.0</span>
+                      </span>
                     </div>
-                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
+                    <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
                       <div
-                        className="h-full rounded-full transition-[width] duration-700"
-                        style={{ backgroundColor: criterionColor, width: `${Math.max(4, (criterion.band / 6) * 100)}%` }}
+                        className="h-full rounded-full transition-all duration-700"
+                        style={{
+                          backgroundColor: criterionColor,
+                          width: `${Math.max(5, (criterion.band / 6) * 100)}%`,
+                        }}
                       />
                     </div>
-                    <p className="mt-1.5 text-xs leading-5 text-slate-500">{criterion.comment}</p>
+                    <p className="mt-2 text-xs leading-relaxed text-slate-600">
+                      {criterion.comment}
+                    </p>
                   </div>
                 );
               })}
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-2xl border border-[#dcd4ff] bg-[#f6f3ff] p-5">
-            <div className="flex items-center gap-2 font-extrabold text-[#5039bd]">
-              <Icon name="sparkles" className="size-4" />
-              Ringkasan Emma
+          {/* Coach Emma's Encouraging Summary */}
+          <div className="rounded-2xl border border-indigo-100 bg-indigo-50/70 p-5">
+            <div className="flex items-center gap-2 font-black text-indigo-900 text-sm">
+              <Icon name="message-square" className="size-4 text-indigo-600" />
+              Catatan Ulasan dari {partnerName ?? "AI Coach"}
             </div>
-            <p className="mt-2 text-sm leading-6 text-slate-600">{feedback.summary}</p>
+            <p className="mt-2 text-sm leading-relaxed text-slate-700">
+              {feedback.summary}
+            </p>
           </div>
 
+          {/* Strengths & Next Steps */}
           <div className="grid gap-4 md:grid-cols-2">
-            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/70 p-5">
-              <h3 className="flex items-center gap-2 text-sm font-extrabold text-emerald-800">
-                <span className="grid size-6 place-items-center rounded-full bg-emerald-600 text-white"><Icon name="check" className="size-3.5" /></span>
-                Yang sudah bagus
-              </h3>
-              <ul className="mt-3 space-y-2 text-sm leading-5 text-emerald-950/75">
-                {feedback.strengths.map((item) => <li className="flex gap-2" key={item}><span>•</span><span>{item}</span></li>)}
+            <div className="rounded-2xl border border-emerald-100 bg-emerald-50/60 p-5">
+              <h4 className="flex items-center gap-2 text-xs font-black text-emerald-900 uppercase tracking-wider">
+                <span className="grid size-5 place-items-center rounded-full bg-emerald-600 text-white">
+                  <Icon name="check" className="size-3" />
+                </span>
+                Kelebihan yang Terlihat
+              </h4>
+              <ul className="mt-3 space-y-2 text-xs leading-relaxed text-slate-700">
+                {feedback.strengths.map((item) => (
+                  <li className="flex items-start gap-2" key={item}>
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-emerald-600" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
             </div>
-            <div className="rounded-2xl border border-amber-100 bg-amber-50/70 p-5">
-              <h3 className="flex items-center gap-2 text-sm font-extrabold text-amber-800">
-                <span className="grid size-6 place-items-center rounded-full bg-amber-500 text-white"><Icon name="target" className="size-3.5" /></span>
-                Fokus berikutnya
-              </h3>
-              <ul className="mt-3 space-y-2 text-sm leading-5 text-amber-950/75">
-                {feedback.improvements.map((item) => <li className="flex gap-2" key={item}><span>•</span><span>{item}</span></li>)}
+
+            <div className="rounded-2xl border border-amber-100 bg-amber-50/60 p-5">
+              <h4 className="flex items-center gap-2 text-xs font-black text-amber-900 uppercase tracking-wider">
+                <span className="grid size-5 place-items-center rounded-full bg-amber-500 text-white">
+                  <Icon name="target" className="size-3" />
+                </span>
+                Fokus Latihan Selanjutnya
+              </h4>
+              <ul className="mt-3 space-y-2 text-xs leading-relaxed text-slate-700">
+                {feedback.improvements.map((item) => (
+                  <li className="flex items-start gap-2" key={item}>
+                    <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-amber-500" aria-hidden="true" />
+                    <span>{item}</span>
+                  </li>
+                ))}
               </ul>
             </div>
           </div>
 
+          {/* Grammar Corrections */}
           {feedback.corrections.length > 0 && (
             <div>
-              <h3 className="text-base font-extrabold text-slate-900">Koreksi penting</h3>
-              <div className="mt-3 space-y-3">
+              <h3 className="text-sm font-black text-slate-900 mb-3">
+                Koreksi Tata Bahasa Penting
+              </h3>
+              <div className="space-y-3">
                 {feedback.corrections.map((item, index) => (
-                  <div className="rounded-2xl border border-slate-200 p-4" key={`${item.original}-${index}`}>
-                    <div className="grid gap-2 text-sm sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-                      <p className="rounded-xl bg-rose-50 px-3 py-2 font-medium text-rose-800 line-through decoration-rose-300">{item.original}</p>
-                      <Icon name="arrow-right" className="hidden size-4 text-slate-300 sm:block" />
-                      <p className="rounded-xl bg-emerald-50 px-3 py-2 font-semibold text-emerald-800">{item.corrected}</p>
+                  <div
+                    className="rounded-2xl border border-slate-200 bg-white p-4 shadow-2xs"
+                    key={`${item.original}-${index}`}
+                  >
+                    <div className="grid gap-2 text-xs sm:grid-cols-2 sm:items-center">
+                      <p className="rounded-xl bg-rose-50 border border-rose-100 px-3 py-2 font-medium text-rose-800 line-through decoration-rose-400">
+                        {item.original}
+                      </p>
+                      <p className="rounded-xl bg-emerald-50 border border-emerald-100 px-3 py-2 font-extrabold text-emerald-800">
+                        {item.corrected}
+                      </p>
                     </div>
-                    <p className="mt-2 text-xs leading-5 text-slate-500">{item.explanation}</p>
+                    <p className="mt-2 text-xs leading-relaxed text-slate-500">
+                      {item.explanation}
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
+          {/* Vocabulary Upgrades */}
           {feedback.vocabularyUpgrades.length > 0 && (
             <div>
-              <h3 className="text-base font-extrabold text-slate-900">Upgrade kosakata</h3>
-              <div className="mt-3 grid gap-3 md:grid-cols-2">
+              <h3 className="text-sm font-black text-slate-900 mb-3">
+                Rekomendasi Pilihan Kosakata yang Lebih Baik
+              </h3>
+              <div className="grid gap-3 md:grid-cols-2">
                 {feedback.vocabularyUpgrades.map((item, index) => (
-                  <div className="rounded-2xl bg-slate-50 p-4" key={`${item.used}-${index}`}>
-                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                      <span className="text-slate-400">{item.used}</span>
-                      <Icon name="arrow-right" className="size-3.5 text-slate-300" />
-                      <span className="font-extrabold text-[#6047d4]">{item.better}</span>
+                  <div
+                    className="rounded-2xl border border-slate-200/90 bg-slate-50 p-4"
+                    key={`${item.used}-${index}`}
+                  >
+                    <div className="flex items-center gap-2 text-xs">
+                      <span className="text-slate-500 font-bold line-through">{item.used}</span>
+                      <span className="text-slate-300 font-bold">/</span>
+                      <span className="font-black text-indigo-700">{item.better}</span>
                     </div>
-                    <p className="mt-2 text-xs italic leading-5 text-slate-500">“{item.example}”</p>
+                    <p className="mt-2 text-xs italic text-slate-600">
+                      &ldquo;{item.example}&rdquo;
+                    </p>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="rounded-2xl bg-[#172440] p-5 text-white">
+          {/* Next Lesson Recommendation Card */}
+          <div className="rounded-2xl border border-slate-200 bg-slate-900 p-5 text-white">
             <div className="flex items-start gap-3">
-              <span className="grid size-9 shrink-0 place-items-center rounded-xl bg-white/10"><Icon name="lightbulb" className="size-5 text-[#ffd37d]" /></span>
+              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-white/10 text-amber-400">
+                <Icon name="lightbulb" className="size-5" />
+              </span>
               <div>
-                <h3 className="text-sm font-extrabold">Latihan selanjutnya</h3>
-                <p className="mt-1 text-sm leading-6 text-slate-300">{feedback.nextFocus}</p>
+                <h4 className="text-sm font-black text-white">Saran Latihan Selanjutnya</h4>
+                <p className="mt-1 text-xs leading-relaxed text-slate-300">{feedback.nextFocus}</p>
               </div>
             </div>
           </div>
 
+          {/* Action Buttons */}
           <div className="flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
-            <button className="rounded-xl px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-100" onClick={onClose} type="button">
+            <button
+              className="rounded-2xl border border-slate-300 px-6 py-3.5 text-xs font-black text-slate-700 hover:bg-slate-50 transition"
+              onClick={onClose}
+              type="button"
+            >
               {closeLabel}
             </button>
             {onPracticeAgain && (
-              <button className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#6e55df] px-5 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 hover:bg-[#6047d4]" onClick={onPracticeAgain} type="button">
+              <button
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3.5 text-xs font-black text-white shadow-xs hover:bg-indigo-700 transition"
+                onClick={onPracticeAgain}
+                type="button"
+              >
                 <Icon name="repeat" className="size-4" />
-                Latihan lagi
+                Latihan Topik Ini Lagi
               </button>
             )}
           </div>
