@@ -707,7 +707,7 @@ export function SpeakFlowApp() {
                     <circle cx="120" cy="120" r="108" fill="#B899FF" />
                     <circle cx="120" cy="120" r="80" fill="#8F5BFF" />
                     <circle cx="120" cy="120" r="60" fill="#F5F0FF" />
-                    <text x="256" y="146" fill="#0F0F12" font-family="'Plus Jakarta Sans', sans-serif" font-size="82" font-weight="800" letter-spacing="-0.04em">Fluelo</text>
+                    <text x="256" y="146" fill="#0F0F12" fontFamily="'Plus Jakarta Sans', sans-serif" fontSize="82" fontWeight="800" letterSpacing="-0.04em">Fluelo</text>
                   </svg>
                 </div>
 
@@ -1299,7 +1299,7 @@ export function SpeakFlowApp() {
                       <circle cx="120" cy="120" r="108" fill="#B899FF" />
                       <circle cx="120" cy="120" r="80" fill="#8F5BFF" />
                       <circle cx="120" cy="120" r="60" fill="#F5F0FF" />
-                      <text x="256" y="146" fill="#0F0F12" font-family="'Plus Jakarta Sans', sans-serif" font-size="82" font-weight="800" letter-spacing="-0.04em">Fluelo</text>
+                      <text x="256" y="146" fill="#0F0F12" fontFamily="'Plus Jakarta Sans', sans-serif" fontSize="82" fontWeight="800" letterSpacing="-0.04em">Fluelo</text>
                     </svg>
                   </div>
 
