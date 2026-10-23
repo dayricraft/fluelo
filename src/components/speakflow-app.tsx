@@ -290,6 +290,12 @@ export function SpeakFlowApp() {
     const liveNow = new Date();
     setBaseToday(liveNow);
     setCalendarCheckIns(getInitialCalendarCheckIns(liveNow));
+
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setLayoutMode("roomOnly");
+      setActiveScreen(1);
+      setIsTilted(false);
+    }
   }, []);
   const calendarViewDate = new Date(baseToday.getFullYear(), baseToday.getMonth() + calendarMonthOffset, 1);
   const calendarYear = calendarViewDate.getFullYear();
@@ -558,11 +564,11 @@ export function SpeakFlowApp() {
       : chatHistory;
 
   return (
-    <div className="speakflow-bg min-h-screen text-[#0F0F12] pb-14 overflow-x-hidden font-sans">
+    <div className="speakflow-bg min-h-screen text-[#0F0F12] pb-0 md:pb-14 overflow-x-hidden font-sans">
       {/* =====================================================================
            TOP STUDIO NAVIGATION & VIEW CONTROL BAR
            ===================================================================== */}
-      <header className="sticky top-3 z-50 px-4 mb-5 flex justify-center pointer-events-none">
+      <header className="hidden md:flex sticky top-3 z-50 px-4 mb-5 justify-center pointer-events-none">
         <div className="pointer-events-auto bg-white/95 backdrop-blur-md border border-black/10 shadow-lg rounded-full px-3 py-2 flex flex-wrap items-center gap-2">
           {/* Brand Identity */}
           <div className="flex items-center gap-2 pl-2 pr-2.5 border-r border-black/10 select-none">
@@ -640,7 +646,7 @@ export function SpeakFlowApp() {
 
       {/* SINGLE SCREEN NAVIGATION PILLS (When in roomOnly mode) */}
       {layoutMode === "roomOnly" && (
-        <div className="flex justify-center gap-2 mb-5 px-4 flex-wrap">
+        <div className="hidden md:flex justify-center gap-2 mb-5 px-4 flex-wrap">
           {[
             { num: 1, label: "1 Landing Page" },
             { num: 2, label: "2 Login" },
@@ -667,7 +673,7 @@ export function SpeakFlowApp() {
            ===================================================================== */}
       <main
         id="phonesContainer"
-        className={`${isTilted ? "showcase-angled" : ""} max-w-[1880px] mx-auto px-4 pt-1 pb-10 flex flex-wrap items-center justify-center gap-7`}
+        className={`${isTilted ? "showcase-angled" : ""} max-w-[1880px] mx-auto p-0 md:px-4 md:pt-1 md:pb-10 flex flex-wrap items-center justify-center gap-0 md:gap-7`}
       >
         {/* ===================================================================
              SCREEN 1: LANDING / ONBOARDING PAGE
@@ -675,32 +681,8 @@ export function SpeakFlowApp() {
         {(layoutMode === "all5" || (layoutMode === "roomOnly" && activeScreen === 1)) && (
           <div id="phoneFrame1" className="iphone-frame phone-tilt-left">
             <div className="iphone-screen !bg-white">
-              {/* Status Bar */}
-              <div className="w-full pt-3 pb-1 px-6 flex items-center justify-between bg-white z-20 shrink-0">
-                <span className="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
-                <div className="dynamic-island" />
-                <div className="flex items-center gap-1.5 w-14 justify-end">
-                  <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
-                    <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12" />
-                    <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12" />
-                    <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12" />
-                    <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12" />
-                  </svg>
-                  <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
-                    <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                    <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                    <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12" />
-                  </svg>
-                  <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
-                    <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" strokeWidth="1.2" />
-                    <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12" />
-                    <path d="M20.8 3.8V7.2" stroke="#0F0F12" strokeWidth="1.5" strokeLinecap="round" />
-                  </svg>
-                </div>
-              </div>
-
               {/* Editorial Headline & Pill Button */}
-              <div className="pt-4 px-6 text-center flex flex-col items-center z-10">
+              <div className="pt-8 px-6 text-center flex flex-col items-center z-10">
                 {/* Fluelo Brand Logo */}
                 <div className="mb-3 flex justify-center">
                   <svg width="94" height="42" viewBox="0 0 500 240" fill="none" className="shrink-0 drop-shadow-2xs">
@@ -895,11 +877,6 @@ export function SpeakFlowApp() {
                   </svg>
                 </button>
               </div>
-
-              {/* Home Indicator */}
-              <div className="w-full py-2 bg-transparent flex justify-center z-30">
-                <div className="w-32 h-1.5 rounded-full bg-[#0F0F12]" />
-              </div>
             </div>
           </div>
         )}
@@ -912,34 +889,10 @@ export function SpeakFlowApp() {
             <div className="iphone-screen !bg-white">
               {!isGuestSetup ? (
                 /* Full-Height Clean White Login Container */
-                <div className="w-full h-full px-5 pt-3 pb-5 flex flex-col justify-between">
+                <div className="w-full h-full px-5 pt-4 pb-5 flex flex-col justify-between">
                   <div>
-                    {/* Status Bar */}
-                    <div className="w-full pb-2 flex items-center justify-between">
-                      <span className="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
-                      <div className="dynamic-island" />
-                      <div className="flex items-center gap-1.5 w-14 justify-end">
-                        <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
-                          <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12" />
-                          <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12" />
-                          <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12" />
-                          <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12" />
-                        </svg>
-                        <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
-                          <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                          <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                          <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12" />
-                        </svg>
-                        <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
-                          <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" strokeWidth="1.2" />
-                          <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12" />
-                          <path d="M20.8 3.8V7.2" stroke="#0F0F12" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                    </div>
-
                     {/* Top Back and Step Pill */}
-                    <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center justify-between pt-2">
                       <button
                         type="button"
                         onClick={() => navigateTo(1)}
@@ -1038,43 +991,14 @@ export function SpeakFlowApp() {
                         </svg>
                       </div>
                     </button>
-
-                    {/* Home Indicator */}
-                    <div className="w-full pt-4 pb-1 bg-transparent flex justify-center">
-                      <div className="w-32 h-1.5 rounded-full bg-[#0F0F12]" />
-                    </div>
                   </div>
                 </div>
               ) : (
                 /* GUEST ONBOARDING PROFILE SETUP: ELEGANT BENTO GRID LAYOUT */
-                <div className="w-full h-full px-4 pt-3 pb-4 flex flex-col justify-between bg-[#F8F8FC] animate-in fade-in duration-200">
+                <div className="w-full h-full px-4 pt-4 pb-4 flex flex-col justify-between bg-[#F8F8FC] animate-in fade-in duration-200">
                   <div>
-                    {/* Status Bar */}
-                    <div className="w-full pb-2 flex items-center justify-between">
-                      <span className="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
-                      <div className="dynamic-island" />
-                      <div className="flex items-center gap-1.5 w-14 justify-end">
-                        <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
-                          <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12" />
-                          <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12" />
-                          <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12" />
-                          <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12" />
-                        </svg>
-                        <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
-                          <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                          <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                          <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12" />
-                        </svg>
-                        <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
-                          <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" strokeWidth="1.2" />
-                          <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12" />
-                          <path d="M20.8 3.8V7.2" stroke="#0F0F12" strokeWidth="1.5" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                    </div>
-
                     {/* Top Header Bar */}
-                    <div className="flex items-center justify-between mt-1">
+                    <div className="flex items-center justify-between pt-1">
                       <button
                         type="button"
                         onClick={() => setIsGuestSetup(false)}
@@ -1248,11 +1172,6 @@ export function SpeakFlowApp() {
                         </svg>
                       </div>
                     </button>
-
-                    {/* Home Indicator */}
-                    <div className="w-full pt-3 pb-1 bg-transparent flex justify-center">
-                      <div className="w-32 h-1.5 rounded-full bg-[#0F0F12]" />
-                    </div>
                   </div>
                 </div>
               )}
@@ -1267,33 +1186,9 @@ export function SpeakFlowApp() {
           <div id="phoneFrame3" className="iphone-frame phone-tilt-center">
             <div className="iphone-screen">
               {/* TOP WHITE CARD */}
-              <div className="bg-white rounded-b-[30px] px-4 pt-3 pb-4 flex flex-col shrink-0">
-                {/* Status Bar */}
-                <div className="w-full pb-2 px-1 flex items-center justify-between">
-                  <span className="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
-                  <div className="dynamic-island" />
-                  <div className="flex items-center gap-1.5 w-14 justify-end">
-                    <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
-                      <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12" />
-                      <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12" />
-                      <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12" />
-                      <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12" />
-                    </svg>
-                    <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
-                      <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                      <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                      <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12" />
-                    </svg>
-                    <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
-                      <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" strokeWidth="1.2" />
-                      <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12" />
-                      <path d="M20.8 3.8V7.2" stroke="#0F0F12" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                </div>
-
+              <div className="bg-white rounded-b-[30px] px-4 pt-5 pb-4 flex flex-col shrink-0">
                 {/* Fluelo Brand Header on Dashboard */}
-                <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center justify-between">
                   <div className="flex items-center select-none">
                     <svg width="86" height="38" viewBox="0 0 500 240" fill="none" className="shrink-0 drop-shadow-2xs">
                       <circle cx="120" cy="120" r="108" fill="#B899FF" />
@@ -1595,10 +1490,6 @@ export function SpeakFlowApp() {
                   </button>
                 </div>
               </div>
-
-              <div className="w-full pb-2 bg-[#0F0F12] flex justify-center">
-                <div className="w-32 h-1.5 rounded-full bg-white/90" />
-              </div>
             </div>
           </div>
         )}
@@ -1610,33 +1501,9 @@ export function SpeakFlowApp() {
           <div id="phoneFrame4" className="iphone-frame phone-tilt-alt">
             <div className="iphone-screen">
               {/* Top White Bar */}
-              <div className="bg-white rounded-b-[28px] px-4 pt-3 pb-3 flex flex-col shrink-0">
-                {/* Status Bar */}
-                <div className="w-full pb-1.5 px-1 flex items-center justify-between">
-                  <span className="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
-                  <div className={`dynamic-island ${isIslandActive ? "island-active" : ""}`} />
-                  <div className="flex items-center gap-1.5 w-14 justify-end">
-                    <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
-                      <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12" />
-                      <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12" />
-                      <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12" />
-                      <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12" />
-                    </svg>
-                    <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
-                      <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                      <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                      <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12" />
-                    </svg>
-                    <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
-                      <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" strokeWidth="1.2" />
-                      <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12" />
-                      <path d="M20.8 3.8V7.2" stroke="#0F0F12" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                </div>
-
+              <div className="bg-white rounded-b-[28px] px-4 pt-5 pb-3 flex flex-col shrink-0">
                 {/* Header: Back + Character Name & Level Badge (NO DOTS!) */}
-                <div className="flex items-center justify-between mt-0.5">
+                <div className="flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() => navigateTo(3)}
@@ -2028,10 +1895,6 @@ export function SpeakFlowApp() {
                 </div>
               )}
               </div>
-
-              <div className="w-full pb-2 bg-[#0F0F12] flex justify-center">
-                <div className="w-32 h-1.5 rounded-full bg-white/90" />
-              </div>
             </div>
           </div>
         )}
@@ -2050,33 +1913,9 @@ export function SpeakFlowApp() {
             )}
             <div className="iphone-screen">
               {/* TOP WHITE CARD (Calendar) */}
-              <div className="bg-white rounded-b-[30px] px-4 pt-3 pb-4 flex flex-col shrink-0 relative z-30">
-                {/* Status Bar */}
-                <div className="w-full pb-2 px-1 flex items-center justify-between">
-                  <span className="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
-                  <div className="dynamic-island" />
-                  <div className="flex items-center gap-1.5 w-14 justify-end">
-                    <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
-                      <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12" />
-                      <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12" />
-                      <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12" />
-                      <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12" />
-                    </svg>
-                    <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
-                      <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                      <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-                      <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12" />
-                    </svg>
-                    <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
-                      <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" strokeWidth="1.2" />
-                      <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12" />
-                      <path d="M20.8 3.8V7.2" stroke="#0F0F12" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                  </div>
-                </div>
-
+              <div className="bg-white rounded-b-[30px] px-4 pt-5 pb-4 flex flex-col shrink-0 relative z-30">
                 {/* Calendar Header Row */}
-                <div className="flex items-center justify-between mt-1">
+                <div className="flex items-center justify-between">
                   <button
                     type="button"
                     onClick={() => navigateTo(3)}
@@ -2344,10 +2183,6 @@ export function SpeakFlowApp() {
                     </svg>
                   </button>
                 </div>
-              </div>
-
-              <div className="w-full pb-2 bg-[#0F0F12] flex justify-center">
-                <div className="w-32 h-1.5 rounded-full bg-white/90" />
               </div>
             </div>
           </div>

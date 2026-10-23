@@ -1671,12 +1671,58 @@ a {
   transform: scale(0.96);
 }
 
+@media (max-width: 768px) {
+  body {
+    background: #FFFFFF !important;
+  }
+  .speakflow-bg {
+    background: #FFFFFF !important;
+    background-image: none !important;
+    padding-bottom: 0 !important;
+    min-height: 100dvh !important;
+  }
+  #phonesContainer {
+    padding: 0 !important;
+    margin: 0 !important;
+    gap: 0 !important;
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: 100dvh !important;
+  }
+  .iphone-frame {
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    background: #FFFFFF !important;
+    box-shadow: none !important;
+    transform: none !important;
+  }
+  .iphone-frame::before,
+  .iphone-frame::after {
+    display: none !important;
+  }
+  .iphone-screen {
+    border-radius: 0 !important;
+    min-height: 100dvh !important;
+    height: 100% !important;
+    box-shadow: none !important;
+  }
+  .dynamic-island {
+    display: none !important;
+  }
+}
+
 @media (max-width: 640px) {
   .iphone-frame {
     width: 100% !important;
-    max-width: 440px !important;
-    height: auto !important;
-    min-height: 100vh !important;
+    max-width: 100% !important;
+    height: 100dvh !important;
+    min-height: 100dvh !important;
     border-radius: 0 !important;
     padding: 0 !important;
     background: transparent !important;
@@ -1689,7 +1735,7 @@ a {
   }
   .iphone-screen {
     border-radius: 0 !important;
-    min-height: 100vh !important;
+    min-height: 100dvh !important;
   }
 }
 
