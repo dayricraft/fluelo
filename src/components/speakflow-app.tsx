@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLiveSession, type StartLiveSessionOptions } from "@/hooks/useLiveSession";
 import { formatBand } from "@/lib/levels";
-import { useAppData, saveSession, newId } from "@/lib/storage";
+import { useAppData, saveSession, newId, updateProfile } from "@/lib/storage";
 import type { SessionRecord, TranscriptTurn } from "@/lib/types";
 
 interface ChatTurn {
@@ -637,7 +637,18 @@ export function MiniCalendarFace({ face }: { face: string }) {
 }
 
 function getInitialCalendarCheckIns(referenceDate?: Date): Record<string, { color: string; face: string; partnerId: string }> {
-  const now = referenceDate || new Date("2026-10-24T00:00:00Z");
+  if (typeof window !== "undefined") {
+    try {
+      const saved = localStorage.getItem("fluelo_calendar_checkins");
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
+          return parsed;
+        }
+      }
+    } catch {}
+  }
+  const now = referenceDate || new Date();
   const year = now.getFullYear();
   const monthStr = String(now.getMonth() + 1).padStart(2, "0");
   const todayNum = now.getDate();
@@ -688,7 +699,33 @@ export function SpeakFlowApp() {
   const [guestAgeRange, setGuestAgeRange] = useState("18 to 24");
   const [guestLevel, setGuestLevel] = useState("A1");
   const [guestAvatar, setGuestAvatar] = useState("sarah");
+  const [dailyGoalTarget, setDailyGoalTarget] = useState<number>(3);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
   const currentGuestAvatar = CALENDAR_PARTNERS.find((p) => p.id === guestAvatar) || CALENDAR_PARTNERS[0];
+
+  const persistUserProfile = (
+    name: string,
+    level: string,
+    ageRange: string,
+    avatar: string,
+    target: number = dailyGoalTarget
+  ) => {
+    setGuestName(name);
+    setGuestLevel(level);
+    setGuestAgeRange(ageRange);
+    setGuestAvatar(avatar);
+    setDailyGoalTarget(target);
+    setIsGuestSetup(true);
+    if (typeof window !== "undefined") {
+      try {
+        localStorage.setItem(
+          "fluelo_user_profile",
+          JSON.stringify({ name, level, ageRange, avatar, dailyTarget: target })
+        );
+      } catch {}
+    }
+    void updateProfile({ name, level: level as any });
+  };
 
   // Settings & Account State
   const [isDarkMode, setIsDarkMode] = useState<boolean>(false);
@@ -708,17 +745,96 @@ export function SpeakFlowApp() {
   const [selectedPastSession, setSelectedPastSession] = useState<SessionRecord | null>(null);
 
   const [baseToday, setBaseToday] = useState<Date>(() => new Date("2026-10-24T00:00:00Z"));
+
+  // Save calendar check-ins automatically when changed
+  useEffect(() => {
+    if (typeof window !== "undefined" && Object.keys(calendarCheckIns).length > 0) {
+      try {
+        localStorage.setItem("fluelo_calendar_checkins", JSON.stringify(calendarCheckIns));
+      } catch {}
+    }
+  }, [calendarCheckIns]);
+
   useEffect(() => {
     const liveNow = new Date();
     setBaseToday(liveNow);
-    setCalendarCheckIns(getInitialCalendarCheckIns(liveNow));
+    const initialCheckIns = getInitialCalendarCheckIns(liveNow);
+    setCalendarCheckIns(initialCheckIns);
 
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      setLayoutMode("roomOnly");
-      setActiveScreen(1);
-      setIsTilted(false);
+    if (typeof window !== "undefined") {
+      try {
+        const savedProfile = localStorage.getItem("fluelo_user_profile");
+        if (savedProfile) {
+          const parsed = JSON.parse(savedProfile);
+          if (parsed.name) setGuestName(parsed.name);
+          if (parsed.level) setGuestLevel(parsed.level);
+          if (parsed.ageRange) setGuestAgeRange(parsed.ageRange);
+          if (parsed.avatar) setGuestAvatar(parsed.avatar);
+          if (parsed.dailyTarget && typeof parsed.dailyTarget === "number") {
+            setDailyGoalTarget(parsed.dailyTarget);
+          }
+          setIsGuestSetup(true);
+        } else if (data.profile.name) {
+          setGuestName(data.profile.name);
+          if (data.profile.level) setGuestLevel(data.profile.level);
+          setIsGuestSetup(true);
+        }
+      } catch (err) {
+        console.warn("Could not load user profile:", err);
+      }
+
+      if (window.innerWidth < 768) {
+        setLayoutMode("roomOnly");
+        const hasSaved = Boolean(localStorage.getItem("fluelo_user_profile"));
+        setActiveScreen(hasSaved ? 3 : 1);
+        setIsTilted(false);
+      }
     }
-  }, []);
+  }, [data.hydrated]);
+
+  // Gamification: Real Streak & Real XP
+  const totalCompletedSessions = data.sessions.length;
+  const totalXp = Math.max(120, totalCompletedSessions * 50 + 120);
+
+  const calculateStreak = () => {
+    const datesWithActivity = new Set<string>();
+
+    data.sessions.forEach((s) => {
+      if (s.startedAt) {
+        datesWithActivity.add(s.startedAt.slice(0, 10));
+      }
+    });
+
+    Object.keys(calendarCheckIns).forEach((k) => {
+      datesWithActivity.add(k);
+    });
+
+    if (datesWithActivity.size === 0) return 1;
+
+    let streak = 0;
+    const checkDate = new Date();
+    for (let i = 0; i < 60; i++) {
+      const d = new Date();
+      d.setDate(checkDate.getDate() - i);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+      if (datesWithActivity.has(key)) {
+        streak++;
+      } else if (i === 0) {
+        continue;
+      } else {
+        break;
+      }
+    }
+    return Math.max(streak, 1);
+  };
+
+  const currentStreak = calculateStreak();
+
+  const todayKeyStr = `${baseToday.getFullYear()}-${String(baseToday.getMonth() + 1).padStart(2, "0")}-${String(baseToday.getDate()).padStart(2, "0")}`;
+  const sessionsToday = data.sessions.filter(
+    (s) => s.startedAt && s.startedAt.slice(0, 10) === todayKeyStr
+  ).length;
+  const isDailyTargetReached = sessionsToday >= dailyGoalTarget;
   const calendarViewDate = new Date(baseToday.getFullYear(), baseToday.getMonth() + calendarMonthOffset, 1);
   const calendarYear = calendarViewDate.getFullYear();
   const calendarMonth = calendarViewDate.getMonth();
@@ -1819,6 +1935,7 @@ export function SpeakFlowApp() {
                     <button
                       type="button"
                       onClick={() => {
+                        persistUserProfile(guestName, guestLevel, guestAgeRange, guestAvatar);
                         showToast(
                           isIndonesian
                             ? `Selamat datang ${guestName || "Alex"} Level ${guestLevel}!`
@@ -1885,6 +2002,59 @@ export function SpeakFlowApp() {
                     ? `Halo ${guestName || "Alex"}! Mau ngobrol sama siapa hari ini?`
                     : `Hello ${guestName || "Alex"}! Who do you want to talk to today?`}
                 </h2>
+
+                {/* User Profile, Level Pill, Streak & XP */}
+                <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-black/[0.06]">
+                  {/* Left: Avatar + Name + Level Selector */}
+                  <button
+                    type="button"
+                    onClick={() => setIsEditProfileModalOpen(true)}
+                    className="tap-scale flex items-center gap-2 text-left group"
+                    title="Edit Profile & Target"
+                  >
+                    <div
+                      style={{ backgroundColor: currentGuestAvatar.color }}
+                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-black/10 shadow-xs"
+                    >
+                      <MiniCalendarFace face={currentGuestAvatar.face} />
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-[12px] font-extrabold text-[#0F0F12] group-hover:text-[#8F5BFF] transition-colors truncate max-w-[85px]">
+                          {guestName || "Alex"}
+                        </span>
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" className="text-[#9898A6]">
+                          <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <span className="inline-block text-[9.5px] font-extrabold text-[#8F5BFF] bg-[#F5F0FF] px-1.5 py-0.2 rounded-md">
+                        Level {guestLevel}
+                      </span>
+                    </div>
+                  </button>
+
+                  {/* Right: Streak & XP Badges */}
+                  <div className="flex items-center gap-1.5">
+                    <div
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFF3E8] border border-[#FDE272]/50 shadow-2xs"
+                      title={`${currentStreak} days streak`}
+                    >
+                      <span className="text-[11px] leading-none">🔥</span>
+                      <span className="text-[11px] font-extrabold text-[#D96B27]">
+                        {currentStreak}d
+                      </span>
+                    </div>
+                    <div
+                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#F5F0FF] border border-[#D8C8FF] shadow-2xs"
+                      title={`${totalXp} XP earned`}
+                    >
+                      <span className="text-[11px] leading-none">⚡</span>
+                      <span className="text-[11px] font-extrabold text-[#8F5BFF]">
+                        {totalXp} XP
+                      </span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Character Pill Selector Row */}
                 <div className="flex items-center gap-2 mt-3.5 overflow-x-auto no-scrollbar pb-0.5">
@@ -1986,13 +2156,13 @@ export function SpeakFlowApp() {
               </div>
 
               {/* LOWER BLACK BENTO CONTAINER */}
-              <div className="flex-1 p-[5px] flex flex-col gap-[5px] bg-[#0F0F12]">
+              <div className="flex-1 p-[5px] flex flex-col gap-[5px] bg-[#0F0F12] overflow-y-auto no-scrollbar">
                 {/* 2 Graph Cards: Pronunciation and Grammar Indicator */}
-                <div className="grid grid-cols-2 gap-[5px] h-[176px]">
+                <div className="grid grid-cols-2 gap-[5px] h-[155px] shrink-0">
                   {/* LEFT: Pronunciation */}
                   <div
                     onClick={() => setPronIdx((prev) => (prev + 1) % pronMetrics.length)}
-                    className="tap-scale bg-[#FBC3A2] rounded-[26px] p-3.5 flex flex-col justify-between relative overflow-hidden"
+                    className="tap-scale bg-[#FBC3A2] rounded-[24px] p-3 flex flex-col justify-between relative overflow-hidden"
                   >
                     <div className="flex items-center gap-1.5">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
@@ -2007,33 +2177,33 @@ export function SpeakFlowApp() {
                     </div>
 
                     {/* 7 Striped Capsule Bars */}
-                    <div className="flex items-center justify-between gap-1.5 px-0.5 my-1 h-[62px]">
-                      {[42, 48, 56, 50, 38, 58, 46].map((h, i) => (
+                    <div className="flex items-center justify-between gap-1.5 px-0.5 my-1 h-[52px]">
+                      {[36, 42, 50, 44, 34, 52, 40].map((h, i) => (
                         <div
                           key={i}
                           style={{ height: `${h}px` }}
-                          className="w-3.5 rounded-full bg-[#C98253] flex flex-col justify-between py-1.5 items-center"
+                          className="w-3 rounded-full bg-[#C98253] flex flex-col justify-between py-1.5 items-center"
                         >
-                          <span className="w-2 h-[1.5px] bg-[#FBC3A2]" />
-                          <span className="w-2 h-[1.5px] bg-[#0F0F12]" />
+                          <span className="w-1.5 h-[1.5px] bg-[#FBC3A2]" />
+                          <span className="w-1.5 h-[1.5px] bg-[#0F0F12]" />
                         </div>
                       ))}
                     </div>
 
                     <div className="flex items-baseline gap-1">
-                      <span className="text-[22px] font-extrabold text-[#0F0F12] metric-tight">
+                      <span className="text-[20px] font-extrabold text-[#0F0F12] metric-tight">
                         {pronMetrics[pronIdx].big}
                       </span>
-                      <span className="text-[15px] font-bold text-[#0F0F12]">
+                      <span className="text-[14px] font-bold text-[#0F0F12]">
                         {pronMetrics[pronIdx].sub}
                       </span>
                     </div>
                   </div>
 
-                  {/* RIGHT: Grammar Indicator (Replaced Tenses Graph as requested!) */}
+                  {/* RIGHT: Grammar Indicator */}
                   <div
                     onClick={() => setGrammarIdx((prev) => (prev + 1) % grammarMetrics.length)}
-                    className="tap-scale bg-[#D8C8FF] rounded-[26px] p-3.5 flex flex-col justify-between relative overflow-hidden"
+                    className="tap-scale bg-[#D8C8FF] rounded-[24px] p-3 flex flex-col justify-between relative overflow-hidden"
                   >
                     <div className="flex items-center gap-1.5">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" className="shrink-0">
@@ -2046,27 +2216,72 @@ export function SpeakFlowApp() {
                     </div>
 
                     {/* 5 Ascending Purple Bars */}
-                    <div className="flex items-end justify-between gap-2 px-1 my-1 h-[62px]">
-                      <div className="w-4 h-[14px] rounded-[4px] bg-[#946EC2]" />
-                      <div className="w-4 h-[24px] rounded-[4px] bg-[#946EC2]" />
-                      <div className="w-4 h-[32px] rounded-[4px] bg-[#946EC2]" />
-                      <div className="w-4 h-[44px] rounded-[4px] bg-[#946EC2]" />
-                      <div className="w-4 h-[56px] rounded-[4px] bg-[#946EC2]" />
+                    <div className="flex items-end justify-between gap-2 px-1 my-1 h-[52px]">
+                      <div className="w-3.5 h-[12px] rounded-[4px] bg-[#946EC2]" />
+                      <div className="w-3.5 h-[20px] rounded-[4px] bg-[#946EC2]" />
+                      <div className="w-3.5 h-[28px] rounded-[4px] bg-[#946EC2]" />
+                      <div className="w-3.5 h-[38px] rounded-[4px] bg-[#946EC2]" />
+                      <div className="w-3.5 h-[48px] rounded-[4px] bg-[#946EC2]" />
                     </div>
 
                     <div className="flex items-baseline justify-between">
-                      <span className="text-[23px] font-extrabold text-[#0F0F12] metric-tight">
+                      <span className="text-[21px] font-extrabold text-[#0F0F12] metric-tight">
                         {grammarMetrics[grammarIdx].big}
                       </span>
-                      <span className="text-[10.5px] font-extrabold text-[#0F0F12]/70">
+                      <span className="text-[10px] font-extrabold text-[#0F0F12]/70">
                         {grammarMetrics[grammarIdx].sub}
                       </span>
                     </div>
                   </div>
                 </div>
 
+                {/* DAILY SPEAKING GOAL PROGRESS CARD */}
+                <div className="bg-[#181820] border border-white/[0.08] rounded-[22px] p-3 flex flex-col justify-between shrink-0 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-[#8F5BFF] flex items-center justify-center text-white shrink-0">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                          <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                          <path d="M12 6V12L16 14" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                      <span className="text-[11px] font-extrabold text-white">
+                        {isIndonesian ? "Target Bicara Harian" : "Daily Speaking Goal"}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isDailyTargetReached ? "bg-[#B8F3B8] text-[#0F0F12]" : "bg-white/10 text-[#D8C8FF]"}`}>
+                      {isDailyTargetReached
+                        ? (isIndonesian ? "Tercapai! 🏆" : "Completed! 🏆")
+                        : `${sessionsToday}/${dailyGoalTarget} ${isIndonesian ? "Sesi" : "Sessions"}`}
+                    </span>
+                  </div>
+
+                  <div className="mt-2.5">
+                    <div className="w-full h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-gradient-to-r from-[#8F5BFF] to-[#B8F3B8] transition-all duration-500"
+                        style={{ width: `${Math.min(100, Math.round((sessionsToday / dailyGoalTarget) * 100))}%` }}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between mt-1.5 text-[9.5px]">
+                      <span className="text-white/60">
+                        {isDailyTargetReached
+                          ? (isIndonesian ? "Streak aktif & aman hari ini!" : "Streak active & safe today!")
+                          : (isIndonesian ? `${Math.max(0, dailyGoalTarget - sessionsToday)} sesi lagi hari ini` : `${Math.max(0, dailyGoalTarget - sessionsToday)} more session today`)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => navigateTo(4)}
+                        className="text-[#B899FF] font-extrabold hover:underline"
+                      >
+                        {isIndonesian ? "Mulai Bicara →" : "Speak Now →"}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
                 {/* BOTTOM QUIZ CARD */}
-                <div className="bg-[#B8F3B8] rounded-[26px] p-3.5 flex-1 flex flex-col justify-between">
+                <div className="bg-[#B8F3B8] rounded-[22px] p-3 flex-1 min-h-[140px] flex flex-col justify-between shrink-0">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-1.5">
                       <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
@@ -2074,12 +2289,12 @@ export function SpeakFlowApp() {
                       </svg>
                       <span className="text-[11.5px] font-extrabold text-[#0F0F12]">Yes or No Quiz</span>
                     </div>
-                    <span className="text-[10.5px] font-bold text-[#0F0F12]/60">
-                      Question {quizIdx + 1} of 8
+                    <span className="text-[10px] font-bold text-[#0F0F12]/60">
+                      Q{quizIdx + 1} of 8
                     </span>
                   </div>
 
-                  <p className="text-[14px] font-extrabold text-[#0F0F12] leading-snug my-1">
+                  <p className="text-[13px] font-extrabold text-[#0F0F12] leading-snug my-1">
                     {GRAMMAR_QUESTIONS[quizIdx].q}
                   </p>
 
@@ -2091,7 +2306,7 @@ export function SpeakFlowApp() {
                         triggerFeedback(q.ans ? "check" : "cross");
                         setQuizIdx((prev) => (prev + 1) % GRAMMAR_QUESTIONS.length);
                       }}
-                      className="tap-scale bg-[#0F0F12] hover:bg-[#222228] text-white py-2.5 rounded-full text-[12px] font-bold font-sans"
+                      className="tap-scale bg-[#0F0F12] hover:bg-[#222228] text-white py-2 rounded-full text-[12px] font-bold font-sans"
                     >
                       Yes
                     </button>
@@ -2102,7 +2317,7 @@ export function SpeakFlowApp() {
                         triggerFeedback(!q.ans ? "check" : "cross");
                         setQuizIdx((prev) => (prev + 1) % GRAMMAR_QUESTIONS.length);
                       }}
-                      className="tap-scale bg-[#0F0F12] hover:bg-[#222228] text-white py-2.5 rounded-full text-[12px] font-bold font-sans"
+                      className="tap-scale bg-[#0F0F12] hover:bg-[#222228] text-white py-2 rounded-full text-[12px] font-bold font-sans"
                     >
                       No
                     </button>
@@ -2110,7 +2325,7 @@ export function SpeakFlowApp() {
                 </div>
 
                 {/* BOTTOM NAVIGATION DOCK */}
-                <div className="h-[52px] px-4 flex items-center justify-between bg-[#0F0F12]">
+                <div className="h-[52px] px-4 flex items-center justify-between bg-[#0F0F12] shrink-0">
                   <button
                     type="button"
                     onClick={() => navigateTo(3)}
@@ -2156,6 +2371,138 @@ export function SpeakFlowApp() {
                   </button>
                 </div>
               </div>
+
+              {/* QUICK EDIT PROFILE MODAL */}
+              {isEditProfileModalOpen && (
+                <div
+                  className="absolute inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 animate-in fade-in duration-200"
+                  onClick={() => setIsEditProfileModalOpen(false)}
+                >
+                  <div
+                    className="bg-white rounded-[28px] w-full max-w-[320px] p-4 text-[#0F0F12] shadow-2xl animate-in zoom-in-95 duration-200"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {/* Modal Header */}
+                    <div className="flex items-center justify-between pb-2 border-b border-black/[0.08]">
+                      <h3 className="text-[14px] font-extrabold text-[#0F0F12]">
+                        {isIndonesian ? "Pengaturan Profil & Target" : "Profile & Goal Settings"}
+                      </h3>
+                      <button
+                        type="button"
+                        onClick={() => setIsEditProfileModalOpen(false)}
+                        className="w-7 h-7 rounded-full bg-[#F4F4F7] flex items-center justify-center text-[#71717A] hover:text-[#0F0F12] font-bold"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    {/* Modal Body */}
+                    <div className="py-3 flex flex-col gap-3">
+                      {/* Name Input */}
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#71717A] uppercase tracking-wider block mb-1">
+                          {isIndonesian ? "Nama Panggilan" : "Display Name"}
+                        </label>
+                        <input
+                          type="text"
+                          value={guestName}
+                          onChange={(e) => setGuestName(e.target.value)}
+                          placeholder="Alex"
+                          className="w-full px-3 py-2 rounded-[14px] bg-[#F5F5F8] border border-black/10 text-[13px] font-bold text-[#0F0F12] focus:outline-none focus:ring-2 focus:ring-[#8F5BFF]"
+                        />
+                      </div>
+
+                      {/* Avatar Picker */}
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#71717A] uppercase tracking-wider block mb-1">
+                          {isIndonesian ? "Pilih Maskot Avatar" : "Choose Mascot Avatar"}
+                        </label>
+                        <div className="flex items-center justify-between gap-1.5">
+                          {CALENDAR_PARTNERS.map((p) => {
+                            const isSelected = guestAvatar === p.id;
+                            return (
+                              <button
+                                key={p.id}
+                                type="button"
+                                onClick={() => setGuestAvatar(p.id)}
+                                style={{ backgroundColor: p.color }}
+                                className={`w-9 h-9 rounded-full flex items-center justify-center transition-all ${
+                                  isSelected ? "ring-2 ring-[#0F0F12] scale-110 shadow-sm" : "opacity-80 hover:opacity-100"
+                                }`}
+                                title={p.name}
+                              >
+                                <MiniCalendarFace face={p.face} />
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Level Selector */}
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#71717A] uppercase tracking-wider block mb-1">
+                          {isIndonesian ? "Level Bahasa Inggris" : "English Level"}
+                        </label>
+                        <div className="grid grid-cols-5 gap-1">
+                          {["A1", "A2", "B1", "B2", "C1"].map((lvl) => (
+                            <button
+                              key={lvl}
+                              type="button"
+                              onClick={() => setGuestLevel(lvl)}
+                              className={`py-1.5 rounded-[10px] text-[11px] font-extrabold transition-all ${
+                                guestLevel === lvl
+                                  ? "bg-[#0F0F12] text-white shadow-xs"
+                                  : "bg-[#F5F5F8] text-[#71717A] hover:bg-[#ECECF2]"
+                              }`}
+                            >
+                              {lvl}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Daily Target Selector */}
+                      <div>
+                        <label className="text-[10px] font-extrabold text-[#71717A] uppercase tracking-wider block mb-1">
+                          {isIndonesian ? "Target Sesi Harian" : "Daily Speaking Target"}
+                        </label>
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {[1, 3, 5].map((target) => (
+                            <button
+                              key={target}
+                              type="button"
+                              onClick={() => setDailyGoalTarget(target)}
+                              className={`py-1.5 rounded-[10px] text-[11px] font-extrabold transition-all ${
+                                dailyGoalTarget === target
+                                  ? "bg-[#8F5BFF] text-white shadow-xs"
+                                  : "bg-[#F5F5F8] text-[#71717A] hover:bg-[#ECECF2]"
+                              }`}
+                            >
+                              {target} {isIndonesian ? "Sesi" : "Sessions"}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        persistUserProfile(guestName, guestLevel, guestAgeRange, guestAvatar, dailyGoalTarget);
+                        setIsEditProfileModalOpen(false);
+                        showToast(
+                          isIndonesian ? "Profil berhasil disimpan!" : "Profile updated successfully!",
+                          "#B8F3B8"
+                        );
+                      }}
+                      className="tap-scale w-full py-2.5 rounded-full bg-[#0F0F12] text-white text-[12px] font-extrabold hover:bg-[#222228] transition-colors"
+                    >
+                      {isIndonesian ? "Simpan Perubahan" : "Save Changes"}
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -2999,13 +3346,15 @@ export function SpeakFlowApp() {
                         Level {guestLevel}
                       </h3>
                       <span className="text-[10px] font-extrabold bg-[#0F0F12] text-[#B8F3B8] px-2.5 py-0.5 rounded-full">
-                        7 Days Streak
+                        {currentStreak} {isIndonesian ? "Hari Streak" : "Days Streak"}
                       </span>
                     </div>
                   </div>
 
                   <p className="text-[10.5px] font-semibold text-[#0F0F12]/75 max-w-[186px] leading-snug z-10">
-                    Elementary Speaker You are calm and confident Keep up the daily streak!
+                    {isIndonesian
+                      ? "Penutur Percaya Diri! Terus pertahankan rentetan belajar harian Anda!"
+                      : "Elementary Speaker You are calm and confident Keep up the daily streak!"}
                   </p>
 
                   {/* Giant Smiling Face on Right Edge */}
@@ -3021,7 +3370,9 @@ export function SpeakFlowApp() {
                   <div className="bg-white rounded-[22px] p-3 flex flex-col justify-between">
                     <span className="text-[10.5px] font-bold text-[#0F0F12]">Weekly Streak</span>
                     <div>
-                      <p className="text-[18px] font-extrabold text-[#0F0F12] metric-tight">7 of 7</p>
+                      <p className="text-[18px] font-extrabold text-[#0F0F12] metric-tight">
+                        {Math.min(7, currentStreak)} of 7
+                      </p>
                       <p className="text-[9.5px] font-semibold text-[#9898A6] mt-1">Days active</p>
                     </div>
                   </div>
