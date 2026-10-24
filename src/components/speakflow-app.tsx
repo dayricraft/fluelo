@@ -144,6 +144,166 @@ const ROOM_PARTNERS: Record<string, PartnerConfig> = {
   }
 };
 
+const PARTNER_SUGGESTIONS: Record<string, string[]> = {
+  Sarah: [
+    "Order an iced oat latte",
+    "Warm butter croissant please",
+    "How is your morning going?",
+    "Let us talk about breakfast",
+  ],
+  Emma: [
+    "Can you check my grammar?",
+    "How can I sound more natural?",
+    "Let us practice past tense",
+    "Give me a quick sentence test",
+  ],
+  Sophia: [
+    "I am planning a trip to Tokyo",
+    "Best packing tips for travel",
+    "Window seat for my flight please",
+    "What is your favorite city?",
+  ],
+  David: [
+    "Let us practice a job interview",
+    "How to describe my job clearly",
+    "Giving a daily work update",
+    "Tips for professional networking",
+  ],
+  Kenji: [
+    "How is college life going?",
+    "Favorite street food in town",
+    "What video games do you like?",
+    "Teach me some casual English slang",
+  ],
+};
+
+function generatePartnerResponse(userText: string, partnerName: string): string {
+  const lower = userText.toLowerCase().trim();
+
+  // Greetings
+  if (/^(hi|hello|hey|good morning|good afternoon|good evening|howdy)/i.test(lower)) {
+    switch (partnerName) {
+      case "Sarah":
+        return "Good morning Alex! Welcome to Perk Cafe. How are you feeling today, and what can I brew for you?";
+      case "Emma":
+        return "Hello Alex! I am so glad you are practicing today. What topic would you like to explore together?";
+      case "Sophia":
+        return "Hey Alex! Ready for our next travel adventure? Where are you dreaming of going next?";
+      case "David":
+        return "Good morning Alex! Hope you are having a productive day. How is your work and project going?";
+      case "Kenji":
+        return "Yo Alex! Awesome to see you. What have you been up to today?";
+      default:
+        return "Hello Alex! Great to hear from you. What would you like to talk about today?";
+    }
+  }
+
+  // Cafe / Food / Ordering
+  if (
+    lower.includes("latte") ||
+    lower.includes("coffee") ||
+    lower.includes("croissant") ||
+    lower.includes("tea") ||
+    lower.includes("order") ||
+    lower.includes("breakfast") ||
+    lower.includes("pastry") ||
+    lower.includes("menu")
+  ) {
+    if (partnerName === "Sarah") {
+      return "That sounds delicious! Coming right up. Would you like that for here or to go?";
+    } else if (partnerName === "Kenji") {
+      return "Now that makes me hungry! Street food or a cozy cafe is always the best spot to hang out. What is your go-to comfort food?";
+    }
+  }
+
+  // Travel / Flight / Airport / Vacation
+  if (
+    lower.includes("japan") ||
+    lower.includes("tokyo") ||
+    lower.includes("bali") ||
+    lower.includes("flight") ||
+    lower.includes("travel") ||
+    lower.includes("trip") ||
+    lower.includes("airport") ||
+    lower.includes("pack") ||
+    lower.includes("seat")
+  ) {
+    if (partnerName === "Sophia") {
+      return "That sounds like an amazing journey! The sights and local culture there are unforgettable. Have you started packing your suitcase yet?";
+    }
+  }
+
+  // Grammar / Learning / Improvement
+  if (
+    lower.includes("grammar") ||
+    lower.includes("check") ||
+    lower.includes("natural") ||
+    lower.includes("sentence") ||
+    lower.includes("tense") ||
+    lower.includes("learn") ||
+    lower.includes("practice")
+  ) {
+    if (partnerName === "Emma") {
+      return "Your sentence structure was clear and easy to understand! Daily conversation builds true fluency. Can you tell me more about that?";
+    }
+  }
+
+  // Work / Job / Career / Tech
+  if (
+    lower.includes("job") ||
+    lower.includes("work") ||
+    lower.includes("interview") ||
+    lower.includes("design") ||
+    lower.includes("project") ||
+    lower.includes("career") ||
+    lower.includes("coding") ||
+    lower.includes("developer")
+  ) {
+    if (partnerName === "David") {
+      return "Clear and confident communication is essential for career success. What is the most exciting milestone on your roadmap right now?";
+    }
+  }
+
+  // Inquiries about partner / How are you
+  if (lower.includes("how are you") || lower.includes("how are things") || lower.includes("about you")) {
+    switch (partnerName) {
+      case "Sarah":
+        return "I am doing wonderful, thank you! Brewing coffee and chatting with you makes my day.";
+      case "Emma":
+        return "I am feeling great today! Helping learners like you express themselves in English is my favorite thing.";
+      case "Sophia":
+        return "Super energized! Just looking up some flight tickets and hiking trails. What are your weekend plans?";
+      case "David":
+        return "Doing well, thank you! Focused on growth and mentoring ambitious people like you.";
+      case "Kenji":
+        return "I am doing great! Just relaxing between classes. What is on your agenda for today?";
+      default:
+        return "I am doing very well, thank you for asking! How is your day going?";
+    }
+  }
+
+  // Gratitude / Compliments
+  if (lower.includes("thank") || lower.includes("thanks") || lower.includes("great") || lower.includes("awesome")) {
+    return "You are very welcome! You are speaking with wonderful rhythm today. Keep that momentum going!";
+  }
+
+  // Default partner-specific contextual replies
+  switch (partnerName) {
+    case "Sarah":
+      return "That sounds lovely! Daily casual chats are the best way to get comfortable with English. Tell me more about that!";
+    case "Emma":
+      return "Well expressed! You used very natural wording there. What else would you like to share?";
+    case "Sophia":
+      return "I love hearing about that! It makes me want to explore new places. Do you enjoy beaches or big cities more?";
+    case "David":
+      return "Very well articulated. Having a confident voice opens up so many doors. How do you plan to build on that?";
+    case "Kenji":
+      return "Totally get what you mean! That sounds really fun. What do your friends think about that?";
+    default:
+      return "That is super interesting! Tell me more about your thoughts on that.";
+  }
+}
+
 const GRAMMAR_QUESTIONS = [
   { q: "Is 'She has lived in London since 2024' grammatically correct?", ans: true, note: "Correct! Present Perfect with since for a starting point." },
   { q: "Is 'I have went to the English class yesterday' correct?", ans: false, note: "Spot on! With yesterday, use Simple Past: I went." },
@@ -336,6 +496,40 @@ export function SpeakFlowApp() {
   const [inRoomEvaluation, setInRoomEvaluation] = useState(false);
   const [hasStartedVoice, setHasStartedVoice] = useState(false);
 
+  // Real Web Speech Recognition & Interactive Input
+  const [isWebSpeechListening, setIsWebSpeechListening] = useState(false);
+  const [interimSpeechText, setInterimSpeechText] = useState("");
+  const [roomInputText, setRoomInputText] = useState("");
+  const recognitionRef = useRef<any>(null);
+
+  // Preload browser speech voices
+  useEffect(() => {
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.getVoices();
+      const onVoicesChanged = () => {
+        window.speechSynthesis.getVoices();
+      };
+      window.speechSynthesis.addEventListener("voiceschanged", onVoicesChanged);
+      return () => {
+        window.speechSynthesis.removeEventListener("voiceschanged", onVoicesChanged);
+      };
+    }
+  }, []);
+
+  // Cleanup speech recognition and synthesis on unmount
+  useEffect(() => {
+    return () => {
+      if (typeof window !== "undefined" && "speechSynthesis" in window) {
+        window.speechSynthesis.cancel();
+      }
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {}
+      }
+    };
+  }, []);
+
   // Minimal Feedback Indicator State (Checkmark ✓ or Cross ✕ only, NO verbose text)
   const [feedbackStatus, setFeedbackStatus] = useState<"check" | "cross" | null>(null);
 
@@ -384,11 +578,19 @@ export function SpeakFlowApp() {
     if (live.isActive) {
       void live.endSession();
     }
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    stopWebSpeech();
     setCurrentPartnerKey(name);
     setNextExchangeIdx(0);
     setChatHistory([]);
     setInRoomEvaluation(false);
     setHasStartedVoice(false);
+    setSimulatedSpeaking(false);
+    setSimulatedListening(false);
+    setInterimSpeechText("");
+    setRoomInputText("");
     playChime(420, 540);
   };
 
@@ -397,7 +599,7 @@ export function SpeakFlowApp() {
     if (chatBottomRef.current) {
       chatBottomRef.current.scrollIntoView({ behavior: "smooth" });
     }
-  }, [chatHistory, live.transcript]);
+  }, [chatHistory, live.transcript, interimSpeechText]);
 
   // When live session ends and feedback arrives, show in-room evaluation
   useEffect(() => {
@@ -406,23 +608,61 @@ export function SpeakFlowApp() {
     }
   }, [live.feedback]);
 
-  // Web Speech API fallback text-to-speech so AI speaks out loud even without Live stream
-  const speakWithBrowserTTS = (text: string, onEnd?: () => void) => {
+  // Web Speech API text-to-speech with persona-matching accents
+  const speakWithBrowserTTS = (text: string, partnerName: string, onEnd?: () => void) => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       try {
         window.speechSynthesis.cancel();
         const utterance = new SpeechSynthesisUtterance(text);
-        utterance.lang = "en-US";
-        utterance.rate = 0.95;
-        utterance.pitch = 1.05;
-        utterance.onend = () => {
-          onEnd?.();
+
+        // Matching accent by partner
+        if (partnerName === "Sarah") {
+          utterance.lang = "en-GB"; // British English barista
+          utterance.rate = 0.95;
+          utterance.pitch = 1.05;
+        } else if (partnerName === "Sophia") {
+          utterance.lang = "en-AU"; // Australian English travel buddy
+          utterance.rate = 1.0;
+          utterance.pitch = 1.08;
+        } else if (partnerName === "David") {
+          utterance.lang = "en-US"; // American English mentor
+          utterance.rate = 0.94;
+          utterance.pitch = 0.92;
+        } else if (partnerName === "Emma") {
+          utterance.lang = "en-US"; // Clear American English grammar coach
+          utterance.rate = 0.95;
+          utterance.pitch = 1.02;
+        } else {
+          utterance.lang = "en-US";
+          utterance.rate = 1.0;
+          utterance.pitch = 1.0;
+        }
+
+        const voices = window.speechSynthesis.getVoices();
+        if (voices && voices.length > 0) {
+          const targetLang = utterance.lang.toLowerCase();
+          const match =
+            voices.find((v) => v.lang.toLowerCase() === targetLang) ||
+            voices.find((v) => v.lang.toLowerCase().startsWith(targetLang.slice(0, 2))) ||
+            voices.find((v) => v.lang.toLowerCase().includes("en"));
+          if (match) {
+            utterance.voice = match;
+          }
+        }
+
+        let finished = false;
+        const finish = () => {
+          if (!finished) {
+            finished = true;
+            onEnd?.();
+          }
         };
-        utterance.onerror = () => {
-          onEnd?.();
-        };
+
+        utterance.onend = finish;
+        utterance.onerror = finish;
         window.speechSynthesis.speak(utterance);
-      } catch {
+      } catch (err) {
+        console.warn("Speech synthesis error:", err);
         onEnd?.();
       }
     } else {
@@ -430,102 +670,186 @@ export function SpeakFlowApp() {
     }
   };
 
-  // Fallback interactive speech turn (when offline, mic blocked, or browser speech)
-  const triggerFallbackExchange = (customAiText?: string) => {
-    playChime(480, 620);
-    setSimulatedListening(true);
-    setSimulatedSpeaking(false);
-
-    const exchange = partner.nextExchanges[nextExchangeIdx % partner.nextExchanges.length];
-    setNextExchangeIdx((prev) => prev + 1);
-
-    const userText = exchange.user;
-    const aiText = customAiText || exchange.ai;
-
-    setTimeout(() => {
-      setSimulatedListening(false);
-      setChatHistory((prev) => [...prev, { sender: "user", text: userText }]);
-
-      setTimeout(() => {
-        setChatHistory((prev) => [...prev, { sender: "ai", text: aiText }]);
-        setSimulatedSpeaking(true);
-        playChime(420, 540);
-
-        speakWithBrowserTTS(aiText, () => {
-          setSimulatedSpeaking(false);
-        });
-      }, 500);
-    }, 1200);
+  const stopWebSpeech = () => {
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {}
+      recognitionRef.current = null;
+    }
+    setIsWebSpeechListening(false);
+    setSimulatedListening(false);
+    setInterimSpeechText("");
   };
 
-  // Handle live error: notify and fall back gracefully with audible voice
+  const startWebSpeech = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognitionClass =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognitionClass) {
+      showToast("Speech recognition not supported in this browser. Try typing below!", "#FDE272");
+      return;
+    }
+
+    try {
+      if (recognitionRef.current) {
+        try {
+          recognitionRef.current.abort();
+        } catch {}
+      }
+
+      const recognition = new SpeechRecognitionClass();
+      recognition.lang = "en-US";
+      recognition.continuous = false;
+      recognition.interimResults = true;
+      recognition.maxAlternatives = 1;
+
+      recognition.onstart = () => {
+        setIsWebSpeechListening(true);
+        setSimulatedListening(true);
+        setInterimSpeechText("");
+      };
+
+      recognition.onresult = (event: any) => {
+        let interim = "";
+        let final = "";
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          if (event.results[i].isFinal) {
+            final += event.results[i][0].transcript;
+          } else {
+            interim += event.results[i][0].transcript;
+          }
+        }
+        if (interim) {
+          setInterimSpeechText(interim);
+        }
+        if (final.trim()) {
+          setInterimSpeechText("");
+          handleSendUserSpeech(final.trim());
+        }
+      };
+
+      recognition.onerror = (event: any) => {
+        console.warn("Speech recognition error:", event.error);
+        setIsWebSpeechListening(false);
+        setSimulatedListening(false);
+        setInterimSpeechText("");
+        if (event.error === "not-allowed") {
+          showToast("Microphone permission denied. Check browser settings.", "#F9A8A8");
+        }
+      };
+
+      recognition.onend = () => {
+        setIsWebSpeechListening(false);
+        setSimulatedListening(false);
+      };
+
+      recognitionRef.current = recognition;
+      recognition.start();
+    } catch (err) {
+      console.warn("Speech recognition start failed:", err);
+      setIsWebSpeechListening(false);
+      setSimulatedListening(false);
+    }
+  };
+
+  const handleSendUserSpeech = (userText: string) => {
+    if (!userText.trim()) return;
+
+    stopWebSpeech();
+    playChime(520, 680);
+    setChatHistory((prev) => [...prev, { sender: "user", text: userText }]);
+
+    setTimeout(() => {
+      const aiResponse = generatePartnerResponse(userText, partner.name);
+      setChatHistory((prev) => [...prev, { sender: "ai", text: aiResponse }]);
+      setSimulatedSpeaking(true);
+      playChime(420, 540);
+
+      speakWithBrowserTTS(aiResponse, partner.name, () => {
+        setSimulatedSpeaking(false);
+        setTimeout(() => {
+          startWebSpeech();
+        }, 350);
+      });
+    }, 450);
+  };
+
+  // Fallback interactive exchange if needed
+  const triggerFallbackExchange = (customAiText?: string) => {
+    playChime(480, 620);
+    const exchange = partner.nextExchanges[nextExchangeIdx % partner.nextExchanges.length];
+    setNextExchangeIdx((prev) => prev + 1);
+    const userText = exchange.user;
+    handleSendUserSpeech(userText);
+  };
+
+  // Handle live error: notify and fall back gracefully with audio
   useEffect(() => {
     if (live.error) {
       showToast(live.error, "#F9A8A8");
-      // Seamlessly fall back to interactive voice exchange with audio voice so user is never left hanging
       setTimeout(() => {
         triggerFallbackExchange();
       }, 600);
     }
   }, [live.error]);
 
-  // Main Voice Tap: Starts real Gemini Live audio streaming session, or simulation
+  // Main Voice Tap: Starts speech recognition or toggles listening
   const handleVoiceTap = async () => {
     setHasStartedVoice(true);
-    // If live session is already active: toggle mute
+
     if (live.isActive) {
       live.toggleMute();
       showToast(live.muted ? "Microphone muted" : "Microphone active", "#B8F3B8");
       return;
     }
 
-    // Try starting real Live Gemini session
-    try {
-      playChime(480, 620);
-      setInRoomEvaluation(false);
-      showToast(`Connecting to ${partner.name}...`, "#B8F3B8");
-
-      const partnerTopicId =
-        partner.id === "partner-sarah"
-          ? "daily"
-          : partner.id === "partner-sofia"
-            ? "travel"
-            : partner.id === "partner-david"
-              ? "tech"
-              : partner.id === "partner-kenji"
-                ? "campus"
-                : "intro";
-
-      const options: StartLiveSessionOptions = {
-        mode: "practice",
-        level: "A1",
-        topicId: partnerTopicId,
-        topicTitle: `Daily Talk with ${partner.name}`,
-        partnerId: partner.id,
-        partnerName: partner.name,
-      };
-
-      live.resetSession();
-      await live.startSession(options);
-    } catch (err) {
-      console.error("Live session could not start, falling back to interactive speech:", err);
-      triggerFallbackExchange();
+    if (isWebSpeechListening || simulatedListening) {
+      stopWebSpeech();
+      showToast("Microphone paused", "#F9A8A8");
+      return;
     }
+
+    if (simulatedSpeaking && typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+      setSimulatedSpeaking(false);
+    }
+
+    if (chatHistory.length === 0) {
+      const initialGreeting =
+        partner.initialChat[0]?.text ||
+        `Hi Alex! Welcome to Perk Cafe. What would you like to order this morning?`;
+      setChatHistory([{ sender: "ai", text: initialGreeting }]);
+      setSimulatedSpeaking(true);
+      playChime(420, 540);
+      speakWithBrowserTTS(initialGreeting, partner.name, () => {
+        setSimulatedSpeaking(false);
+        startWebSpeech();
+      });
+      return;
+    }
+
+    playChime(480, 620);
+    startWebSpeech();
   };
 
   // End Room Talk Session -> triggers In-Room Evaluation
   const handleEndSession = async () => {
+    stopWebSpeech();
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      window.speechSynthesis.cancel();
+    }
+    setSimulatedSpeaking(false);
+    setSimulatedListening(false);
+    setInRoomEvaluation(true);
+    showToast(`Room Talk with ${partner.name} ended`, "#F9A8A8");
     if (live.isActive) {
-      showToast(`Ending session with ${partner.name}...`, "#F9A8A8");
-      setInRoomEvaluation(true);
       try {
         await live.endSession();
       } catch (err) {
         console.error("End session error:", err);
       }
-    } else {
-      setInRoomEvaluation(true);
-      showToast(`Room Talk with ${partner.name} ended`, "#F9A8A8");
     }
   };
 
@@ -538,9 +862,9 @@ export function SpeakFlowApp() {
     }
   };
 
-  // Speaking state: active when Gemini live is speaking OR simulated speech is active
+  // Speaking state: active when Gemini live is speaking OR browser speech is active
   const isCurrentlySpeaking = live.status === "speaking" || simulatedSpeaking;
-  const isCurrentlyListening = live.status === "listening" || simulatedListening;
+  const isCurrentlyListening = live.status === "listening" || simulatedListening || isWebSpeechListening;
 
   // Dynamic Island active state
   const isIslandActive = isCurrentlySpeaking || isCurrentlyListening || live.status === "connecting";
@@ -548,10 +872,10 @@ export function SpeakFlowApp() {
   // Status text for the stage pill
   const getStageStatusText = () => {
     if (live.status === "connecting") return `Connecting to ${partner.name}...`;
-    if (isCurrentlySpeaking) return `${partner.name} is speaking`;
-    if (isCurrentlyListening) return `${partner.name} is listening to you`;
+    if (isCurrentlySpeaking) return `${partner.name} is speaking...`;
+    if (isCurrentlyListening) return `${partner.name} is listening to you...`;
     if (live.status === "evaluating") return `Analyzing your speaking...`;
-    return `Tap Voice to talk with ${partner.name}`;
+    return `Tap Voice to speak with ${partner.name}`;
   };
 
   // Get displayed chat turns: prefer real live session transcripts if any
@@ -1555,11 +1879,20 @@ export function SpeakFlowApp() {
                   className={`rounded-[28px] p-4 relative overflow-hidden flex flex-col items-center justify-between transition-all duration-300 ${
                     !hasStartedVoice
                       ? "flex-1 cursor-pointer py-6"
-                      : "h-[195px] shrink-0"
+                      : "h-[175px] shrink-0"
                   }`}
                 >
                   <div className="w-full flex items-center justify-between z-10">
-                    <div className="inline-flex items-center bg-[#0F0F12] text-white px-3 py-1 rounded-full">
+                    <div className="inline-flex items-center gap-1.5 bg-[#0F0F12] text-white px-3 py-1 rounded-full">
+                      {(isCurrentlySpeaking || isCurrentlyListening) && (
+                        <div className="flex items-center gap-[2.5px] h-3 mr-0.5" aria-hidden="true">
+                          <span className="sound-wave-bar text-[#B8F3B8]" style={{ animationDelay: "0ms" }} />
+                          <span className="sound-wave-bar text-[#B8F3B8]" style={{ animationDelay: "150ms" }} />
+                          <span className="sound-wave-bar text-[#B8F3B8]" style={{ animationDelay: "300ms" }} />
+                          <span className="sound-wave-bar text-[#B8F3B8]" style={{ animationDelay: "450ms" }} />
+                          <span className="sound-wave-bar text-[#B8F3B8]" style={{ animationDelay: "600ms" }} />
+                        </div>
+                      )}
                       <span className="text-[10.5px] font-extrabold tracking-tight">
                         {!hasStartedVoice
                           ? (isIndonesian ? `Tekan Voice untuk bicara dengan ${partner.name}` : `Tap Voice to talk with ${partner.name}`)
@@ -1744,8 +2077,64 @@ export function SpeakFlowApp() {
                             </div>
                           ))
                         )}
+                        {interimSpeechText && (
+                          <div className="flex flex-col items-end self-end max-w-[88%] animate-pulse">
+                            <span className="text-[9.5px] font-extrabold text-[#9898A6] mb-0.5 px-1">
+                              {isIndonesian ? "Kamu (berbicara...)" : "You (speaking...)"}
+                            </span>
+                            <div className="px-3.5 py-2.5 text-[12px] font-bold leading-snug rounded-[18px] rounded-tr-[6px] bg-[#0F0F12]/85 text-white border border-[#B8F3B8]/50 shadow-xs">
+                              {interimSpeechText}
+                              <span className="inline-block w-1.5 h-3 ml-1 bg-[#B8F3B8] animate-ping align-middle" />
+                            </div>
+                          </div>
+                        )}
                         <div ref={chatBottomRef} />
                       </div>
+
+                      {/* Quick Suggestion Prompt Chips */}
+                      <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 pb-1.5 border-t border-black/[0.06] shrink-0">
+                        {PARTNER_SUGGESTIONS[currentPartnerKey]?.map((sug, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleSendUserSpeech(sug)}
+                            className="tap-scale px-2.5 py-1 rounded-full bg-[#F4F4F8] hover:bg-[#EAEAF0] active:scale-95 text-[#0F0F12] text-[10.5px] font-bold whitespace-nowrap shrink-0 transition-all border border-black/[0.04]"
+                          >
+                            {sug}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* In-Room Text Input Box */}
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          if (roomInputText.trim()) {
+                            handleSendUserSpeech(roomInputText.trim());
+                            setRoomInputText("");
+                          }
+                        }}
+                        className="flex items-center gap-1.5 pt-1 shrink-0"
+                      >
+                        <input
+                          type="text"
+                          value={roomInputText}
+                          onChange={(e) => setRoomInputText(e.target.value)}
+                          placeholder={isIndonesian ? `Ketik pesan ke ${partner.name}...` : `Type a message to ${partner.name}...`}
+                          className="flex-1 h-[36px] px-3.5 rounded-full bg-[#F4F4F8] text-[11.5px] font-semibold text-[#0F0F12] placeholder:text-[#9898A6] focus:outline-none focus:ring-1 focus:ring-black/20 border border-black/[0.06]"
+                        />
+                        <button
+                          type="submit"
+                          disabled={!roomInputText.trim()}
+                          className="tap-scale w-[36px] h-[36px] rounded-full bg-[#0F0F12] disabled:opacity-25 disabled:cursor-not-allowed text-white flex items-center justify-center shrink-0 transition-opacity"
+                          title="Send message"
+                        >
+                          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                            <path d="M22 2L11 13" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                            <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                        </button>
+                      </form>
                     </>
                   ) : (
                     /* IN-ROOM EVALUATION VIEW */
@@ -1805,7 +2194,12 @@ export function SpeakFlowApp() {
                           type="button"
                           onClick={() => {
                             setInRoomEvaluation(false);
-                            void handleVoiceTap();
+                            setChatHistory([]);
+                            setHasStartedVoice(false);
+                            stopWebSpeech();
+                            if (typeof window !== "undefined" && "speechSynthesis" in window) {
+                              window.speechSynthesis.cancel();
+                            }
                           }}
                           className="tap-scale h-[40px] px-3 bg-[#F4F4F8] hover:bg-[#EAEAF0] text-[#0F0F12] rounded-full text-[12px] font-extrabold tracking-tight flex items-center justify-center transition-colors font-sans"
                         >
@@ -1874,10 +2268,10 @@ export function SpeakFlowApp() {
                       {live.status === "connecting"
                         ? "Connecting..."
                         : isCurrentlyListening
-                          ? "Listening"
+                          ? (isIndonesian ? "Mendengarkan..." : "Listening...")
                           : isCurrentlySpeaking
-                            ? "Speaking"
-                            : "Voice"}
+                            ? (isIndonesian ? "Bicara..." : "Speaking...")
+                            : (isIndonesian ? "Bicara (Mic)" : "Tap to Speak")}
                     </span>
                   </button>
 
