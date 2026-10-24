@@ -647,6 +647,233 @@ export const SLUG_TO_SCREEN: Record<string, number> = {
   calendar: 5,
 };
 
+
+function SidebarDrawer({
+  isOpen,
+  onClose,
+  activeScreen,
+  onNavigate,
+  isIndonesian,
+  onToggleLanguage,
+  isDarkMode,
+  onToggleTheme,
+  guestName,
+  guestLevel,
+  guestAvatar,
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  activeScreen: number;
+  onNavigate: (screen: number) => void;
+  isIndonesian: boolean;
+  onToggleLanguage: (id: boolean) => void;
+  isDarkMode: boolean;
+  onToggleTheme: () => void;
+  guestName: string;
+  guestLevel: string;
+  guestAvatar: string;
+}) {
+  if (!isOpen) return null;
+
+  const menuItems = [
+    {
+      num: 1,
+      title: "Onboarding",
+      subEn: "Introduction & app overview",
+      subId: "Pengenalan & panduan awal",
+      icon: (
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.2" />
+          <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" />
+        </svg>
+      ),
+    },
+    {
+      num: 3,
+      title: "Dashboard",
+      subEn: "Daily goals & progress",
+      subId: "Target harian & progres",
+      icon: (
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+          <path d="M4 10.5L12 4L20 10.5V19C20 19.6 19.6 20 19 20H5C4.4 20 4 19.6 4 19V10.5Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      num: 4,
+      title: "Room Talk",
+      subEn: "Live AI voice practice",
+      subId: "Latihan suara AI langsung",
+      icon: (
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+          <path d="M12 12C12 10.3 13.3 9 15 9C16.7 9 18 10.3 18 12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12C6 7.6 9.6 4 14 4C18.4 4 21 7.6 21 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      num: 5,
+      title: "Calendar",
+      subEn: "Check-in & streak history",
+      subId: "Riwayat streak & check-in",
+      icon: (
+        <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M8 3V6M16 3V6M4 10H20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <div
+      className="absolute inset-0 z-50 bg-black/60 backdrop-blur-xs flex justify-end animate-in fade-in duration-200"
+      onClick={onClose}
+    >
+      <div
+        className="w-[82%] max-w-[280px] h-full bg-[#0F0F12] text-white p-4 flex flex-col justify-between shadow-2xl animate-in slide-in-from-right duration-300 border-l border-white/10"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Top: Brand Header & User Profile Preview */}
+        <div>
+          <div className="flex items-center justify-between pb-3 border-b border-white/10">
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-full bg-[#8F5BFF] flex items-center justify-center">
+                <span className="w-3 h-3 rounded-full bg-white" />
+              </div>
+              <div>
+                <h3 className="text-[15px] font-extrabold text-white tracking-tight leading-none">Fluelo</h3>
+                <p className="text-[9.5px] font-bold text-[#8C8C99] mt-0.5">AI Speaking App</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={onClose}
+              className="w-7 h-7 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white tap-scale"
+              aria-label="Close menu"
+            >
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+              </svg>
+            </button>
+          </div>
+
+          {/* Active User Card */}
+          <div className="mt-3 p-2.5 rounded-[16px] bg-white/5 border border-white/5 flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-white/15 shrink-0">
+              <FlueloCloudSVG name={guestAvatar || "Sarah"} size={36} blink={false} />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-extrabold text-white truncate leading-tight font-sans">
+                {guestName || "Alex"}
+              </p>
+              <p className="text-[10px] font-bold text-[#B8F3B8] mt-0.5 font-sans">
+                Level {guestLevel} • Active
+              </p>
+            </div>
+          </div>
+
+          {/* Navigation Title */}
+          <p className="text-[9.5px] font-extrabold text-[#71717A] uppercase tracking-wider mt-4 mb-2 px-1 font-sans">
+            {isIndonesian ? "Menu Navigasi" : "Navigation"}
+          </p>
+
+          {/* 4 Menu Items: Onboarding, Dashboard, Room Talk, Calendar */}
+          <nav className="flex flex-col gap-1.5 font-sans">
+            {menuItems.map((item) => {
+              const isActive = activeScreen === item.num;
+              return (
+                <button
+                  key={item.num}
+                  type="button"
+                  onClick={() => {
+                    onNavigate(item.num);
+                    onClose();
+                  }}
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[14px] font-extrabold text-[12.5px] transition-all tap-scale ${
+                    isActive
+                      ? "bg-[#B8F3B8] text-[#0F0F12] shadow-sm"
+                      : "text-white/80 hover:text-white hover:bg-white/5"
+                  }`}
+                >
+                  <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${isActive ? "bg-[#0F0F12]/10" : "bg-white/10"}`}>
+                    {item.icon}
+                  </div>
+                  <div className="text-left flex-1 min-w-0">
+                    <p className="leading-tight">{item.title}</p>
+                    <p className={`text-[9.5px] font-bold mt-0.5 truncate ${isActive ? "text-[#0F0F12]/70" : "text-[#71717A]"}`}>
+                      {isIndonesian ? item.subId : item.subEn}
+                    </p>
+                  </div>
+                </button>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* Bottom Preferences: Theme & Language */}
+        <div className="pt-3 border-t border-white/10 flex flex-col gap-2 font-sans">
+          <p className="text-[9.5px] font-extrabold text-[#71717A] uppercase tracking-wider px-1">
+            {isIndonesian ? "Tema & Bahasa" : "Theme & Language"}
+          </p>
+
+          {/* Language Switch */}
+          <div className="bg-white/5 rounded-[14px] p-1.5 px-2.5 flex items-center justify-between">
+            <span className="text-[11.5px] font-bold text-white/80">
+              {isIndonesian ? "Bahasa" : "Language"}
+            </span>
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => onToggleLanguage(false)}
+                className={`px-2 py-0.5 rounded-[8px] text-[10.5px] font-extrabold transition-all tap-scale ${
+                  !isIndonesian ? "bg-[#8F5BFF] text-white" : "text-white/50 hover:text-white"
+                }`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleLanguage(true)}
+                className={`px-2 py-0.5 rounded-[8px] text-[10.5px] font-extrabold transition-all tap-scale ${
+                  isIndonesian ? "bg-[#8F5BFF] text-white" : "text-white/50 hover:text-white"
+                }`}
+              >
+                ID
+              </button>
+            </div>
+          </div>
+
+          {/* Theme Switch */}
+          <button
+            type="button"
+            onClick={onToggleTheme}
+            className="bg-white/5 hover:bg-white/10 rounded-[14px] p-2 px-2.5 flex items-center justify-between text-left transition-all tap-scale"
+          >
+            <div className="flex items-center gap-2">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                {isDarkMode ? (
+                  <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" stroke="#B8F3B8" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                ) : (
+                  <>
+                    <circle cx="12" cy="12" r="5" stroke="#FDE272" strokeWidth="2.2" />
+                    <path d="M12 1V3M12 21V23M4.22 4.22L5.64 5.64M18.36 18.36L19.78 19.78M1 12H3M21 12H23M4.22 19.78L5.64 18.36M18.36 5.64L19.78 4.22" stroke="#FDE272" strokeWidth="2" strokeLinecap="round" />
+                  </>
+                )}
+              </svg>
+              <span className="text-[11.5px] font-bold text-white/90">
+                {isIndonesian ? "Mode Tampilan" : "Theme Mode"}
+              </span>
+            </div>
+            <span className="text-[10.5px] font-extrabold text-[#B8F3B8]">
+              {isDarkMode ? (isIndonesian ? "Gelap" : "Dark") : (isIndonesian ? "Terang" : "Light")}
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function SpeakFlowApp() {
   const data = useAppData();
   const live = useLiveSession();
@@ -657,6 +884,7 @@ export function SpeakFlowApp() {
   const [activeScreen, setActiveScreen] = useState<number>(3);
   const [navDirection, setNavDirection] = useState<"forward" | "backward">("forward");
   const [isNavigating, setIsNavigating] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isTilted, setIsTilted] = useState<boolean>(false);
   const [isIndonesian, setIsIndonesian] = useState<boolean>(false);
 
@@ -1505,36 +1733,6 @@ export function SpeakFlowApp() {
         </div>
       </header>
 
-      {/* INTERACTIVE NAVIGATION PILLS WITH TRANSITION FEEDBACK (App Mode) */}
-      {layoutMode === "app" && (
-        <div className="flex justify-center gap-1.5 mb-4 px-4 flex-wrap">
-          {[
-            { num: 1, labelEn: "Onboarding", labelId: "Mulai" },
-            { num: 2, labelEn: "Profile", labelId: "Profil" },
-            { num: 3, labelEn: "Dashboard", labelId: "Beranda" },
-            { num: 4, labelEn: "Room Talk", labelId: "Ruang Bicara" },
-            { num: 5, labelEn: "Calendar", labelId: "Kalender" },
-          ].map((item) => {
-            const isActive = activeScreen === item.num;
-            return (
-              <button
-                key={item.num}
-                type="button"
-                onClick={() => navigateTo(item.num)}
-                className={`px-3.5 py-1.5 rounded-full text-[11.5px] font-extrabold transition-all tap-scale flex items-center gap-1.5 border ${
-                  isActive
-                    ? "bg-[#0F0F12] text-white border-[#0F0F12] shadow-sm scale-105"
-                    : "bg-white/80 hover:bg-white text-[#71717A] hover:text-[#0F0F12] border-black/8"
-                }`}
-              >
-                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-[#B8F3B8]" : "bg-black/20"}`} />
-                <span>{isIndonesian ? item.labelId : item.labelEn}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-
       {/* =====================================================================
            MAIN SHOWCASE CONTAINER (5 SCREENS)
            ===================================================================== */}
@@ -1684,122 +1882,17 @@ export function SpeakFlowApp() {
               {isNavigating && (
                 <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#8F5BFF] via-[#B8F3B8] to-[#8EE88E] z-50 route-progress-bar shadow-[0_0_12px_rgba(184,243,184,0.8)]" />
               )}
-              {!isGuestSetup ? (
-                /* Full-Height Clean White Login Container */
-                <div className="w-full h-full px-5 pt-4 pb-5 flex flex-col justify-between">
-                  <div>
-                    {/* Top Back and Step Pill */}
-                    <div className="flex items-center justify-between pt-2">
-                      <button
-                        type="button"
-                        onClick={() => navigateTo(1)}
-                        className="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center"
-                      >
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <path d="M15 18L9 12L15 6" stroke="#0F0F12" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </button>
-                      <span className="text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full bg-[#F4F4F8] text-[#6E6E7A]">
-                        Account Sync
-                      </span>
-                    </div>
-
-                    <div className="mt-4">
-                      <h2 className="text-[25px] font-extrabold text-[#0F0F12] heading-tight font-sans">
-                        {isIndonesian ? "Selamat Datang di Fluelo" : "Welcome to Fluelo"}
-                      </h2>
-                      <p className="text-[12px] font-medium text-[#8C8C99] mt-1.5 leading-relaxed font-sans">
-                        {isIndonesian
-                          ? "Masuk dengan Google atau mulai langsung sebagai tamu untuk membuka sesi Room Talk AI."
-                          : "Sign in with Google or continue as a guest to unlock Room Talk AI."}
-                      </p>
-                    </div>
-
-                    {/* Feature Preview Card (Clean aesthetic illustration and badges) */}
-                    <div className="mt-7 bg-[#F8F8FC] rounded-[24px] p-5 border border-black/[0.05] flex flex-col items-center text-center">
-                      <div className="w-14 h-14 rounded-full bg-[#B8F3B8] border border-black/10 flex items-center justify-center shadow-xs mb-3">
-                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-                          <path d="M5 10C6.5 8 8.5 8 10 10" stroke="#0F0F12" strokeWidth="2.3" strokeLinecap="round" />
-                          <path d="M14 10C15.5 8 17.5 8 19 10" stroke="#0F0F12" strokeWidth="2.3" strokeLinecap="round" />
-                          <path d="M7.5 15.5C9.8 18 14.2 18 16.5 15.5" stroke="#0F0F12" strokeWidth="2.3" strokeLinecap="round" />
-                        </svg>
-                      </div>
-                      <p className="text-[14px] font-extrabold text-[#0F0F12] tracking-tight font-sans">
-                        {isIndonesian ? "5 Partner Bicara AI Siap" : "5 AI Speaking Partners Ready"}
-                      </p>
-                      <p className="text-[11.5px] font-medium text-[#8C8C99] mt-1 max-w-[230px] leading-relaxed font-sans">
-                        {isIndonesian
-                          ? "Latihan percakapan audio dua arah setiap hari dengan evaluasi grammar & fluency instan."
-                          : "Practice daily two-way English voice talk with instant grammar and fluency feedback."}
-                      </p>
-                      <div className="flex items-center gap-2 mt-3.5">
-                        <div className="rounded-[16px] shadow-sm"><FlueloCloudSVG name="Sarah" size={50} blink={false} /></div>
-                        <div className="rounded-[16px] shadow-sm"><FlueloCloudSVG name="Emma" size={50} blink={false} /></div>
-                        <div className="rounded-[16px] shadow-sm"><FlueloCloudSVG name="David" size={50} blink={false} /></div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Bottom 2 Action Choices */}
-                  <div>
-                    {/* Choice 1: Continue with Google */}
+              {/* GUEST ONBOARDING PROFILE SETUP: ELEGANT BENTO GRID LAYOUT */}
+              <div className="w-full h-full px-4 pt-4 pb-4 flex flex-col justify-between bg-[#F8F8FC] animate-in fade-in duration-200">
+                <div>
+                  {/* Top Header Bar */}
+                  <div className="flex items-center justify-between pt-1">
                     <button
                       type="button"
-                      onClick={() => {
-                        showToast(isIndonesian ? "Berhasil masuk dengan Google!" : "Signed in with Google! Welcome back.", "#B8F3B8");
-                        navigateTo(3);
-                      }}
-                      className="tap-scale w-full h-[50px] bg-[#F4F4F8] hover:bg-[#EAEAF0] border border-black/10 px-4 rounded-full flex items-center justify-center gap-2.5 shadow-2xs font-sans"
+                      onClick={() => navigateTo(1)}
+                      className="tap-scale w-9 h-9 rounded-full bg-white border border-black/10 flex items-center justify-center shadow-2xs"
+                      title="Back to Onboarding"
                     >
-                      <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
-                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
-                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
-                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
-                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
-                      </svg>
-                      <span className="text-[13px] font-extrabold text-[#0F0F12]">
-                        {isIndonesian ? "Masuk dengan Google" : "Continue with Google"}
-                      </span>
-                    </button>
-
-                    {/* Clean Divider */}
-                    <div className="flex items-center gap-3 my-3">
-                      <div className="h-[1px] flex-1 bg-black/10" />
-                      <span className="text-[10px] font-extrabold text-[#9A9AA6] uppercase tracking-wider font-sans">
-                        {isIndonesian ? "atau" : "or"}
-                      </span>
-                      <div className="h-[1px] flex-1 bg-black/10" />
-                    </div>
-
-                    {/* Choice 2: Continue as Guest */}
-                    <button
-                      type="button"
-                      onClick={() => setIsGuestSetup(true)}
-                      className="tap-scale w-full h-[50px] bg-[#0F0F12] text-white pl-5 pr-1.5 rounded-full flex items-center justify-between shadow-sm font-sans"
-                    >
-                      <span className="text-[13px] font-bold tracking-tight">
-                        {isIndonesian ? "Masuk sebagai Tamu (Guest)" : "Continue as Guest"}
-                      </span>
-                      <div className="w-9 h-9 rounded-full bg-[#B8F3B8] flex items-center justify-center text-[#0F0F12] shrink-0">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
-                          <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#0F0F12" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-                        </svg>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                /* GUEST ONBOARDING PROFILE SETUP: ELEGANT BENTO GRID LAYOUT */
-                <div className="w-full h-full px-4 pt-4 pb-4 flex flex-col justify-between bg-[#F8F8FC] animate-in fade-in duration-200">
-                  <div>
-                    {/* Top Header Bar */}
-                    <div className="flex items-center justify-between pt-1">
-                      <button
-                        type="button"
-                        onClick={() => setIsGuestSetup(false)}
-                        className="tap-scale w-9 h-9 rounded-full bg-white border border-black/10 flex items-center justify-center shadow-2xs"
-                        title="Back"
-                      >
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                           <path d="M15 18L9 12L15 6" stroke="#0F0F12" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
                         </svg>
@@ -1964,7 +2057,6 @@ export function SpeakFlowApp() {
                     </button>
                   </div>
                 </div>
-              )}
             </div>
           </div>
         )}
@@ -1999,9 +2091,10 @@ export function SpeakFlowApp() {
 
                   <button
                     type="button"
-                    onClick={() => navigateTo(4)}
-                    className="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center"
-                    title="Open Room Talk"
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center hover:bg-[#F4F4F8]"
+                    title="Menu & Settings"
+                    aria-label="Open sidebar menu"
                   >
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
                       <path d="M5 9H19M5 15H19" stroke="#0F0F12" strokeWidth="2.2" strokeLinecap="round" />
@@ -2270,53 +2363,30 @@ export function SpeakFlowApp() {
                   </div>
                 </div>
 
-                {/* BOTTOM NAVIGATION DOCK */}
-                <div className="h-[52px] px-4 flex items-center justify-between bg-[#0F0F12] shrink-0">
-                  <button
-                    type="button"
-                    onClick={() => navigateTo(3)}
-                    className="tap-scale bg-white text-[#0F0F12] px-4 py-2 rounded-full flex items-center justify-center"
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                      <path d="M4 10.5L12 4L20 10.5V19C20 19.6 19.6 20 19 20H5C4.4 20 4 19.6 4 19V10.5Z" stroke="#0F0F12" strokeWidth="2.2" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo(4)}
-                    className="tap-scale text-white/65 hover:text-white p-2 rounded-full flex items-center justify-center"
-                    title="Open Room Talk"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 12C12 10.3 13.3 9 15 9C16.7 9 18 10.3 18 12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12C6 7.6 9.6 4 14 4C18.4 4 21 7.6 21 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo(5)}
-                    className="tap-scale text-white/65 hover:text-white p-2 rounded-full flex items-center justify-center"
-                    title="Check-In Calendar"
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                      <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="2.2" />
-                      <path d="M8 3V6M16 3V6M4 10H20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo(2)}
-                    className="tap-scale text-white/65 hover:text-white p-2 rounded-full flex items-center justify-center"
-                    title="Account"
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                      <circle cx="7.5" cy="7.5" r="2" fill="currentColor" />
-                      <circle cx="16.5" cy="7.5" r="2" fill="currentColor" />
-                      <circle cx="7.5" cy="16.5" r="2" fill="currentColor" />
-                      <circle cx="16.5" cy="16.5" r="2" fill="currentColor" />
-                    </svg>
-                  </button>
-                </div>
+
               </div>
+
+              
+              {/* SLIDE-OVER SIDEBAR DRAWER */}
+              <SidebarDrawer
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                activeScreen={activeScreen}
+                onNavigate={navigateTo}
+                isIndonesian={isIndonesian}
+                onToggleLanguage={(id) => {
+                  setIsIndonesian(id);
+                  showToast(id ? "Bahasa diubah ke Indonesia" : "Switched to English", "#D8C8FF");
+                }}
+                isDarkMode={isDarkMode}
+                onToggleTheme={() => {
+                  setIsDarkMode(!isDarkMode);
+                  showToast(isDarkMode ? (isIndonesian ? "Tema Terang Diaktifkan" : "Light Theme Activated") : (isIndonesian ? "Tema Gelap Diaktifkan" : "Dark Theme Activated"), "#B8F3B8");
+                }}
+                guestName={guestName}
+                guestLevel={guestLevel}
+                guestAvatar={guestAvatar}
+              />
 
               {/* QUICK EDIT PROFILE MODAL */}
               {isEditProfileModalOpen && (
@@ -2493,9 +2563,17 @@ export function SpeakFlowApp() {
                     </p>
                   </div>
 
-                  <span className="px-2.5 py-1 rounded-full bg-[#F4F4F8] text-[10.5px] font-extrabold text-[#0F0F12]">
-                    A1
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setIsSidebarOpen(true)}
+                    className="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center hover:bg-[#F4F4F8]"
+                    title="Menu & Settings"
+                    aria-label="Open sidebar menu"
+                  >
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                      <path d="M5 9H19M5 15H19" stroke="#0F0F12" strokeWidth="2.2" strokeLinecap="round" />
+                    </svg>
+                  </button>
                 </div>
 
                 {/* Character Switcher Pills */}
@@ -2558,6 +2636,28 @@ export function SpeakFlowApp() {
                       isSpeaking={isCurrentlySpeaking}
                       float={!isCurrentlySpeaking}
                     />
+
+                    
+              {/* SLIDE-OVER SIDEBAR DRAWER */}
+              <SidebarDrawer
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                activeScreen={activeScreen}
+                onNavigate={navigateTo}
+                isIndonesian={isIndonesian}
+                onToggleLanguage={(id) => {
+                  setIsIndonesian(id);
+                  showToast(id ? "Bahasa diubah ke Indonesia" : "Switched to English", "#D8C8FF");
+                }}
+                isDarkMode={isDarkMode}
+                onToggleTheme={() => {
+                  setIsDarkMode(!isDarkMode);
+                  showToast(isDarkMode ? (isIndonesian ? "Tema Terang Diaktifkan" : "Light Theme Activated") : (isIndonesian ? "Tema Gelap Diaktifkan" : "Dark Theme Activated"), "#B8F3B8");
+                }}
+                guestName={guestName}
+                guestLevel={guestLevel}
+                guestAvatar={guestAvatar}
+              />
 
                     {/* Pre-Voice Greeting Text (shown only when !hasStartedVoice) */}
                     {!hasStartedVoice && (
@@ -3047,6 +3147,27 @@ export function SpeakFlowApp() {
              =================================================================== */}
         {(layoutMode === "showcase" || (layoutMode === "app" && activeScreen === 5)) && (
           <div id="phoneFrame5" className={`iphone-frame ${layoutMode === "showcase" && isTilted ? "phone-tilt-right" : ""} relative transition-all duration-300`}>
+            
+              {/* SLIDE-OVER SIDEBAR DRAWER */}
+              <SidebarDrawer
+                isOpen={isSidebarOpen}
+                onClose={() => setIsSidebarOpen(false)}
+                activeScreen={activeScreen}
+                onNavigate={navigateTo}
+                isIndonesian={isIndonesian}
+                onToggleLanguage={(id) => {
+                  setIsIndonesian(id);
+                  showToast(id ? "Bahasa diubah ke Indonesia" : "Switched to English", "#D8C8FF");
+                }}
+                isDarkMode={isDarkMode}
+                onToggleTheme={() => {
+                  setIsDarkMode(!isDarkMode);
+                  showToast(isDarkMode ? (isIndonesian ? "Tema Terang Diaktifkan" : "Light Theme Activated") : (isIndonesian ? "Tema Gelap Diaktifkan" : "Dark Theme Activated"), "#B8F3B8");
+                }}
+                guestName={guestName}
+                guestLevel={guestLevel}
+                guestAvatar={guestAvatar}
+              />
             {/* Click-anywhere-to-close dismiss backdrop */}
             {activePickerDay !== null && (
               <div
@@ -3109,20 +3230,33 @@ export function SpeakFlowApp() {
                     </div>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setCalendarMonthOffset(0);
-                      setActivePickerDay(baseToday.getDate());
-                    }}
-                    className="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center"
-                    title="Check In Today"
-                  >
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                      <rect x="4" y="5" width="16" height="15" rx="3" stroke="#0F0F12" strokeWidth="2" />
-                      <path d="M8 3V6M16 3V6M9.5 13L11.5 15L15 11" stroke="#0F0F12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                    </svg>
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setCalendarMonthOffset(0);
+                        setActivePickerDay(baseToday.getDate());
+                      }}
+                      className="tap-scale w-8 h-8 rounded-full border border-black/10 flex items-center justify-center"
+                      title="Check In Today"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <rect x="4" y="5" width="16" height="15" rx="3" stroke="#0F0F12" strokeWidth="2" />
+                        <path d="M8 3V6M16 3V6M9.5 13L11.5 15L15 11" stroke="#0F0F12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setIsSidebarOpen(true)}
+                      className="tap-scale w-8 h-8 rounded-full border border-black/10 flex items-center justify-center hover:bg-[#F4F4F8]"
+                      title="Menu & Settings"
+                      aria-label="Open sidebar menu"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                        <path d="M5 9H19M5 15H19" stroke="#0F0F12" strokeWidth="2.2" strokeLinecap="round" />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
 
                 {/* Days of Week */}
@@ -3298,50 +3432,6 @@ export function SpeakFlowApp() {
                   </div>
                 </div>
 
-                {/* Bottom Navigation Dock */}
-                <div className="h-[52px] px-4 flex items-center justify-between bg-[#0F0F12]">
-                  <button
-                    type="button"
-                    onClick={() => navigateTo(3)}
-                    className="tap-scale text-white/60 hover:text-white p-2 rounded-full flex items-center justify-center"
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                      <path d="M4 10.5L12 4L20 10.5V19C20 19.6 19.6 20 19 20H5C4.4 20 4 19.6 4 19V10.5Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo(4)}
-                    className="tap-scale text-white/60 hover:text-white p-2 rounded-full flex items-center justify-center"
-                    title="Open Room Talk"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                      <path d="M12 12C12 10.3 13.3 9 15 9C16.7 9 18 10.3 18 12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12C6 7.6 9.6 4 14 4C18.4 4 21 7.6 21 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo(5)}
-                    className="tap-scale bg-white text-[#0F0F12] px-4 py-2 rounded-full flex items-center justify-center"
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                      <rect x="4" y="5" width="16" height="15" rx="3" stroke="#0F0F12" strokeWidth="2.2" />
-                      <path d="M8 3V6M16 3V6M4 10H20" stroke="#0F0F12" strokeWidth="2.2" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => navigateTo(2)}
-                    className="tap-scale text-white/60 hover:text-white p-2 rounded-full flex items-center justify-center"
-                  >
-                    <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-                      <circle cx="7.5" cy="7.5" r="2" fill="currentColor" />
-                      <circle cx="16.5" cy="7.5" r="2" fill="currentColor" />
-                      <circle cx="7.5" cy="16.5" r="2" fill="currentColor" />
-                      <circle cx="16.5" cy="16.5" r="2" fill="currentColor" />
-                    </svg>
-                  </button>
-                </div>
               </div>
             </div>
           </div>
