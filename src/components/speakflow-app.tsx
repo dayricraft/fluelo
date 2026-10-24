@@ -630,15 +630,34 @@ function getInitialCalendarCheckIns(referenceDate?: Date): Record<string, { colo
   return record;
 }
 
+
+export const SCREEN_SLUGS: Record<number, string> = {
+  1: "landing",
+  2: "login",
+  3: "dashboard",
+  4: "room",
+  5: "calendar",
+};
+
+export const SLUG_TO_SCREEN: Record<string, number> = {
+  landing: 1,
+  login: 2,
+  dashboard: 3,
+  room: 4,
+  calendar: 5,
+};
+
 export function SpeakFlowApp() {
   const data = useAppData();
   const live = useLiveSession();
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
 
   // App Layout State
-  const [layoutMode, setLayoutMode] = useState<"all5" | "core3" | "roomOnly" | "ref3">("all5");
-  const [activeScreen, setActiveScreen] = useState<number>(3); // 1: Landing, 2: Login, 3: Home, 4: Room Talk, 5: Calendar
-  const [isTilted, setIsTilted] = useState<boolean>(true);
+  const [layoutMode, setLayoutMode] = useState<"app" | "showcase">("app");
+  const [activeScreen, setActiveScreen] = useState<number>(3);
+  const [navDirection, setNavDirection] = useState<"forward" | "backward">("forward");
+  const [isNavigating, setIsNavigating] = useState(false);
+  const [isTilted, setIsTilted] = useState<boolean>(false);
   const [isIndonesian, setIsIndonesian] = useState<boolean>(false);
 
   // Home State
@@ -746,12 +765,50 @@ export function SpeakFlowApp() {
         console.warn("Could not load user profile:", err);
       }
 
-      if (window.innerWidth < 768) {
-        setLayoutMode("roomOnly");
-        const hasSaved = Boolean(localStorage.getItem("fluelo_user_profile"));
-        setActiveScreen(hasSaved ? 3 : 1);
-        setIsTilted(false);
+      // URL Route Synchronization & Refresh Persistence
+      const params = new URLSearchParams(window.location.search);
+      const screenParam = params.get("screen");
+      let initialScreen = 3;
+
+      if (screenParam && SLUG_TO_SCREEN[screenParam]) {
+        initialScreen = SLUG_TO_SCREEN[screenParam];
+      } else {
+        const savedSlug = localStorage.getItem("fluelo_last_screen");
+        if (savedSlug && SLUG_TO_SCREEN[savedSlug]) {
+          initialScreen = SLUG_TO_SCREEN[savedSlug];
+        } else {
+          const hasSavedProfile = Boolean(localStorage.getItem("fluelo_user_profile"));
+          initialScreen = hasSavedProfile ? 3 : 1;
+        }
+        const slug = SCREEN_SLUGS[initialScreen] || "dashboard";
+        window.history.replaceState({ screen: initialScreen }, "", `?screen=${slug}`);
       }
+
+      setActiveScreen(initialScreen);
+      setLayoutMode("app");
+      setIsTilted(false);
+
+      // Listen for browser Back / Forward navigation (popstate)
+      const handlePopState = (e: PopStateEvent) => {
+        const currentParams = new URLSearchParams(window.location.search);
+        const sParam = currentParams.get("screen");
+        if (sParam && SLUG_TO_SCREEN[sParam]) {
+          const next = SLUG_TO_SCREEN[sParam];
+          setActiveScreen((curr) => {
+            setNavDirection(next > curr ? "forward" : "backward");
+            return next;
+          });
+        } else if (e.state && typeof e.state.screen === "number") {
+          const next = e.state.screen;
+          setActiveScreen((curr) => {
+            setNavDirection(next > curr ? "forward" : "backward");
+            return next;
+          });
+        }
+      };
+
+      window.addEventListener("popstate", handlePopState);
+      return () => window.removeEventListener("popstate", handlePopState);
     }
   }, [data.hydrated]);
 
@@ -1274,13 +1331,79 @@ export function SpeakFlowApp() {
     }
   };
 
-  // Navigation Helper
-  const navigateTo = (screenNum: number) => {
-    setActiveScreen(screenNum);
-    const target = document.getElementById(`phoneFrame${screenNum}`);
-    if (target) {
-      target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+  // Directional Navigation with URL Sync & View Transitions (Modern Web Guidance)
+  const navigateTo = (screenNum: number, forcedDirection?: "forward" | "backward") => {
+    if (screenNum === activeScreen) return;
+    const direction = forcedDirection || (screenNum > activeScreen ? "forward" : "backward");
+    setNavDirection(direction);
+    setIsNavigating(true);
+
+    if (typeof document !== "undefined" && "startViewTransition" in document) {
+      (document as unknown as { startViewTransition: (opt: { update: () => void; types?: string[] }) => void }).startViewTransition({
+        update: () => {
+          setActiveScreen(screenNum);
+        },
+        types: [direction]
+      });
+    } else {
+      setActiveScreen(screenNum);
     }
+
+    if (typeof window !== "undefined") {
+      const slug = SCREEN_SLUGS[screenNum] || "dashboard";
+      window.history.pushState({ screen: screenNum }, "", `?screen=${slug}`);
+      localStorage.setItem("fluelo_last_screen", slug);
+    }
+
+    if (layoutMode === "showcase") {
+      const target = document.getElementById(`phoneFrame${screenNum}`);
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "center", inline: "center" });
+      }
+    }
+
+    setTimeout(() => {
+      setIsNavigating(false);
+    }, 420);
+  };
+
+  // Touch and Mouse Swipe Navigation Gestures
+  const touchStartXRef = useRef<number | null>(null);
+  const touchStartYRef = useRef<number | null>(null);
+
+  const handleTouchStart = (e: React.TouchEvent | React.MouseEvent) => {
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    touchStartXRef.current = clientX;
+    touchStartYRef.current = clientY;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent | React.MouseEvent) => {
+    if (touchStartXRef.current === null || touchStartYRef.current === null) return;
+    const clientX = "changedTouches" in e ? e.changedTouches[0].clientX : e.clientX;
+    const clientY = "changedTouches" in e ? e.changedTouches[0].clientY : e.clientY;
+    const deltaX = clientX - touchStartXRef.current;
+    const deltaY = clientY - touchStartYRef.current;
+
+    // Minimum swipe threshold: 50px horizontal with dominance over vertical scroll
+    if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY) * 1.3) {
+      if (deltaX < 0) {
+        // Swiped Left -> advance to next screen
+        if (activeScreen === 1) navigateTo(2);
+        else if (activeScreen === 2) navigateTo(3);
+        else if (activeScreen === 3) navigateTo(4);
+        else if (activeScreen === 4) navigateTo(5);
+      } else {
+        // Swiped Right -> return to previous screen
+        if (activeScreen === 5) navigateTo(4);
+        else if (activeScreen === 4) navigateTo(3);
+        else if (activeScreen === 3) navigateTo(2);
+        else if (activeScreen === 2) navigateTo(1);
+      }
+    }
+
+    touchStartXRef.current = null;
+    touchStartYRef.current = null;
   };
 
   // Speaking state: active when Gemini live is speaking OR browser speech is active
@@ -1325,51 +1448,44 @@ export function SpeakFlowApp() {
             <span className="text-xs font-extrabold tracking-tight text-[#0F0F12]">Fluelo</span>
           </div>
 
-          {/* View Mode Switcher */}
+          {/* View Mode Switcher: App View vs Showcase */}
           <div className="flex items-center bg-[#F3F2F7] p-1 rounded-full flex-wrap gap-0.5">
             <button
               type="button"
-              onClick={() => setLayoutMode("all5")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                layoutMode === "all5" ? "bg-[#0F0F12] text-white" : "text-[#5A5A66] hover:text-[#0F0F12]"
-              }`}
-            >
-              All 5 Screens
-            </button>
-            <button
-              type="button"
-              onClick={() => setLayoutMode("core3")}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                layoutMode === "core3" ? "bg-[#0F0F12] text-white" : "text-[#5A5A66] hover:text-[#0F0F12]"
-              }`}
-            >
-              Home, Room Talk, Calendar
-            </button>
-            <button
-              type="button"
               onClick={() => {
-                setLayoutMode("roomOnly");
-                setActiveScreen(4);
+                setLayoutMode("app");
+                setIsTilted(false);
               }}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
-                layoutMode === "roomOnly" ? "bg-[#0F0F12] text-white" : "text-[#5A5A66] hover:text-[#0F0F12]"
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all tap-scale ${
+                layoutMode === "app" ? "bg-[#0F0F12] text-white shadow-xs" : "text-[#5A5A66] hover:text-[#0F0F12]"
               }`}
             >
-              Focus Room Talk
+              {isIndonesian ? "Mode Aplikasi" : "App View"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setLayoutMode("showcase")}
+              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all tap-scale ${
+                layoutMode === "showcase" ? "bg-[#0F0F12] text-white shadow-xs" : "text-[#5A5A66] hover:text-[#0F0F12]"
+              }`}
+            >
+              {isIndonesian ? "Showcase (5 Layar)" : "Showcase (5 Phones)"}
             </button>
           </div>
 
-          {/* Tilt Switch */}
-          <button
-            type="button"
-            onClick={() => setIsTilted(!isTilted)}
-            className="px-3 py-1.5 rounded-full text-xs font-bold bg-[#F3F2F7] hover:bg-[#E5E4EC] text-[#0F0F12] flex items-center gap-1.5 transition-all"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-              <rect x="5" y="3" width="14" height="18" rx="3" stroke="#0F0F12" strokeWidth="2.2" transform="rotate(-8 12 12)" />
-            </svg>
-            <span>Tilt {isTilted ? "ON" : "FLAT"}</span>
-          </button>
+          {/* Tilt Switch (Visible in Showcase mode) */}
+          {layoutMode === "showcase" && (
+            <button
+              type="button"
+              onClick={() => setIsTilted(!isTilted)}
+              className="px-3 py-1.5 rounded-full text-xs font-bold bg-[#F3F2F7] hover:bg-[#E5E4EC] text-[#0F0F12] flex items-center gap-1.5 transition-all tap-scale"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                <rect x="5" y="3" width="14" height="18" rx="3" stroke="#0F0F12" strokeWidth="2.2" transform="rotate(-8 12 12)" />
+              </svg>
+              <span>Tilt {isTilted ? "ON" : "FLAT"}</span>
+            </button>
+          )}
 
           {/* Language Copy Toggle */}
           <button
@@ -1389,27 +1505,33 @@ export function SpeakFlowApp() {
         </div>
       </header>
 
-      {/* SINGLE SCREEN NAVIGATION PILLS (When in roomOnly mode) */}
-      {layoutMode === "roomOnly" && (
-        <div className="hidden md:flex justify-center gap-2 mb-5 px-4 flex-wrap">
+      {/* INTERACTIVE NAVIGATION PILLS WITH TRANSITION FEEDBACK (App Mode) */}
+      {layoutMode === "app" && (
+        <div className="flex justify-center gap-1.5 mb-4 px-4 flex-wrap">
           {[
-            { num: 1, label: "1 Landing Page" },
-            { num: 2, label: "2 Login" },
-            { num: 3, label: "3 Home Dashboard" },
-            { num: 4, label: "4 Room Talk AI" },
-            { num: 5, label: "5 Calendar and Stats" },
-          ].map((item) => (
-            <button
-              key={item.num}
-              type="button"
-              onClick={() => setActiveScreen(item.num)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all border border-black/10 ${
-                activeScreen === item.num ? "bg-[#0F0F12] text-white" : "bg-white text-[#0F0F12]"
-              }`}
-            >
-              {item.label}
-            </button>
-          ))}
+            { num: 1, labelEn: "Onboarding", labelId: "Mulai" },
+            { num: 2, labelEn: "Profile", labelId: "Profil" },
+            { num: 3, labelEn: "Dashboard", labelId: "Beranda" },
+            { num: 4, labelEn: "Room Talk", labelId: "Ruang Bicara" },
+            { num: 5, labelEn: "Calendar", labelId: "Kalender" },
+          ].map((item) => {
+            const isActive = activeScreen === item.num;
+            return (
+              <button
+                key={item.num}
+                type="button"
+                onClick={() => navigateTo(item.num)}
+                className={`px-3.5 py-1.5 rounded-full text-[11.5px] font-extrabold transition-all tap-scale flex items-center gap-1.5 border ${
+                  isActive
+                    ? "bg-[#0F0F12] text-white border-[#0F0F12] shadow-sm scale-105"
+                    : "bg-white/80 hover:bg-white text-[#71717A] hover:text-[#0F0F12] border-black/8"
+                }`}
+              >
+                <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-[#B8F3B8]" : "bg-black/20"}`} />
+                <span>{isIndonesian ? item.labelId : item.labelEn}</span>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -1418,14 +1540,23 @@ export function SpeakFlowApp() {
            ===================================================================== */}
       <main
         id="phonesContainer"
-        className={`${isTilted ? "showcase-angled" : ""} max-w-[1880px] mx-auto p-0 md:px-4 md:pt-1 md:pb-10 flex flex-wrap items-center justify-center gap-0 md:gap-7`}
+        className={layoutMode === "showcase" ? `${isTilted ? "showcase-angled" : ""} max-w-[1880px] mx-auto p-0 md:px-4 md:pt-1 md:pb-10 flex flex-wrap items-center justify-center gap-0 md:gap-7` : "max-w-[1200px] mx-auto p-0 md:px-4 md:py-2 flex flex-col items-center justify-center"}
       >
         {/* ===================================================================
              SCREEN 1: LANDING / ONBOARDING PAGE
              =================================================================== */}
-        {(layoutMode === "all5" || (layoutMode === "roomOnly" && activeScreen === 1)) && (
-          <div id="phoneFrame1" className="iphone-frame phone-tilt-left">
-            <div className="iphone-screen !bg-white">
+        {(layoutMode === "showcase" || (layoutMode === "app" && activeScreen === 1)) && (
+          <div id="phoneFrame1" className={`iphone-frame ${layoutMode === "showcase" && isTilted ? "phone-tilt-left" : ""} transition-all duration-300`}>
+            <div
+              className={`iphone-screen !bg-white ${layoutMode === "app" ? (navDirection === "forward" ? "screen-enter-forward" : "screen-enter-backward") : ""}`}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleTouchStart}
+              onMouseUp={handleTouchEnd}
+            >
+              {isNavigating && (
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#8F5BFF] via-[#B8F3B8] to-[#8EE88E] z-50 route-progress-bar shadow-[0_0_12px_rgba(184,243,184,0.8)]" />
+              )}
               {/* Editorial Headline & Pill Button */}
               <div className="pt-8 px-6 text-center flex flex-col items-center z-10">
                 {/* Fluelo Brand Logo */}
@@ -1541,9 +1672,18 @@ export function SpeakFlowApp() {
         {/* ===================================================================
              SCREEN 2: LOGIN PAGE (FULL SCREEN, NO BOTTOM 3 CARDS)
              =================================================================== */}
-        {(layoutMode === "all5" || (layoutMode === "roomOnly" && activeScreen === 2)) && (
-          <div id="phoneFrame2" className="iphone-frame phone-tilt-alt">
-            <div className="iphone-screen !bg-white">
+        {(layoutMode === "showcase" || (layoutMode === "app" && activeScreen === 2)) && (
+          <div id="phoneFrame2" className={`iphone-frame ${layoutMode === "showcase" && isTilted ? "phone-tilt-alt" : ""} transition-all duration-300`}>
+            <div
+              className={`iphone-screen !bg-white ${layoutMode === "app" ? (navDirection === "forward" ? "screen-enter-forward" : "screen-enter-backward") : ""}`}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleTouchStart}
+              onMouseUp={handleTouchEnd}
+            >
+              {isNavigating && (
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#8F5BFF] via-[#B8F3B8] to-[#8EE88E] z-50 route-progress-bar shadow-[0_0_12px_rgba(184,243,184,0.8)]" />
+              )}
               {!isGuestSetup ? (
                 /* Full-Height Clean White Login Container */
                 <div className="w-full h-full px-5 pt-4 pb-5 flex flex-col justify-between">
@@ -1832,9 +1972,18 @@ export function SpeakFlowApp() {
         {/* ===================================================================
              SCREEN 3: HOME DASHBOARD (CHARACTERS, PRONUNCIATION, GRAMMAR)
              =================================================================== */}
-        {(layoutMode === "all5" || layoutMode === "core3" || (layoutMode === "roomOnly" && activeScreen === 3)) && (
-          <div id="phoneFrame3" className="iphone-frame phone-tilt-center">
-            <div className="iphone-screen">
+        {(layoutMode === "showcase" || (layoutMode === "app" && activeScreen === 3)) && (
+          <div id="phoneFrame3" className={`iphone-frame ${layoutMode === "showcase" && isTilted ? "phone-tilt-center" : ""} transition-all duration-300`}>
+            <div
+              className={`iphone-screen ${layoutMode === "app" ? (navDirection === "forward" ? "screen-enter-forward" : "screen-enter-backward") : ""}`}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleTouchStart}
+              onMouseUp={handleTouchEnd}
+            >
+              {isNavigating && (
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#8F5BFF] via-[#B8F3B8] to-[#8EE88E] z-50 route-progress-bar shadow-[0_0_12px_rgba(184,243,184,0.8)]" />
+              )}
               {/* TOP WHITE CARD */}
               <div className="bg-white rounded-b-[30px] px-4 pt-5 pb-4 flex flex-col shrink-0">
                 {/* Fluelo Brand Header on Dashboard */}
@@ -2308,9 +2457,18 @@ export function SpeakFlowApp() {
         {/* ===================================================================
              SCREEN 4: ROOM TALK (LIVE AI VOICE CONVERSATION & IN-ROOM EVALUATION)
              =================================================================== */}
-        {(layoutMode === "all5" || layoutMode === "core3" || (layoutMode === "roomOnly" && activeScreen === 4)) && (
-          <div id="phoneFrame4" className="iphone-frame phone-tilt-alt">
-            <div className="iphone-screen">
+        {(layoutMode === "showcase" || (layoutMode === "app" && activeScreen === 4)) && (
+          <div id="phoneFrame4" className={`iphone-frame ${layoutMode === "showcase" && isTilted ? "phone-tilt-alt" : ""} transition-all duration-300`}>
+            <div
+              className={`iphone-screen ${layoutMode === "app" ? (navDirection === "forward" ? "screen-enter-forward" : "screen-enter-backward") : ""}`}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleTouchStart}
+              onMouseUp={handleTouchEnd}
+            >
+              {isNavigating && (
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#8F5BFF] via-[#B8F3B8] to-[#8EE88E] z-50 route-progress-bar shadow-[0_0_12px_rgba(184,243,184,0.8)]" />
+              )}
               {/* Top White Bar */}
               <div className="bg-white rounded-b-[28px] px-4 pt-5 pb-3 flex flex-col shrink-0">
                 {/* Header: Back + Character Name & Level Badge (NO DOTS!) */}
@@ -2887,8 +3045,8 @@ export function SpeakFlowApp() {
         {/* ===================================================================
              SCREEN 5: CHECK-IN CALENDAR, LEVEL A1 & SPEAKING 14/20 SESSIONS
              =================================================================== */}
-        {(layoutMode === "all5" || layoutMode === "core3" || (layoutMode === "roomOnly" && activeScreen === 5)) && (
-          <div id="phoneFrame5" className="iphone-frame phone-tilt-right relative">
+        {(layoutMode === "showcase" || (layoutMode === "app" && activeScreen === 5)) && (
+          <div id="phoneFrame5" className={`iphone-frame ${layoutMode === "showcase" && isTilted ? "phone-tilt-right" : ""} relative transition-all duration-300`}>
             {/* Click-anywhere-to-close dismiss backdrop */}
             {activePickerDay !== null && (
               <div
@@ -2896,7 +3054,16 @@ export function SpeakFlowApp() {
                 onClick={() => setActivePickerDay(null)}
               />
             )}
-            <div className="iphone-screen">
+            <div
+              className={`iphone-screen ${layoutMode === "app" ? (navDirection === "forward" ? "screen-enter-forward" : "screen-enter-backward") : ""}`}
+              onTouchStart={handleTouchStart}
+              onTouchEnd={handleTouchEnd}
+              onMouseDown={handleTouchStart}
+              onMouseUp={handleTouchEnd}
+            >
+              {isNavigating && (
+                <div className="absolute top-0 left-0 right-0 h-[3px] bg-gradient-to-r from-[#8F5BFF] via-[#B8F3B8] to-[#8EE88E] z-50 route-progress-bar shadow-[0_0_12px_rgba(184,243,184,0.8)]" />
+              )}
               {/* TOP WHITE CARD (Calendar) */}
               <div className="bg-white rounded-b-[30px] px-4 pt-5 pb-4 flex flex-col shrink-0 relative z-30">
                 {/* Calendar Header Row */}

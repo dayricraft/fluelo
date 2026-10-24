@@ -1793,3 +1793,77 @@ a {
   animation: cloudBlink 4.2s infinite;
 }
 
+/* ==========================================================================
+   DIRECTIONAL NAVIGATION & ROUTE VIEW TRANSITIONS (Modern Web Guidance)
+   ========================================================================== */
+@keyframes screenSlideInRight {
+  0% {
+    transform: translate3d(28px, 0, 0) scale(0.985);
+    opacity: 0.25;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes screenSlideInLeft {
+  0% {
+    transform: translate3d(-28px, 0, 0) scale(0.985);
+    opacity: 0.25;
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 1;
+  }
+}
+
+.screen-enter-forward {
+  animation: screenSlideInRight 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+.screen-enter-backward {
+  animation: screenSlideInLeft 0.32s cubic-bezier(0.16, 1, 0.3, 1) both;
+  will-change: transform, opacity;
+}
+
+/* Route Progress Loading Bar */
+@keyframes routeProgressAnim {
+  0% {
+    width: 0%;
+    opacity: 1;
+  }
+  60% {
+    width: 78%;
+    opacity: 1;
+  }
+  100% {
+    width: 100%;
+    opacity: 0;
+  }
+}
+
+.route-progress-bar {
+  animation: routeProgressAnim 0.42s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Native-feel tactile button press */
+.tap-scale {
+  transition: transform 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.tap-scale:active {
+  transform: scale(0.93) !important;
+}
+
+/* Dynamic Island Pulse when connecting */
+@keyframes islandConnectingPulse {
+  0%, 100% { transform: scale(1); opacity: 0.9; }
+  50% { transform: scale(1.08); opacity: 1; box-shadow: 0 0 16px rgba(184, 243, 184, 0.6); }
+}
+
+.island-connecting {
+  animation: islandConnectingPulse 1.2s ease-in-out infinite;
+}
+
+
