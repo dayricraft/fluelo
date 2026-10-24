@@ -651,8 +651,6 @@ export const SLUG_TO_SCREEN: Record<string, number> = {
 function SidebarDrawer({
   isOpen,
   onClose,
-  activeScreen,
-  onNavigate,
   isIndonesian,
   onToggleLanguage,
   isDarkMode,
@@ -660,12 +658,15 @@ function SidebarDrawer({
   guestName,
   guestLevel,
   guestAvatar,
+  guestAgeRange,
+  dailyGoalTarget,
+  currentStreak,
+  totalXp,
+  onOpenEditProfile,
   accentColor = "#B8F3B8",
 }: {
   isOpen: boolean;
   onClose: () => void;
-  activeScreen: number;
-  onNavigate: (screen: number) => void;
   isIndonesian: boolean;
   onToggleLanguage: (id: boolean) => void;
   isDarkMode: boolean;
@@ -673,58 +674,14 @@ function SidebarDrawer({
   guestName: string;
   guestLevel: string;
   guestAvatar: string;
+  guestAgeRange: string;
+  dailyGoalTarget: number;
+  currentStreak: number;
+  totalXp: number;
+  onOpenEditProfile: () => void;
   accentColor?: string;
 }) {
   if (!isOpen) return null;
-
-  const menuItems = [
-    {
-      num: 1,
-      title: "Onboarding",
-      subEn: "Introduction & app overview",
-      subId: "Pengenalan & panduan awal",
-      icon: (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-          <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.2" />
-          <polygon points="10 8 16 12 10 16 10 8" fill="currentColor" />
-        </svg>
-      ),
-    },
-    {
-      num: 3,
-      title: "Dashboard",
-      subEn: "Daily goals & progress",
-      subId: "Target harian & progres",
-      icon: (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-          <path d="M4 10.5L12 4L20 10.5V19C20 19.6 19.6 20 19 20H5C4.4 20 4 19.6 4 19V10.5Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
-        </svg>
-      ),
-    },
-    {
-      num: 4,
-      title: "Room Talk",
-      subEn: "Live AI voice practice",
-      subId: "Latihan suara AI langsung",
-      icon: (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-          <path d="M12 12C12 10.3 13.3 9 15 9C16.7 9 18 10.3 18 12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12C6 7.6 9.6 4 14 4C18.4 4 21 7.6 21 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-    {
-      num: 5,
-      title: "Calendar",
-      subEn: "Check-in & streak history",
-      subId: "Riwayat streak & check-in",
-      icon: (
-        <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
-          <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="2.2" />
-          <path d="M8 3V6M16 3V6M4 10H20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
-        </svg>
-      ),
-    },
-  ];
 
   return (
     <div
@@ -732,11 +689,11 @@ function SidebarDrawer({
       onClick={onClose}
     >
       <div
-        className="w-[82%] max-w-[280px] h-full bg-[#0F0F12] text-white p-4 flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-300 border-r border-white/10"
+        className="w-[84%] max-w-[285px] h-full bg-[#0F0F12] text-white p-4 flex flex-col justify-between shadow-2xl animate-in slide-in-from-left duration-300 border-r border-white/10"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Top: Brand Header & User Profile Preview */}
-        <div>
+        <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between pb-3 border-b border-white/10">
             <div className="flex items-center gap-2">
               <div
@@ -747,7 +704,9 @@ function SidebarDrawer({
               </div>
               <div>
                 <h3 className="text-[15px] font-extrabold text-white tracking-tight leading-none">Fluelo</h3>
-                <p className="text-[9.5px] font-bold text-[#8C8C99] mt-0.5">AI Speaking App</p>
+                <p className="text-[9.5px] font-bold text-[#8C8C99] mt-0.5">
+                  {isIndonesian ? "Profil & Pengaturan" : "Profile & Settings"}
+                </p>
               </div>
             </div>
             <button
@@ -762,83 +721,85 @@ function SidebarDrawer({
             </button>
           </div>
 
-          {/* Active User Card */}
-          <div className="mt-3 p-2.5 rounded-[16px] bg-white/5 border border-white/5 flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full overflow-hidden flex items-center justify-center border border-white/15 shrink-0">
-              <FlueloCloudSVG name={guestAvatar || "Sarah"} size={36} blink={false} />
-            </div>
-            <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-extrabold text-white truncate leading-tight font-sans">
-                {guestName || "Alex"}
+          {/* 1. SECTION: PROFIL PENGGUNA */}
+          <div>
+            <div className="flex items-center justify-between mb-2 px-1">
+              <p className="text-[9.5px] font-extrabold text-[#71717A] uppercase tracking-wider font-sans">
+                {isIndonesian ? "Profil Akun" : "Account Profile"}
               </p>
-              <p
-                className="text-[10px] font-bold mt-0.5 font-sans transition-colors"
-                style={{ color: accentColor }}
+              <span
+                className="text-[10px] font-extrabold px-2 py-0.5 rounded-md font-sans"
+                style={{ backgroundColor: `${accentColor}25`, color: accentColor }}
               >
-                Level {guestLevel} • Active
-              </p>
+                Level {guestLevel}
+              </span>
+            </div>
+
+            <div className="p-3 rounded-[18px] bg-white/5 border border-white/10 flex flex-col gap-3 font-sans">
+              <div className="flex items-center gap-3">
+                <div className="w-11 h-11 rounded-full overflow-hidden flex items-center justify-center border-2 border-white/20 shrink-0 bg-white/5">
+                  <FlueloCloudSVG name={guestAvatar || "Sarah"} size={42} blink={false} />
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] font-extrabold text-white truncate leading-tight">
+                    {guestName || "Alex"}
+                  </p>
+                  <p className="text-[10px] font-semibold text-[#8C8C99] mt-0.5">
+                    {guestAgeRange}
+                  </p>
+                </div>
+              </div>
+
+              {/* Progress Summary: Target & Streak */}
+              <div className="grid grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                <div className="bg-white/5 rounded-xl p-2 text-center">
+                  <span className="text-[9px] font-bold text-[#8C8C99] block">
+                    {isIndonesian ? "Target Harian" : "Daily Goal"}
+                  </span>
+                  <span className="text-[12px] font-extrabold text-white mt-0.5 block">
+                    {dailyGoalTarget} {isIndonesian ? "Sesi" : "Sess"}
+                  </span>
+                </div>
+                <div className="bg-white/5 rounded-xl p-2 text-center">
+                  <span className="text-[9px] font-bold text-[#8C8C99] block">
+                    Streak Belajar
+                  </span>
+                  <span className="text-[12px] font-extrabold mt-0.5 block" style={{ color: accentColor }}>
+                    {currentStreak} Hari
+                  </span>
+                </div>
+              </div>
+
+              {/* Edit Profile Button */}
+              <button
+                type="button"
+                onClick={() => {
+                  onClose();
+                  onOpenEditProfile();
+                }}
+                className="tap-scale w-full py-2 rounded-xl text-[11.5px] font-extrabold flex items-center justify-center gap-1.5 transition-all text-[#0F0F12]"
+                style={{ backgroundColor: accentColor }}
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 20H21" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                  <path d="M16.5 3.5C16.9 3.1 17.5 3.1 17.9 3.5L20.5 6.1C20.9 6.5 20.9 7.1 20.5 7.5L7 21L3 22L4 18L16.5 3.5Z" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+                <span>{isIndonesian ? "Edit Profil & Target" : "Edit Profile & Target"}</span>
+              </button>
             </div>
           </div>
-
-          {/* Navigation Title */}
-          <p className="text-[9.5px] font-extrabold text-[#71717A] uppercase tracking-wider mt-4 mb-2 px-1 font-sans">
-            {isIndonesian ? "Menu Navigasi" : "Navigation"}
-          </p>
-
-          {/* 4 Menu Items: Onboarding, Dashboard, Room Talk, Calendar */}
-          <nav className="flex flex-col gap-1.5 font-sans">
-            {menuItems.map((item) => {
-              const isActive = activeScreen === item.num;
-              return (
-                <button
-                  key={item.num}
-                  type="button"
-                  onClick={() => {
-                    onNavigate(item.num);
-                    onClose();
-                  }}
-                  style={{
-                    backgroundColor: isActive ? accentColor : undefined,
-                  }}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-[14px] font-extrabold text-[12.5px] transition-all tap-scale ${
-                    isActive
-                      ? "text-[#0F0F12] shadow-sm"
-                      : "text-white/80 hover:text-white hover:bg-white/5"
-                  }`}
-                >
-                  <div
-                    className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 ${
-                      isActive ? "bg-[#0F0F12]/12 text-[#0F0F12]" : "bg-white/10 text-white"
-                    }`}
-                  >
-                    {item.icon}
-                  </div>
-                  <div className="text-left flex-1 min-w-0">
-                    <p className="leading-tight">{item.title}</p>
-                    <p
-                      className={`text-[9.5px] font-bold mt-0.5 truncate ${
-                        isActive ? "text-[#0F0F12]/70" : "text-[#71717A]"
-                      }`}
-                    >
-                      {isIndonesian ? item.subId : item.subEn}
-                    </p>
-                  </div>
-                </button>
-              );
-            })}
-          </nav>
         </div>
 
-        {/* Bottom Preferences: Theme & Language */}
+        {/* Bottom Preferences: 2. Bahasa & 3. Tema */}
         <div className="pt-3 border-t border-white/10 flex flex-col gap-2 font-sans">
           <p className="text-[9.5px] font-extrabold text-[#71717A] uppercase tracking-wider px-1">
-            {isIndonesian ? "Tema & Bahasa" : "Theme & Language"}
+            {isIndonesian ? "Preferensi" : "Preferences"}
           </p>
 
-          {/* Language Switch */}
+          {/* 2. SECTION: BAHASA */}
           <div className="bg-white/5 rounded-[14px] p-1.5 px-2.5 flex items-center justify-between">
             <span className="text-[11.5px] font-bold text-white/80">
-              {isIndonesian ? "Bahasa" : "Language"}
+              {isIndonesian ? "Bahasa Aplikasi" : "Language"}
             </span>
             <div className="flex items-center gap-1">
               <button
@@ -862,7 +823,7 @@ function SidebarDrawer({
             </div>
           </div>
 
-          {/* Theme Switch */}
+          {/* 3. SECTION: TEMA */}
           <button
             type="button"
             onClick={onToggleTheme}
@@ -890,6 +851,85 @@ function SidebarDrawer({
         </div>
       </div>
     </div>
+  );
+}
+
+function BottomNav({
+  activeScreen,
+  onNavigate,
+  accentColor = "#B8F3B8",
+  isIndonesian,
+}: {
+  activeScreen: number;
+  onNavigate: (screen: number) => void;
+  accentColor?: string;
+  isIndonesian: boolean;
+}) {
+  const tabs = [
+    {
+      screen: 3,
+      labelEn: "Home",
+      labelId: "Beranda",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M4 10.5L12 4L20 10.5V19C20 19.6 19.6 20 19 20H5C4.4 20 4 19.6 4 19V10.5Z" stroke="currentColor" strokeWidth="2.2" strokeLinejoin="round" />
+        </svg>
+      ),
+    },
+    {
+      screen: 4,
+      labelEn: "Room Talk",
+      labelId: "Room Talk",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <path d="M12 12C12 10.3 13.3 9 15 9C16.7 9 18 10.3 18 12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12C6 7.6 9.6 4 14 4C18.4 4 21 7.6 21 12" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+    {
+      screen: 5,
+      labelEn: "Calendar",
+      labelId: "Kalender",
+      icon: (
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+          <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" strokeWidth="2.2" />
+          <path d="M8 3V6M16 3V6M4 10H20" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+        </svg>
+      ),
+    },
+  ];
+
+  return (
+    <nav
+      className="shrink-0 w-full h-[56px] px-6 bg-[#0F0F12] border-t border-white/10 flex items-center justify-around z-30 select-none"
+      aria-label="Bottom Navigation"
+    >
+      {tabs.map((tab) => {
+        const isActive = activeScreen === tab.screen;
+        return (
+          <button
+            key={tab.screen}
+            type="button"
+            onClick={() => onNavigate(tab.screen)}
+            style={{
+              backgroundColor: isActive ? accentColor : "transparent",
+            }}
+            className={`tap-scale flex items-center gap-2 px-3.5 py-1.5 rounded-full transition-all duration-200 ${
+              isActive
+                ? "text-[#0F0F12] font-extrabold shadow-sm scale-102"
+                : "text-white/60 hover:text-white hover:bg-white/5"
+            }`}
+          >
+            <div className="w-[18px] h-[18px] flex items-center justify-center shrink-0">
+              {tab.icon}
+            </div>
+            <span className={`text-[12px] font-extrabold tracking-tight ${isActive ? "inline" : "hidden sm:inline"}`}>
+              {isIndonesian ? tab.labelId : tab.labelEn}
+            </span>
+          </button>
+        );
+      })}
+    </nav>
   );
 }
 
@@ -2117,10 +2157,25 @@ export function SpeakFlowApp() {
               )}
               {/* TOP WHITE CARD */}
               <div className={`${isDarkMode ? "bg-[#181820] text-white border-b border-white/10" : "bg-white text-[#0F0F12]"} rounded-b-[30px] px-4 pt-5 pb-4 flex flex-col shrink-0 transition-colors duration-200`}>
-                {/* Fluelo Brand Header on Dashboard: Logo on left with Menu underneath, Date on right */}
-                <div className="flex items-start justify-between">
-                  <div className="flex flex-col items-start gap-2">
-                    <div className="flex items-center select-none">
+                {/* Fluelo Brand Header on Dashboard: 3-line Menu + Fluelo Logo on left, Date on right */}
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 select-none">
+                    {/* Clean 3 Lines Menu Button - No Circle Border, Pixel-Precise Alignment */}
+                    <button
+                      type="button"
+                      onClick={() => setIsSidebarOpen(true)}
+                      className={`tap-scale p-1 -ml-1 flex items-center justify-center hover:opacity-75 transition-opacity ${
+                        isDarkMode ? "text-white" : "text-[#0F0F12]"
+                      }`}
+                      title="Menu & Settings"
+                      aria-label="Open sidebar menu"
+                    >
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 6.5H20M4 12H20M4 17.5H20" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
+                      </svg>
+                    </button>
+
+                    <div className="flex items-center">
                       <svg width="86" height="38" viewBox="0 0 500 240" fill="none" className="shrink-0 drop-shadow-2xs">
                         <circle cx="120" cy="120" r="108" fill="#B899FF" />
                         <circle cx="120" cy="120" r="80" fill="#8F5BFF" />
@@ -2128,27 +2183,10 @@ export function SpeakFlowApp() {
                         <text x="256" y="146" fill={isDarkMode ? "#FFFFFF" : "#0F0F12"} fontFamily="'Plus Jakarta Sans', sans-serif" fontSize="82" fontWeight="800" letterSpacing="-0.04em">Fluelo</text>
                       </svg>
                     </div>
-
-                    {/* Menu Button (=) Directly Under Fluelo Logo */}
-                    <button
-                      type="button"
-                      onClick={() => setIsSidebarOpen(true)}
-                      className={`tap-scale w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
-                        isDarkMode
-                          ? "border-white/15 bg-white/5 hover:bg-white/10 text-white"
-                          : "border-black/10 bg-[#F4F4F8] hover:bg-[#EAEAF0] text-[#0F0F12]"
-                      }`}
-                      title="Menu & Settings"
-                      aria-label="Open sidebar menu"
-                    >
-                      <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 9H19M5 15H19" stroke={isDarkMode ? "#FFFFFF" : "#0F0F12"} strokeWidth="2.2" strokeLinecap="round" />
-                      </svg>
-                    </button>
                   </div>
 
                   {/* Date on the Right Side */}
-                  <p className={`text-[11px] font-bold text-right pt-2 ${isDarkMode ? "text-[#9898A6]" : "text-[#A0A0AB]"}`}>
+                  <p className={`text-[11px] font-bold text-right ${isDarkMode ? "text-[#9898A6]" : "text-[#A0A0AB]"}`}>
                     {baseToday.toLocaleDateString(isIndonesian ? "id-ID" : "en-US", { month: "short", day: "numeric", year: "numeric" })}
                   </p>
                 </div>
@@ -2422,13 +2460,18 @@ export function SpeakFlowApp() {
 
               </div>
 
-              
-              {/* SLIDE-OVER SIDEBAR DRAWER */}
+              {/* FIXED BOTTOM NAVIGATION BAR */}
+              <BottomNav
+                activeScreen={3}
+                onNavigate={navigateTo}
+                accentColor={partner.color}
+                isIndonesian={isIndonesian}
+              />
+
+              {/* SLIDE-OVER SIDEBAR DRAWER (Profil, Bahasa, Tema) */}
               <SidebarDrawer
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
-                activeScreen={activeScreen}
-                onNavigate={navigateTo}
                 isIndonesian={isIndonesian}
                 onToggleLanguage={toggleLanguage}
                 isDarkMode={isDarkMode}
@@ -2436,6 +2479,11 @@ export function SpeakFlowApp() {
                 guestName={guestName}
                 guestLevel={guestLevel}
                 guestAvatar={guestAvatar}
+                guestAgeRange={guestAgeRange}
+                dailyGoalTarget={dailyGoalTarget}
+                currentStreak={currentStreak}
+                totalXp={totalXp}
+                onOpenEditProfile={() => setIsEditProfileModalOpen(true)}
                 accentColor={partner.color}
               />
 
@@ -3180,12 +3228,10 @@ export function SpeakFlowApp() {
         {(layoutMode === "showcase" || (layoutMode === "app" && activeScreen === 5)) && (
           <div id="phoneFrame5" className={`iphone-frame ${layoutMode === "showcase" && isTilted ? "phone-tilt-right" : ""} relative transition-all duration-300`}>
             
-              {/* SLIDE-OVER SIDEBAR DRAWER */}
+              {/* SLIDE-OVER SIDEBAR DRAWER (Profil, Bahasa, Tema) */}
               <SidebarDrawer
                 isOpen={isSidebarOpen}
                 onClose={() => setIsSidebarOpen(false)}
-                activeScreen={activeScreen}
-                onNavigate={navigateTo}
                 isIndonesian={isIndonesian}
                 onToggleLanguage={toggleLanguage}
                 isDarkMode={isDarkMode}
@@ -3193,6 +3239,11 @@ export function SpeakFlowApp() {
                 guestName={guestName}
                 guestLevel={guestLevel}
                 guestAvatar={guestAvatar}
+                guestAgeRange={guestAgeRange}
+                dailyGoalTarget={dailyGoalTarget}
+                currentStreak={currentStreak}
+                totalXp={totalXp}
+                onOpenEditProfile={() => setIsEditProfileModalOpen(true)}
                 accentColor={partner.color}
               />
             {/* Click-anywhere-to-close dismiss backdrop */}
@@ -3275,14 +3326,14 @@ export function SpeakFlowApp() {
                     <button
                       type="button"
                       onClick={() => setIsSidebarOpen(true)}
-                      className={`tap-scale w-8 h-8 rounded-full border flex items-center justify-center transition-all ${
-                        isDarkMode ? "border-white/15 text-white hover:bg-white/10" : "border-black/10 text-[#0F0F12] hover:bg-[#F4F4F8]"
+                      className={`tap-scale p-1 flex items-center justify-center hover:opacity-75 transition-opacity ${
+                        isDarkMode ? "text-white" : "text-[#0F0F12]"
                       }`}
                       title="Menu & Settings"
                       aria-label="Open sidebar menu"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                        <path d="M5 9H19M5 15H19" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                      <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                        <path d="M4 6.5H20M4 12H20M4 17.5H20" stroke="currentColor" strokeWidth="2.3" strokeLinecap="round" />
                       </svg>
                     </button>
                   </div>
@@ -3462,6 +3513,14 @@ export function SpeakFlowApp() {
                 </div>
 
               </div>
+
+              {/* FIXED BOTTOM NAVIGATION BAR */}
+              <BottomNav
+                activeScreen={5}
+                onNavigate={navigateTo}
+                accentColor={partner.color}
+                isIndonesian={isIndonesian}
+              />
             </div>
           </div>
         )}
