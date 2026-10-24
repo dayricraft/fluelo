@@ -579,7 +579,7 @@ export const CALENDAR_PARTNERS = [
   { id: "emma", name: "Emma", color: "#B5E2FA", face: "Emma" },
   { id: "sophia", name: "Sophia", color: "#D8C8FF", face: "Sophia" },
   { id: "david", name: "David", color: "#FBC3A2", face: "David" },
-  { id: "kenji", name: "Kenji", color: "#B8F3B8", face: "Kenji" }
+  { id: "kenji", name: "Kenji", color: "#A8F0E5", face: "Kenji" }
 ];
 
 export const GUEST_AGE_RANGES = [
@@ -1033,7 +1033,7 @@ export function SpeakFlowApp() {
 
   // Save calendar check-ins automatically when changed
   useEffect(() => {
-    if (typeof window !== "undefined" && Object.keys(calendarCheckIns).length > 0) {
+    if (typeof window !== "undefined") {
       try {
         localStorage.setItem("fluelo_calendar_checkins", JSON.stringify(calendarCheckIns));
       } catch {}
@@ -1174,18 +1174,46 @@ export function SpeakFlowApp() {
 
   const handleSelectPartnerColor = (dayNum: number, partner: typeof CALENDAR_PARTNERS[number]) => {
     const key = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+    let wasCleared = false;
     setCalendarCheckIns((prev) => {
-      if (prev[key]?.partnerId === partner.id) {
-        const next = { ...prev };
+      const isSame = prev[key]?.partnerId === partner.id;
+      const next = { ...prev };
+      if (isSame) {
         delete next[key];
-        return next;
+        wasCleared = true;
+      } else {
+        next[key] = { color: partner.color, face: partner.face, partnerId: partner.id };
       }
-      return {
-        ...prev,
-        [key]: { color: partner.color, face: partner.face, partnerId: partner.id }
-      };
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("fluelo_calendar_checkins", JSON.stringify(next));
+        } catch {}
+      }
+      return next;
     });
     setActivePickerDay(null);
+    showToast(
+      wasCleared
+        ? (isIndonesian ? `Check-in tanggal ${dayNum} dibatalkan` : `Check-in for day ${dayNum} removed`)
+        : (isIndonesian ? `${partner.name} berhasil dicatat untuk tanggal ${dayNum}!` : `${partner.name} recorded for day ${dayNum}!`),
+      partner.color
+    );
+  };
+
+  const handleRemoveCheckIn = (dayNum: number) => {
+    const key = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(dayNum).padStart(2, "0")}`;
+    setCalendarCheckIns((prev) => {
+      const next = { ...prev };
+      delete next[key];
+      if (typeof window !== "undefined") {
+        try {
+          localStorage.setItem("fluelo_calendar_checkins", JSON.stringify(next));
+        } catch {}
+      }
+      return next;
+    });
+    setActivePickerDay(null);
+    showToast(isIndonesian ? `Check-in tanggal ${dayNum} dihapus` : `Check-in for day ${dayNum} cleared`, "#F9A8A8");
   };
 
   // Room Talk State
@@ -3246,13 +3274,6 @@ export function SpeakFlowApp() {
                 onOpenEditProfile={() => setIsEditProfileModalOpen(true)}
                 accentColor={partner.color}
               />
-            {/* Click-anywhere-to-close dismiss backdrop */}
-            {activePickerDay !== null && (
-              <div
-                className="fixed inset-0 z-20 cursor-default"
-                onClick={() => setActivePickerDay(null)}
-              />
-            )}
             <div
               className={`iphone-screen ${layoutMode === "app" ? (navDirection === "forward" ? "screen-enter-forward" : "screen-enter-backward") : ""}`}
             >
@@ -3394,7 +3415,7 @@ export function SpeakFlowApp() {
                           {dayNum}
                         </span>
                         <div className="flex-1 flex items-center justify-center">
-                          {checkIn && <MiniCalendarFace face={checkIn.face} />}
+                          {checkIn && <MiniCalendarFace face={checkIn.face} size={22} />}
                         </div>
                       </button>
                     );
@@ -3409,30 +3430,57 @@ export function SpeakFlowApp() {
                   )}
                 </div>
 
-                {/* Character Color Picker: Clean Minimal Pill without verbose text and no extra button */}
+                {/* Character Color Picker: Clean, Responsive & Accessible */}
                 {activePickerDay !== null && (
                   <div
-                    className={`mt-2.5 pt-2 border-t flex items-center justify-center gap-3 animate-in fade-in duration-150 ${isDarkMode ? "border-white/10" : "border-black/5"}`}
+                    className={`mt-2.5 pt-2 border-t flex flex-col gap-1.5 animate-in fade-in duration-150 ${isDarkMode ? "border-white/10" : "border-black/5"}`}
                     onClick={(e) => e.stopPropagation()}
                   >
-                    {CALENDAR_PARTNERS.map((p) => {
-                      const activeKey = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(activePickerDay).padStart(2, "0")}`;
-                      const isCurrentPartner = calendarCheckIns[activeKey]?.partnerId === p.id;
-                      return (
+                    <div className="flex items-center justify-between px-1">
+                      <span className={`text-[10px] font-extrabold ${isDarkMode ? "text-white/70" : "text-[#71717A]"}`}>
+                        {isIndonesian ? `Isi Tanggal ${activePickerDay}:` : `Check-in Day ${activePickerDay}:`}
+                      </span>
+                      <div className="flex items-center gap-2">
+                        {calendarCheckIns[`${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(activePickerDay).padStart(2, "0")}`] && (
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveCheckIn(activePickerDay)}
+                            className="text-[9.5px] font-bold text-[#FF6B6B] hover:underline tap-scale"
+                          >
+                            {isIndonesian ? "Hapus" : "Clear"}
+                          </button>
+                        )}
                         <button
-                          key={p.id}
                           type="button"
-                          onClick={() => handleSelectPartnerColor(activePickerDay, p)}
-                          style={{ backgroundColor: p.color }}
-                          className={`tap-scale w-7 h-7 rounded-full flex items-center justify-center shadow-sm transition-transform ${
-                            isCurrentPartner ? "ring-2 ring-[#0F0F12] scale-110" : "hover:scale-105"
-                          }`}
-                          title={p.name}
+                          onClick={() => setActivePickerDay(null)}
+                          className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] font-bold ${isDarkMode ? "text-white/40 hover:text-white" : "text-[#9898A6] hover:text-[#0F0F12]"} tap-scale`}
+                          title="Tutup picker"
                         >
-                          <MiniCalendarFace face={p.face} />
+                          ✕
                         </button>
-                      );
-                    })}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-center gap-2.5 py-0.5">
+                      {CALENDAR_PARTNERS.map((p) => {
+                        const activeKey = `${calendarYear}-${String(calendarMonth + 1).padStart(2, "0")}-${String(activePickerDay).padStart(2, "0")}`;
+                        const isCurrentPartner = calendarCheckIns[activeKey]?.partnerId === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => handleSelectPartnerColor(activePickerDay, p)}
+                            style={{ backgroundColor: p.color }}
+                            className={`tap-scale w-8 h-8 rounded-full flex items-center justify-center shadow-xs transition-transform ${
+                              isCurrentPartner ? (isDarkMode ? "ring-2 ring-white scale-110" : "ring-2 ring-[#0F0F12] scale-110") : "hover:scale-105 opacity-90 hover:opacity-100"
+                            }`}
+                            title={p.name}
+                          >
+                            <MiniCalendarFace face={p.face} size={24} />
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </div>
