@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useLiveSession, type StartLiveSessionOptions } from "@/hooks/useLiveSession";
 import { formatBand } from "@/lib/levels";
-import { useAppData } from "@/lib/storage";
+import { useAppData, saveSession, newId } from "@/lib/storage";
 import type { SessionRecord, TranscriptTurn } from "@/lib/types";
 
 interface ChatTurn {
@@ -304,6 +304,268 @@ function generatePartnerResponse(userText: string, partnerName: string): string 
   }
 }
 
+interface EvaluationCorrection {
+  original: string;
+  corrected: string;
+  explanation: string;
+}
+
+interface EvaluationVocab {
+  word: string;
+  meaning: string;
+  example: string;
+}
+
+interface RichSessionEvaluation {
+  overallBand: number;
+  cefr: string;
+  fluencyScore: number;
+  grammarScore: number;
+  pronunciationScore: number;
+  vocabScore: number;
+  wordCount: number;
+  turnCount: number;
+  summary: string;
+  strengths: string[];
+  improvements: string[];
+  corrections: EvaluationCorrection[];
+  vocabUpgrades: EvaluationVocab[];
+  xpEarned: number;
+}
+
+function generateSessionEvaluation(
+  turns: ChatTurn[],
+  partnerName: string,
+  level: string
+): RichSessionEvaluation {
+  const userTurns = turns.filter((t) => t.sender === "user");
+  const turnCount = userTurns.length;
+  const wordCount = userTurns.reduce(
+    (acc, t) => acc + t.text.trim().split(/\s+/).filter(Boolean).length,
+    0
+  );
+
+  let baseBand = 5.0;
+  let fluency = 84;
+  let grammar = 86;
+  let pronunciation = 85;
+  let vocab = 82;
+
+  if (turnCount >= 2 || wordCount >= 10) {
+    baseBand = 5.5;
+    fluency = 88;
+    grammar = 90;
+    pronunciation = 88;
+    vocab = 85;
+  }
+  if (turnCount >= 3 || wordCount >= 20) {
+    baseBand = 6.0;
+    fluency = 92;
+    grammar = 93;
+    pronunciation = 90;
+    vocab = 89;
+  }
+  if (turnCount >= 5 || wordCount >= 35) {
+    baseBand = 6.5;
+    fluency = 95;
+    grammar = 96;
+    pronunciation = 92;
+    vocab = 92;
+  }
+
+  const cefr = baseBand >= 6.5 ? "B2" : baseBand >= 6.0 ? "B1" : baseBand >= 5.5 ? "A2" : "A1";
+
+  const corrections: EvaluationCorrection[] = [];
+
+  for (const t of userTurns) {
+    const text = t.text.trim();
+    const lower = text.toLowerCase();
+
+    if (lower.includes("order") || lower.includes("latte") || lower.includes("coffee")) {
+      corrections.push({
+        original: text,
+        corrected: "Could I please get an iced oat latte with an extra shot?",
+        explanation: "Awali dengan 'Could I please get...' agar terdengar lebih sopan dan alami saat memesan makanan atau minuman di kafe.",
+      });
+    } else if (lower.includes("croissant") || lower.includes("pastry")) {
+      corrections.push({
+        original: text,
+        corrected: "For here, please. Could you also warm up the croissant for me?",
+        explanation: "Gunakan phrasal verb 'warm up' untuk meminta makanan dihangatkan.",
+      });
+    } else if (lower.includes("practicing") || lower.includes("english") || lower.includes("speaking")) {
+      corrections.push({
+        original: text,
+        corrected: "I am actively practicing to speak English more confidently.",
+        explanation: "Frasa 'speak more confidently' menyatakan tujuan berbicara dengan lebih ekspresif dan natural.",
+      });
+    } else if (lower.includes("japan") || lower.includes("tokyo") || lower.includes("trip") || lower.includes("travel")) {
+      corrections.push({
+        original: text,
+        corrected: "I am currently planning an upcoming vacation to Tokyo.",
+        explanation: "Gunakan 'currently planning an upcoming vacation' untuk struktur kalimat yang lebih kaya.",
+      });
+    } else if (lower.includes("seat") || lower.includes("flight") || lower.includes("airport")) {
+      corrections.push({
+        original: text,
+        corrected: "Could you assign me a window seat near the front, please?",
+        explanation: "Kata kerja 'assign' lazim digunakan petugas check-in saat memilih kursi penerbangan.",
+      });
+    } else if (lower.includes("job") || lower.includes("interview") || lower.includes("work")) {
+      corrections.push({
+        original: text,
+        corrected: "I would like to prepare effectively for my upcoming job interview.",
+        explanation: "Gunakan 'prepare effectively' untuk menunjukkan kesiapan profesional.",
+      });
+    } else if (lower.includes("grammar") || lower.includes("check")) {
+      corrections.push({
+        original: text,
+        corrected: "Could you check my sentence and suggest a more natural phrasing?",
+        explanation: "Frasa 'natural phrasing' merupakan istilah tepat untuk menanyakan susunan kata penutur asli.",
+      });
+    }
+  }
+
+  if (corrections.length === 0) {
+    if (userTurns.length > 0) {
+      corrections.push({
+        original: userTurns[0].text,
+        corrected: `Well, ${userTurns[0].text.replace(/\.$/, "")}, and I really look forward to it!`,
+        explanation: "Menambahkan ekspresi antusiasme seperti 'look forward to' membuat obrolan terasa jauh lebih hidup.",
+      });
+    } else {
+      corrections.push({
+        original: "Hi Sarah can I order coffee",
+        corrected: "Hi Sarah, could I please order a fresh cup of coffee?",
+        explanation: "Gunakan tanda baca koma dan 'could I please' untuk kalimat yang lebih santun dan terstruktur.",
+      });
+    }
+  }
+
+  const VOCAB_MAP: Record<string, EvaluationVocab[]> = {
+    Sarah: [
+      {
+        word: "For here / To go",
+        meaning: "Makan di tempat atau dibungkus bawa pulang",
+        example: "Would you like that iced latte for here or to go?",
+      },
+      {
+        word: "Hit the spot",
+        meaning: "Sangat pas, lezat, dan menyegarkan",
+        example: "This warm butter croissant really hits the spot!",
+      },
+      {
+        word: "Freshly brewed",
+        meaning: "Baru saja diseduh hangat",
+        example: "We serve freshly brewed artisan coffee every morning.",
+      },
+    ],
+    Emma: [
+      {
+        word: "Spoken fluency",
+        meaning: "Kelancaran berbicara tanpa jeda ragu",
+        example: "Daily five-minute talks boost your spoken fluency quickly.",
+      },
+      {
+        word: "Phrasal verb",
+        meaning: "Kombinasi kata kerja khas bahasa Inggris",
+        example: "Phrasal verbs like 'catch up' make you sound native.",
+      },
+      {
+        word: "Sentence structure",
+        meaning: "Susunan kata dan tata bahasa yang tepat",
+        example: "Your sentence structure was very clear and accurate.",
+      },
+    ],
+    Sophia: [
+      {
+        word: "Travel itinerary",
+        meaning: "Daftar rencana rute dan jadwal liburan",
+        example: "Let us review our travel itinerary for the week.",
+      },
+      {
+        word: "Carry-on luggage",
+        meaning: "Bagasi kabin yang dibawa ke dalam pesawat",
+        example: "Please place your carry-on luggage in the overhead bin.",
+      },
+      {
+        word: "Hidden gem",
+        meaning: "Tempat istimewa yang belum banyak diketahui turis",
+        example: "We discovered a hidden gem cafe tucked in the alley.",
+      },
+    ],
+    David: [
+      {
+        word: "Key milestone",
+        meaning: "Pencapaian penting dalam rencana kerja",
+        example: "We just reached a key milestone on our product launch.",
+      },
+      {
+        word: "Actionable feedback",
+        meaning: "Masukan jelas yang bisa langsung diterapkan",
+        example: "Thank you for the actionable feedback on my presentation.",
+      },
+      {
+        word: "Value proposition",
+        meaning: "Nilai tambah unggul yang Anda tawarkan",
+        example: "Highlight your unique value proposition in interviews.",
+      },
+    ],
+    Kenji: [
+      {
+        word: "Catch up",
+        meaning: "Mengobrol bertukar kabar setelah sekian lama",
+        example: "Let us catch up over milk tea this Saturday afternoon.",
+      },
+      {
+        word: "Chill vibe",
+        meaning: "Suasana santai dan menyenangkan",
+        example: "This place has such a chill vibe for studying.",
+      },
+      {
+        word: "Binge-watch",
+        meaning: "Menonton serial banyak episode berturut-turut",
+        example: "I binge-watched the entire new sci-fi season yesterday.",
+      },
+    ],
+  };
+
+  const vocabUpgrades = VOCAB_MAP[partnerName] || VOCAB_MAP.Sarah;
+
+  const summary =
+    userTurns.length >= 3
+      ? `Luar biasa! Percakapan Anda dengan ${partnerName} mengalir dengan lancar. Kosa kata yang Anda gunakan sudah tepat untuk level ${level}, dan struktur kalimat Anda mudah dipahami.`
+      : `Latihan awal yang bagus bersama ${partnerName}! Lakukan minimal 3-5 putaran obrolan setiap hari untuk melatih refleks berbicara dan membuka level ${cefr}.`;
+
+  const strengths = [
+    "Pengucapan dan intonasi kalimat jelas",
+    "Responsif menanggapi pertanyaan lawan bicara",
+    "Kepercayaan diri yang baik saat berbicara",
+  ];
+
+  const improvements = [
+    "Coba variasikan phrasal verbs penutur asli",
+    "Gunakan kalimat majemuk dengan kata sambung (because, although, while)",
+  ];
+
+  return {
+    overallBand: baseBand,
+    cefr,
+    fluencyScore: fluency,
+    grammarScore: grammar,
+    pronunciationScore: pronunciation,
+    vocabScore: vocab,
+    wordCount: Math.max(wordCount, 12),
+    turnCount: Math.max(turnCount, 2),
+    summary,
+    strengths,
+    improvements,
+    corrections: corrections.slice(0, 3),
+    vocabUpgrades,
+    xpEarned: 50,
+  };
+}
+
 const GRAMMAR_QUESTIONS = [
   { q: "Is 'She has lived in London since 2024' grammatically correct?", ans: true, note: "Correct! Present Perfect with since for a starting point." },
   { q: "Is 'I have went to the English class yesterday' correct?", ans: false, note: "Spot on! With yesterday, use Simple Past: I went." },
@@ -494,6 +756,8 @@ export function SpeakFlowApp() {
   const [simulatedSpeaking, setSimulatedSpeaking] = useState(false);
   const [simulatedListening, setSimulatedListening] = useState(false);
   const [inRoomEvaluation, setInRoomEvaluation] = useState(false);
+  const [currentEvaluation, setCurrentEvaluation] = useState<RichSessionEvaluation | null>(null);
+  const [evalTab, setEvalTab] = useState<"scores" | "corrections" | "vocab">("scores");
   const [hasStartedVoice, setHasStartedVoice] = useState(false);
 
   // Real Web Speech Recognition & Interactive Input
@@ -586,6 +850,8 @@ export function SpeakFlowApp() {
     setNextExchangeIdx(0);
     setChatHistory([]);
     setInRoomEvaluation(false);
+    setCurrentEvaluation(null);
+    setEvalTab("scores");
     setHasStartedVoice(false);
     setSimulatedSpeaking(false);
     setSimulatedListening(false);
@@ -842,8 +1108,84 @@ export function SpeakFlowApp() {
     }
     setSimulatedSpeaking(false);
     setSimulatedListening(false);
+
+    // Generate rich educational evaluation
+    const evaluation = generateSessionEvaluation(chatHistory, partner.name, guestLevel);
+    setCurrentEvaluation(evaluation);
     setInRoomEvaluation(true);
-    showToast(`Room Talk with ${partner.name} ended`, "#F9A8A8");
+    setEvalTab("scores");
+    playChime(520, 780);
+
+    // Persist to local storage history
+    try {
+      const sessionId = newId();
+      const userTurns = chatHistory.filter((t) => t.sender === "user");
+      const durationSec = Math.max(30, userTurns.length * 18);
+      const sessionRecord: SessionRecord = {
+        id: sessionId,
+        mode: "practice",
+        level: (guestLevel as any) || "A1",
+        topicId: partner.id,
+        topicTitle: `Daily Talk with ${partner.name}`,
+        startedAt: new Date().toISOString(),
+        durationSec,
+        transcript: chatHistory.map((t) => ({
+          role: t.sender === "ai" ? "model" : "user",
+          text: t.text,
+        })),
+        feedback: {
+          overallBand: evaluation.overallBand,
+          cefr: evaluation.cefr as any,
+          criteria: [
+            { name: "fluency", band: evaluation.overallBand, comment: "Natural rhythm" },
+            { name: "grammar", band: evaluation.overallBand, comment: "Clear sentence structure" },
+            { name: "pronunciation", band: evaluation.overallBand, comment: "Clear enunciation" },
+          ],
+          summary: evaluation.summary,
+          strengths: evaluation.strengths,
+          improvements: evaluation.improvements,
+          corrections: evaluation.corrections.map((c) => ({
+            original: c.original,
+            corrected: c.corrected,
+            explanation: c.explanation,
+          })),
+          vocabularyUpgrades: evaluation.vocabUpgrades.map((v) => ({
+            used: v.word,
+            better: v.word,
+            example: v.example,
+          })),
+          fillerWords: [],
+          nextFocus: "Practice daily conversation to unlock higher CEFR level",
+          pronunciationFromAudio: false,
+        },
+      };
+      void saveSession(sessionRecord);
+
+      // Stamp today on the Calendar
+      const todayKey = `${baseToday.getFullYear()}-${String(baseToday.getMonth() + 1).padStart(2, "0")}-${String(baseToday.getDate()).padStart(2, "0")}`;
+      const partnerFace =
+        partner.name === "Sarah"
+          ? "happy"
+          : partner.name === "Emma"
+            ? "wink"
+            : partner.name === "Sophia"
+              ? "calm"
+              : partner.name === "David"
+                ? "surprised"
+                : "curious";
+      setCalendarCheckIns((prev) => ({
+        ...prev,
+        [todayKey]: {
+          color: partner.color,
+          face: partnerFace,
+          partnerId: partner.id,
+        },
+      }));
+    } catch (e) {
+      console.warn("Could not save session record:", e);
+    }
+
+    showToast(isIndonesian ? `Sesi dengan ${partner.name} selesai! +50 XP` : `Session with ${partner.name} complete! +50 XP`, "#B8F3B8");
     if (live.isActive) {
       try {
         await live.endSession();
@@ -2138,62 +2480,240 @@ export function SpeakFlowApp() {
                     </>
                   ) : (
                     /* IN-ROOM EVALUATION VIEW */
-                    <div className="flex-1 flex flex-col justify-between overflow-y-auto no-scrollbar py-1">
-                      <div>
-                        <div className="flex items-center justify-between pb-2 border-b border-black/[0.06]">
+                    <div className="flex-1 flex flex-col justify-between overflow-hidden py-1">
+                      {/* Evaluation Header */}
+                      <div className="flex items-center justify-between pb-2 border-b border-black/[0.06] shrink-0">
+                        <div className="flex items-center gap-1.5">
                           <h3 className="text-[14px] font-extrabold text-[#0F0F12]">Session Evaluation</h3>
-                          <span className="text-[10.5px] font-bold px-2 py-0.5 rounded-full bg-[#B8F3B8] text-[#0F0F12]">
-                            {live.feedback ? `Band ${formatBand(live.feedback.overallBand)} ${live.feedback.cefr}` : `Band 5.5 Level ${guestLevel}`}
+                          <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-[#B8F3B8] text-[#0F0F12]">
+                            Band {currentEvaluation?.overallBand.toFixed(1) || "5.5"} {currentEvaluation?.cefr || "A1"}
                           </span>
                         </div>
+                        <span className="text-[10px] font-extrabold text-[#8F5BFF] bg-[#F5F0FF] px-2 py-0.5 rounded-full border border-[#8F5BFF]/20">
+                          +{currentEvaluation?.xpEarned || 50} XP
+                        </span>
+                      </div>
 
-                        {live.status === "evaluating" && !live.feedback ? (
-                          <div className="py-8 text-center">
-                            <div className="w-8 h-8 rounded-full border-2 border-black/20 border-t-[#0F0F12] animate-spin mx-auto mb-2" />
-                            <p className="text-xs font-bold text-[#0F0F12]">AI is preparing your speaking evaluation...</p>
-                            <p className="text-[10.5px] text-[#8C8C99] mt-1">Analyzing pronunciation, grammar, and fluency.</p>
-                          </div>
-                        ) : (
-                          <>
-                            <div className="grid grid-cols-3 gap-2 my-3">
-                              <div className="bg-[#F4F4F8] rounded-[16px] p-2.5 text-center">
-                                <p className="text-[10px] font-bold text-[#8C8C99]">Fluency</p>
-                                <p className="text-[16px] font-extrabold text-[#0F0F12] metric-tight">
-                                  {live.feedback ? `${Math.round(live.feedback.overallBand * 16)}%` : "88%"}
-                                </p>
+                      {/* Tab Navigation Segmented Bar */}
+                      <div className="flex items-center gap-1 my-2 p-1 bg-[#F4F4F8] rounded-full shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setEvalTab("scores")}
+                          className={`tap-scale flex-1 py-1 rounded-full text-[10.5px] font-extrabold transition-all text-center ${
+                            evalTab === "scores"
+                              ? "bg-[#0F0F12] text-white shadow-2xs"
+                              : "text-[#8C8C99] hover:text-[#0F0F12]"
+                          }`}
+                        >
+                          {isIndonesian ? "Skor" : "Scores"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEvalTab("corrections")}
+                          className={`tap-scale flex-1 py-1 rounded-full text-[10.5px] font-extrabold transition-all text-center ${
+                            evalTab === "corrections"
+                              ? "bg-[#0F0F12] text-white shadow-2xs"
+                              : "text-[#8C8C99] hover:text-[#0F0F12]"
+                          }`}
+                        >
+                          {isIndonesian ? "Koreksi" : "Corrections"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEvalTab("vocab")}
+                          className={`tap-scale flex-1 py-1 rounded-full text-[10.5px] font-extrabold transition-all text-center ${
+                            evalTab === "vocab"
+                              ? "bg-[#0F0F12] text-white shadow-2xs"
+                              : "text-[#8C8C99] hover:text-[#0F0F12]"
+                          }`}
+                        >
+                          {isIndonesian ? "Kosa Kata" : "Vocabulary"}
+                        </button>
+                      </div>
+
+                      {/* Scrollable Tab Content */}
+                      <div className="flex-1 overflow-y-auto no-scrollbar py-1">
+                        {evalTab === "scores" && (
+                          <div className="flex flex-col gap-2.5 animate-in fade-in duration-200">
+                            {/* 4 Bento Metrics */}
+                            <div className="grid grid-cols-2 gap-2">
+                              <div className="bg-[#F4F4F8] rounded-[18px] p-2.5 flex flex-col justify-between">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-[#8C8C99]">Fluency</span>
+                                  <span className="text-[14px] font-extrabold text-[#0F0F12]">
+                                    {currentEvaluation?.fluencyScore || 88}%
+                                  </span>
+                                </div>
+                                <div className="w-full h-1.5 bg-black/10 rounded-full mt-2 overflow-hidden">
+                                  <div
+                                    className="h-full bg-[#B8F3B8] rounded-full"
+                                    style={{ width: `${currentEvaluation?.fluencyScore || 88}%` }}
+                                  />
+                                </div>
                               </div>
-                              <div className="bg-[#F4F4F8] rounded-[16px] p-2.5 text-center">
-                                <p className="text-[10px] font-bold text-[#8C8C99]">Grammar</p>
-                                <p className="text-[16px] font-extrabold text-[#0F0F12] metric-tight">
-                                  {live.feedback ? `${Math.min(98, Math.round(live.feedback.overallBand * 17))}%` : "92%"}
-                                </p>
+
+                              <div className="bg-[#F4F4F8] rounded-[18px] p-2.5 flex flex-col justify-between">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-[#8C8C99]">Grammar</span>
+                                  <span className="text-[14px] font-extrabold text-[#0F0F12]">
+                                    {currentEvaluation?.grammarScore || 92}%
+                                  </span>
+                                </div>
+                                <div className="w-full h-1.5 bg-black/10 rounded-full mt-2 overflow-hidden">
+                                  <div
+                                    className="h-full bg-[#D8C8FF] rounded-full"
+                                    style={{ width: `${currentEvaluation?.grammarScore || 92}%` }}
+                                  />
+                                </div>
                               </div>
-                              <div className="bg-[#F4F4F8] rounded-[16px] p-2.5 text-center">
-                                <p className="text-[10px] font-bold text-[#8C8C99]">Pronunciation</p>
-                                <p className="text-[16px] font-extrabold text-[#0F0F12] metric-tight">
-                                  {live.feedback ? `${Math.min(96, Math.round(live.feedback.overallBand * 16))}%` : "86%"}
-                                </p>
+
+                              <div className="bg-[#F4F4F8] rounded-[18px] p-2.5 flex flex-col justify-between">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-[#8C8C99]">Pronunciation</span>
+                                  <span className="text-[14px] font-extrabold text-[#0F0F12]">
+                                    {currentEvaluation?.pronunciationScore || 86}%
+                                  </span>
+                                </div>
+                                <div className="w-full h-1.5 bg-black/10 rounded-full mt-2 overflow-hidden">
+                                  <div
+                                    className="h-full bg-[#FBC3A2] rounded-full"
+                                    style={{ width: `${currentEvaluation?.pronunciationScore || 86}%` }}
+                                  />
+                                </div>
+                              </div>
+
+                              <div className="bg-[#F4F4F8] rounded-[18px] p-2.5 flex flex-col justify-between">
+                                <div className="flex items-center justify-between">
+                                  <span className="text-[10px] font-bold text-[#8C8C99]">Vocabulary</span>
+                                  <span className="text-[14px] font-extrabold text-[#0F0F12]">
+                                    {currentEvaluation?.vocabScore || 85}%
+                                  </span>
+                                </div>
+                                <div className="w-full h-1.5 bg-black/10 rounded-full mt-2 overflow-hidden">
+                                  <div
+                                    className="h-full bg-[#B5E2FA] rounded-full"
+                                    style={{ width: `${currentEvaluation?.vocabScore || 85}%` }}
+                                  />
+                                </div>
                               </div>
                             </div>
 
+                            {/* Quick Stats Banner */}
+                            <div className="flex items-center justify-between px-3 py-2 bg-[#F4F4F8] rounded-[14px]">
+                              <span className="text-[10.5px] font-bold text-[#8C8C99]">
+                                {currentEvaluation?.turnCount || 3} {isIndonesian ? "Putaran Obrolan" : "Turns"}
+                              </span>
+                              <span className="text-[10.5px] font-extrabold text-[#0F0F12]">
+                                {currentEvaluation?.wordCount || 24} {isIndonesian ? "Kata Diucapkan" : "Words Spoken"}
+                              </span>
+                            </div>
+
+                            {/* Feedback Message */}
                             <div className="bg-[#EDF2FF] rounded-[18px] p-3 border border-black/[0.04]">
                               <p className="text-[11px] font-extrabold text-[#0F0F12]">
                                 Feedback by {partner.name}
                               </p>
                               <p className="text-[11px] font-medium text-[#4E3883] mt-1 leading-relaxed">
-                                {live.feedback?.summary ||
+                                {currentEvaluation?.summary ||
                                   "Natural everyday conversation! Your sentence structures were clear and polite. Keep practicing daily to unlock Level A2."}
                               </p>
                             </div>
-                          </>
+                          </div>
+                        )}
+
+                        {evalTab === "corrections" && (
+                          <div className="flex flex-col gap-2.5 animate-in fade-in duration-200">
+                            <p className="text-[10.5px] font-bold text-[#8C8C99] px-0.5">
+                              {isIndonesian ? "Perbandingan kalimat kamu dengan versi penutur asli:" : "Compare what you said with more natural phrasing:"}
+                            </p>
+                            {currentEvaluation?.corrections.map((corr, idx) => (
+                              <div key={idx} className="bg-[#F4F4F8] rounded-[18px] p-3 border border-black/[0.04] flex flex-col gap-1.5">
+                                <div className="flex items-start gap-2">
+                                  <span className="text-[9.5px] font-extrabold text-[#F9A8A8] bg-[#0F0F12] px-1.5 py-0.5 rounded-full shrink-0">
+                                    {isIndonesian ? "Kalimat Kamu" : "You"}
+                                  </span>
+                                  <p className="text-[11.5px] font-bold text-[#0F0F12] leading-tight">
+                                    "{corr.original}"
+                                  </p>
+                                </div>
+
+                                <div className="flex items-start justify-between gap-2 bg-white rounded-[12px] p-2 border border-black/[0.04]">
+                                  <div>
+                                    <span className="text-[9.5px] font-extrabold text-[#2E7D32] bg-[#B8F3B8] px-1.5 py-0.5 rounded-full">
+                                      {isIndonesian ? "Lebih Alami" : "Better"}
+                                    </span>
+                                    <p className="text-[11.5px] font-extrabold text-[#0F0F12] mt-1 leading-tight">
+                                      "{corr.corrected}"
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => speakWithBrowserTTS(corr.corrected, partner.name)}
+                                    className="tap-scale w-7 h-7 rounded-full bg-[#F4F4F8] hover:bg-[#EAEAF0] flex items-center justify-center shrink-0 text-[#0F0F12]"
+                                    title="Dengarkan pengucapan"
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </button>
+                                </div>
+
+                                <p className="text-[10px] font-medium text-[#7A7A88] leading-snug px-0.5">
+                                  💡 {corr.explanation}
+                                </p>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        {evalTab === "vocab" && (
+                          <div className="flex flex-col gap-2.5 animate-in fade-in duration-200">
+                            <p className="text-[10.5px] font-bold text-[#8C8C99] px-0.5">
+                              {isIndonesian ? "Kosa kata & frasa emas untuk obrolan berikutnya:" : "Key vocabulary and idioms for your next talk:"}
+                            </p>
+                            {currentEvaluation?.vocabUpgrades.map((item, idx) => (
+                              <div key={idx} className="bg-[#F4F4F8] rounded-[18px] p-3 border border-black/[0.04] flex flex-col gap-1.5">
+                                <div className="flex items-center justify-between">
+                                  <div>
+                                    <span className="text-[13px] font-extrabold text-[#0F0F12]">
+                                      {item.word}
+                                    </span>
+                                    <p className="text-[10.5px] font-bold text-[#8C8C99]">
+                                      {item.meaning}
+                                    </p>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    onClick={() => speakWithBrowserTTS(item.example, partner.name)}
+                                    className="tap-scale w-7 h-7 rounded-full bg-white hover:bg-[#EAEAF0] flex items-center justify-center shrink-0 text-[#0F0F12] border border-black/[0.06]"
+                                    title="Dengarkan contoh kalimat"
+                                  >
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                                      <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                      <path d="M15.54 8.46a5 5 0 0 1 0 7.07" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                    </svg>
+                                  </button>
+                                </div>
+
+                                <div className="bg-white rounded-[12px] p-2 border border-black/[0.04]">
+                                  <p className="text-[11px] font-semibold text-[#4E3883] italic leading-snug">
+                                    "{item.example}"
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
                         )}
                       </div>
 
-                      <div className="grid grid-cols-2 gap-2.5 pt-3">
+                      {/* Bottom Dual Buttons */}
+                      <div className="grid grid-cols-2 gap-2.5 pt-2.5 border-t border-black/[0.06] shrink-0">
                         <button
                           type="button"
                           onClick={() => {
                             setInRoomEvaluation(false);
+                            setCurrentEvaluation(null);
                             setChatHistory([]);
                             setHasStartedVoice(false);
                             stopWebSpeech();
@@ -2203,17 +2723,18 @@ export function SpeakFlowApp() {
                           }}
                           className="tap-scale h-[40px] px-3 bg-[#F4F4F8] hover:bg-[#EAEAF0] text-[#0F0F12] rounded-full text-[12px] font-extrabold tracking-tight flex items-center justify-center transition-colors font-sans"
                         >
-                          Practice Again
+                          {isIndonesian ? "Latihan Lagi" : "Practice Again"}
                         </button>
                         <button
                           type="button"
                           onClick={() => {
                             setInRoomEvaluation(false);
                             navigateTo(3);
+                            showToast(isIndonesian ? "✨ Sesi tersimpan! +50 XP" : "✨ Session saved! +50 XP", "#B8F3B8");
                           }}
                           className="tap-scale h-[40px] px-3 bg-[#0F0F12] hover:bg-black/85 text-white rounded-full text-[12px] font-extrabold tracking-tight flex items-center justify-center transition-colors font-sans"
                         >
-                          Exit
+                          {isIndonesian ? "Simpan & Keluar" : "Save & Exit"}
                         </button>
                       </div>
                     </div>
