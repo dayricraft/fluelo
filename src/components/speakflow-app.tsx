@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { FlueloCloudSVG } from "@/components/fluelo-cloud-svg";
 import { useLiveSession, type StartLiveSessionOptions } from "@/hooks/useLiveSession";
 import { formatBand } from "@/lib/levels";
 import { useAppData, saveSession, newId, updateProfile } from "@/lib/storage";
@@ -574,11 +575,11 @@ const GRAMMAR_QUESTIONS = [
 ];
 
 export const CALENDAR_PARTNERS = [
-  { id: "sarah", name: "Sarah", color: "#B8F3B8", face: "happy" },
-  { id: "emma", name: "Emma", color: "#FBC3A2", face: "wink" },
-  { id: "sophia", name: "Sophia", color: "#B5E2FA", face: "calm" },
-  { id: "david", name: "David", color: "#D8C8FF", face: "surprised" },
-  { id: "kenji", name: "Kenji", color: "#FDE272", face: "curious" }
+  { id: "sarah", name: "Sarah", color: "#B8F3B8", face: "Sarah" },
+  { id: "emma", name: "Emma", color: "#B5E2FA", face: "Emma" },
+  { id: "sophia", name: "Sophia", color: "#D8C8FF", face: "Sophia" },
+  { id: "david", name: "David", color: "#FBC3A2", face: "David" },
+  { id: "kenji", name: "Kenji", color: "#B8F3B8", face: "Kenji" }
 ];
 
 export const GUEST_AGE_RANGES = [
@@ -590,50 +591,12 @@ export const GUEST_AGE_RANGES = [
 
 export const GUEST_LEVELS = ["A1", "A2", "B1", "B2", "C1", "C2", "C3"];
 
-export function MiniCalendarFace({ face }: { face: string }) {
-  if (face === "happy") {
-    return (
-      <svg width="15" height="11" viewBox="0 0 16 12" fill="none">
-        <path d="M2.5 4C3.8 2.2 6.2 2.2 7.5 4" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M8.5 4C9.8 2.2 12.2 2.2 13.5 4" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M4 8C6 10.5 10 10.5 12 8" stroke="#0F0F12" strokeWidth="1.7" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  if (face === "wink") {
-    return (
-      <svg width="15" height="11" viewBox="0 0 16 12" fill="none">
-        <path d="M2.5 4C3.8 2.2 6.2 2.2 7.5 4" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M9 4.5H13" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-        <path d="M4 8C6 10.5 10 10.5 12 8" stroke="#0F0F12" strokeWidth="1.7" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  if (face === "calm") {
-    return (
-      <svg width="15" height="11" viewBox="0 0 16 12" fill="none">
-        <circle cx="5" cy="4" r="1.2" fill="#0F0F12" />
-        <circle cx="11" cy="4" r="1.2" fill="#0F0F12" />
-        <path d="M5.5 8.5C7 9.8 9 9.8 10.5 8.5" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-      </svg>
-    );
-  }
-  if (face === "surprised") {
-    return (
-      <svg width="15" height="11" viewBox="0 0 16 12" fill="none">
-        <circle cx="5" cy="4" r="1.2" fill="#0F0F12" />
-        <circle cx="11" cy="4" r="1.2" fill="#0F0F12" />
-        <circle cx="8" cy="8.2" r="1.8" stroke="#0F0F12" strokeWidth="1.5" />
-      </svg>
-    );
-  }
-  return (
-    <svg width="15" height="11" viewBox="0 0 16 12" fill="none">
-      <circle cx="5" cy="4" r="1.2" fill="#0F0F12" />
-      <path d="M9.5 3.5C10.8 2.5 12.2 2.5 13.5 4" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-      <path d="M5 8.5C7 10.2 9.5 10.2 11.5 8.5" stroke="#0F0F12" strokeWidth="1.6" strokeLinecap="round" />
-    </svg>
-  );
+export function MiniCalendarFace({ face, size = 26 }: { face: string; size?: number }) {
+  const charName = face.charAt(0).toUpperCase() + face.slice(1).toLowerCase();
+  const validName = ["Sarah", "Emma", "Sophia", "David", "Kenji"].includes(charName)
+    ? charName
+    : "Sarah";
+  return <FlueloCloudSVG name={validName} size={size} blink={false} />;
 }
 
 function getInitialCalendarCheckIns(referenceDate?: Date): Record<string, { color: string; face: string; partnerId: string }> {
@@ -910,7 +873,7 @@ export function SpeakFlowApp() {
     };
   }, []);
 
-  // Minimal Feedback Indicator State (Checkmark ✓ or Cross ✕ only, NO verbose text)
+  // Minimal Feedback Indicator State (Checkmark or Cross icon only, NO verbose text)
   const [feedbackStatus, setFeedbackStatus] = useState<"check" | "cross" | null>(null);
 
   const triggerFeedback = (status: "check" | "cross") => {
@@ -1513,150 +1476,62 @@ export function SpeakFlowApp() {
                 </button>
               </div>
 
-              {/* Bottom Geometric Characters Cluster */}
+              {/* Bottom Cluster Featuring All 5 Frosted Cloud Characters from Reference Prototype */}
               <div className="relative flex-1 w-full mt-2 overflow-hidden">
-                {/* 1. Sarah Mint Circle */}
                 <button
                   type="button"
                   onClick={() => {
                     handleSelectPartner("Sarah");
                     navigateTo(4);
                   }}
-                  style={{ transform: "rotate(-10deg)" }}
-                  className="mascot-float tap-scale absolute left-[24px] top-[34px] w-[142px] h-[142px] rounded-full bg-[#B8F3B8] flex items-center justify-center z-10 shadow-sm"
+                  className="tap-scale absolute left-[16px] top-[22px] rotate-[-8deg] z-10 drop-shadow-md cursor-pointer"
                   title="Talk with Sarah"
                 >
-                  <svg width="92" height="68" viewBox="0 0 92 68" fill="none">
-                    <path d="M12 24C17 15 27 15 32 24" stroke="#0F0F12" strokeWidth="4.5" strokeLinecap="round" />
-                    <path d="M60 24C65 15 75 15 80 24" stroke="#0F0F12" strokeWidth="4.5" strokeLinecap="round" />
-                    <path d="M20 42C33 58 59 58 72 42" stroke="#0F0F12" strokeWidth="5" strokeLinecap="round" />
-                  </svg>
+                  <FlueloCloudSVG name="Sarah" size={132} float={true} />
                 </button>
-
-                {/* 2. Sophia Lavender Circle */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleSelectPartner("Sophia");
-                    navigateTo(4);
-                  }}
-                  style={{ transform: "rotate(14deg)" }}
-                  className="mascot-float-delayed tap-scale absolute right-[10px] top-[6px] w-[134px] h-[134px] rounded-full bg-[#D8C8FF] flex items-center justify-center z-10"
-                  title="Talk with Sophia"
-                >
-                  <div className="w-[104px] h-[104px] rounded-full border-[11px] border-[#C1A8FA] bg-[#F4EEFF] flex items-center justify-center">
-                    <svg width="68" height="62" viewBox="0 0 68 62" fill="none">
-                      <circle cx="20" cy="24" r="6.5" fill="#0F0F12" />
-                      <circle cx="18" cy="22" r="2" fill="#FFFFFF" />
-                      <circle cx="48" cy="22" r="6.5" fill="#0F0F12" />
-                      <circle cx="46" cy="20" r="2" fill="#FFFFFF" />
-                      <path d="M12 12C16 8 23 8 27 11" stroke="#0F0F12" strokeWidth="3.2" strokeLinecap="round" />
-                      <path d="M41 10C45 7 52 7 56 11" stroke="#0F0F12" strokeWidth="3.2" strokeLinecap="round" />
-                      <ellipse cx="35" cy="43" rx="7.5" ry="6" fill="#0F0F12" />
-                    </svg>
-                  </div>
-                </button>
-
-                {/* 3. Sophia Lilac Pink Scallop */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleSelectPartner("Sophia");
-                    navigateTo(4);
-                  }}
-                  style={{ transform: "rotate(6deg)" }}
-                  className="mascot-float tap-scale absolute -left-[22px] top-[168px] w-[124px] h-[124px] z-10 flex items-center justify-center"
-                >
-                  <svg width="124" height="124" viewBox="0 0 124 124" fill="none">
-                    <path d="M62 4C73 4 82 12 91 18C100 24 114 29 118 40C122 51 115 64 115 76C115 88 120 101 112 110C104 119 90 116 78 119C66 122 54 122 42 118C30 114 16 116 9 106C2 96 8 82 7 70C6 58 2 44 9 34C16 24 30 22 40 15C50 8 51 4 62 4Z" fill="#F7B8D8" />
-                    <ellipse cx="48" cy="48" rx="9" ry="12" fill="#FFFFFF" />
-                    <circle cx="50" cy="43" r="5.5" fill="#0F0F12" />
-                    <ellipse cx="78" cy="52" rx="9" ry="12" fill="#FFFFFF" />
-                    <circle cx="79" cy="47" r="5.5" fill="#0F0F12" />
-                    <path d="M44 79C56 75 72 76 84 82" stroke="#0F0F12" strokeWidth="4.8" strokeLinecap="round" />
-                  </svg>
-                </button>
-
-                {/* 4. David Butter Yellow Lightning */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    handleSelectPartner("David");
-                    navigateTo(4);
-                  }}
-                  style={{ transform: "rotate(-4deg)" }}
-                  className="mascot-float-delayed tap-scale absolute left-[84px] top-[150px] w-[135px] h-[196px] z-20 flex items-center justify-center"
-                  title="Talk with David"
-                >
-                  <svg width="135" height="196" viewBox="0 0 135 196" fill="none">
-                    <path d="M44 12L108 4L88 68L124 66L66 188L32 186L56 116L20 118L44 12Z" fill="#FDE272" stroke="#FDE272" strokeWidth="10" strokeLinejoin="round" />
-                    <path d="M35 68C42 57 53 58 58 68" stroke="#0F0F12" strokeWidth="4.4" strokeLinecap="round" />
-                    <path d="M77 64C84 53 95 54 100 64" stroke="#0F0F12" strokeWidth="4.4" strokeLinecap="round" />
-                    <path d="M48 89C59 100 76 99 86 87" stroke="#0F0F12" strokeWidth="4.6" strokeLinecap="round" />
-                  </svg>
-                </button>
-
-                {/* 5. Emma Warm Peach Rounded Square */}
                 <button
                   type="button"
                   onClick={() => {
                     handleSelectPartner("Emma");
                     navigateTo(4);
                   }}
-                  style={{ transform: "rotate(-14deg)" }}
-                  className="mascot-float tap-scale absolute -right-[16px] top-[134px] w-[126px] h-[126px] rounded-[28px] bg-[#FBC3A2] flex items-center justify-center z-10"
+                  className="tap-scale absolute right-[14px] top-[14px] rotate-[9deg] z-20 drop-shadow-md cursor-pointer"
                   title="Talk with Emma"
                 >
-                  <svg width="86" height="74" viewBox="0 0 86 74" fill="none">
-                    <path d="M12 18L34 25" stroke="#0F0F12" strokeWidth="4.5" strokeLinecap="round" />
-                    <path d="M74 18L52 25" stroke="#0F0F12" strokeWidth="4.5" strokeLinecap="round" />
-                    <ellipse cx="24" cy="30" rx="8.5" ry="6.5" fill="#FFFFFF" />
-                    <circle cx="25" cy="30" r="4.5" fill="#0F0F12" />
-                    <ellipse cx="62" cy="30" rx="8.5" ry="6.5" fill="#FFFFFF" />
-                    <circle cx="61" cy="30" r="4.5" fill="#0F0F12" />
-                    <path d="M28 55C39 48 51 48 62 54" stroke="#0F0F12" strokeWidth="4.8" strokeLinecap="round" />
-                  </svg>
+                  <FlueloCloudSVG name="Emma" size={136} float={true} />
                 </button>
-
-                {/* 6. Sophia Sky Blue Arch */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSelectPartner("David");
+                    navigateTo(4);
+                  }}
+                  className="tap-scale absolute left-[96px] top-[134px] rotate-[-3deg] z-30 drop-shadow-xl cursor-pointer"
+                  title="Talk with David"
+                >
+                  <FlueloCloudSVG name="David" size={142} float={true} />
+                </button>
                 <button
                   type="button"
                   onClick={() => {
                     handleSelectPartner("Sophia");
                     navigateTo(4);
                   }}
-                  style={{ transform: "rotate(-5deg)" }}
-                  className="mascot-float-delayed tap-scale absolute -left-[6px] -bottom-[14px] w-[134px] h-[116px] rounded-t-[68px] rounded-b-[28px] bg-[#B5E2FA] flex items-center justify-center z-20"
+                  className="tap-scale absolute left-[10px] bottom-[10px] rotate-[6deg] z-20 drop-shadow-md cursor-pointer"
                   title="Talk with Sophia"
                 >
-                  <svg width="84" height="64" viewBox="0 0 84 64" fill="none">
-                    <path d="M18 22C23 17 30 17 35 22" stroke="#0F0F12" strokeWidth="4" strokeLinecap="round" />
-                    <path d="M51 22C56 17 63 17 68 22" stroke="#0F0F12" strokeWidth="4" strokeLinecap="round" />
-                    <ellipse cx="26" cy="30" rx="7" ry="4.5" fill="#FFFFFF" />
-                    <circle cx="26" cy="30" r="3.5" fill="#0F0F12" />
-                    <ellipse cx="59" cy="30" rx="7" ry="4.5" fill="#FFFFFF" />
-                    <circle cx="59" cy="30" r="3.5" fill="#0F0F12" />
-                    <ellipse cx="43" cy="47" rx="7" ry="4.2" stroke="#0F0F12" strokeWidth="3.8" />
-                  </svg>
+                  <FlueloCloudSVG name="Sophia" size={124} float={true} />
                 </button>
-
-                {/* 7. Kenji Coral Pink Triangle */}
                 <button
                   type="button"
                   onClick={() => {
                     handleSelectPartner("Kenji");
                     navigateTo(4);
                   }}
-                  style={{ transform: "rotate(4deg)" }}
-                  className="mascot-float tap-scale absolute -right-[8px] -bottom-[16px] w-[166px] h-[148px] z-20 flex items-center justify-center"
+                  className="tap-scale absolute right-[10px] bottom-[8px] rotate-[-7deg] z-20 drop-shadow-md cursor-pointer"
                   title="Talk with Kenji"
                 >
-                  <svg width="166" height="148" viewBox="0 0 166 148" fill="none">
-                    <path d="M72 18C78 7 94 7 100 18L154 118C160 129 152 142 140 142H32C20 142 12 129 18 118L72 18Z" fill="#F9A8A8" />
-                    <path d="M54 68L68 76L54 84" stroke="#0F0F12" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M114 68L100 76L114 84" stroke="#0F0F12" strokeWidth="4.4" strokeLinecap="round" strokeLinejoin="round" />
-                    <path d="M58 106C72 96 96 96 110 106" stroke="#0F0F12" strokeWidth="4.8" strokeLinecap="round" />
-                  </svg>
+                  <FlueloCloudSVG name="Kenji" size={128} float={true} />
                 </button>
               </div>
             </div>
@@ -1717,12 +1592,10 @@ export function SpeakFlowApp() {
                           ? "Latihan percakapan audio dua arah setiap hari dengan evaluasi grammar & fluency instan."
                           : "Practice daily two-way English voice talk with instant grammar and fluency feedback."}
                       </p>
-                      <div className="flex items-center gap-1.5 mt-3.5">
-                        <span className="w-7 h-7 rounded-full bg-[#B8F3B8] border border-black/10 flex items-center justify-center text-[10.5px] font-extrabold text-[#0F0F12] font-sans">S</span>
-                        <span className="w-7 h-7 rounded-full bg-[#FBC3A2] border border-black/10 flex items-center justify-center text-[10.5px] font-extrabold text-[#0F0F12] font-sans">E</span>
-                        <span className="w-7 h-7 rounded-full bg-[#B5E2FA] border border-black/10 flex items-center justify-center text-[10.5px] font-extrabold text-[#0F0F12] font-sans">S</span>
-                        <span className="w-7 h-7 rounded-full bg-[#D8C8FF] border border-black/10 flex items-center justify-center text-[10.5px] font-extrabold text-[#0F0F12] font-sans">D</span>
-                        <span className="w-7 h-7 rounded-full bg-[#FDE272] border border-black/10 flex items-center justify-center text-[10.5px] font-extrabold text-[#0F0F12] font-sans">K</span>
+                      <div className="flex items-center gap-2 mt-3.5">
+                        <div className="rounded-[16px] shadow-sm"><FlueloCloudSVG name="Sarah" size={50} blink={false} /></div>
+                        <div className="rounded-[16px] shadow-sm"><FlueloCloudSVG name="Emma" size={50} blink={false} /></div>
+                        <div className="rounded-[16px] shadow-sm"><FlueloCloudSVG name="David" size={50} blink={false} /></div>
                       </div>
                     </div>
                   </div>
@@ -1805,13 +1678,8 @@ export function SpeakFlowApp() {
                       <div className="bg-white rounded-[22px] p-3 border border-black/[0.06] shadow-2xs flex flex-col gap-2.5">
                         <div className="flex items-center gap-3">
                           {/* Large Selected Avatar Badge */}
-                          <div
-                            style={{ backgroundColor: currentGuestAvatar.color }}
-                            className="w-13 h-13 rounded-[18px] border-2 border-[#0F0F12] flex items-center justify-center shrink-0 shadow-xs transition-colors"
-                          >
-                            <div className="scale-125">
-                              <MiniCalendarFace face={currentGuestAvatar.face} />
-                            </div>
+                          <div className="w-13 h-13 rounded-[18px] border-2 border-[#0F0F12] overflow-hidden flex items-center justify-center shrink-0 shadow-xs transition-colors">
+                            <FlueloCloudSVG name={currentGuestAvatar.name || "Sarah"} size={52} blink={false} />
                           </div>
 
                           {/* Name Input */}
@@ -1836,21 +1704,20 @@ export function SpeakFlowApp() {
                           </span>
                           <div className="grid grid-cols-5 gap-1.5">
                             {CALENDAR_PARTNERS.map((av) => {
-                              const isSelected = guestAvatar === av.id;
+                              const isSelected = guestAvatar.toLowerCase() === av.name.toLowerCase() || guestAvatar.toLowerCase() === av.id.toLowerCase();
                               return (
                                 <button
                                   key={av.id}
                                   type="button"
-                                  onClick={() => setGuestAvatar(av.id)}
-                                  style={{ backgroundColor: av.color }}
-                                  className={`tap-scale h-9 rounded-xl flex items-center justify-center transition-all ${
+                                  onClick={() => setGuestAvatar(av.name)}
+                                  className={`tap-scale h-10 rounded-xl flex items-center justify-center transition-all ${
                                     isSelected
                                       ? "ring-2 ring-[#0F0F12] scale-105 shadow-xs"
                                       : "opacity-60 hover:opacity-100 hover:scale-102"
                                   }`}
                                   title={av.name}
                                 >
-                                  <MiniCalendarFace face={av.face} />
+                                  <FlueloCloudSVG name={av.name} size={36} blink={false} />
                                 </button>
                               );
                             })}
@@ -2003,7 +1870,7 @@ export function SpeakFlowApp() {
                     : `Hello ${guestName || "Alex"}! Who do you want to talk to today?`}
                 </h2>
 
-                {/* User Profile, Level Pill, Streak & XP */}
+                {/* User Profile, Level Pill, Streak & XP (Clean SVGs, no emojis) */}
                 <div className="flex items-center justify-between mt-2.5 pt-2 border-t border-black/[0.06]">
                   {/* Left: Avatar + Name + Level Selector */}
                   <button
@@ -2012,11 +1879,8 @@ export function SpeakFlowApp() {
                     className="tap-scale flex items-center gap-2 text-left group"
                     title="Edit Profile & Target"
                   >
-                    <div
-                      style={{ backgroundColor: currentGuestAvatar.color }}
-                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 border border-black/10 shadow-xs"
-                    >
-                      <MiniCalendarFace face={currentGuestAvatar.face} />
+                    <div className="w-8 h-8 rounded-full overflow-hidden border border-black/10 flex items-center justify-center shrink-0 shadow-xs">
+                      <FlueloCloudSVG name={guestAvatar || "Sarah"} size={36} blink={false} />
                     </div>
                     <div>
                       <div className="flex items-center gap-1">
@@ -2033,22 +1897,26 @@ export function SpeakFlowApp() {
                     </div>
                   </button>
 
-                  {/* Right: Streak & XP Badges */}
+                  {/* Right: Streak & XP Badges (No emoji slop) */}
                   <div className="flex items-center gap-1.5">
                     <div
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#FFF3E8] border border-[#FDE272]/50 shadow-2xs"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#FFF3E8] border border-[#FDE272]/50 shadow-2xs"
                       title={`${currentStreak} days streak`}
                     >
-                      <span className="text-[11px] leading-none">🔥</span>
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2C8.5 7 11 10.5 9 13C8 10 6.5 9 6.5 9C4 12.5 4 15.5 6 18.5C8 21.5 12 22 13.5 22C17.5 22 20 18.5 20 14.5C20 9.5 15.5 7 15.5 7C15.5 7 15.5 8.5 14 9.5C12.5 10.5 12 9 12 7C12 5 12 2 12 2Z" fill="#D96B27" />
+                      </svg>
                       <span className="text-[11px] font-extrabold text-[#D96B27]">
                         {currentStreak}d
                       </span>
                     </div>
                     <div
-                      className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#F5F0FF] border border-[#D8C8FF] shadow-2xs"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#F5F0FF] border border-[#D8C8FF] shadow-2xs"
                       title={`${totalXp} XP earned`}
                     >
-                      <span className="text-[11px] leading-none">⚡</span>
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none">
+                        <path d="M13 2L3 14H12L11 22L21 10H12L13 2Z" fill="#8F5BFF" />
+                      </svg>
                       <span className="text-[11px] font-extrabold text-[#8F5BFF]">
                         {totalXp} XP
                       </span>
@@ -2056,102 +1924,24 @@ export function SpeakFlowApp() {
                   </div>
                 </div>
 
-                {/* Character Pill Selector Row */}
+                {/* Character Pill Selector Row from UI Reference Prototype */}
                 <div className="flex items-center gap-2 mt-3.5 overflow-x-auto no-scrollbar pb-0.5">
-                  {/* Sarah */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSelectPartner("Sarah");
-                      navigateTo(4);
-                    }}
-                    className="tap-scale relative w-[74px] h-[52px] rounded-[16px] bg-[#F5F5F8] hover:bg-[#ECECF2] shrink-0 overflow-hidden text-left p-2.5 flex items-end border border-black/[0.04]"
-                  >
-                    <span className="text-[11.5px] font-extrabold text-[#0F0F12] z-10">Sarah</span>
-                    <div className="absolute -top-1.5 -right-1.5 w-8 h-8 rounded-full bg-[#B8F3B8] rotate-[-10deg] flex items-center justify-center shadow-sm">
-                      <svg width="20" height="16" viewBox="0 0 24 18" fill="none">
-                        <path d="M3 7C5 4 8 4 10 7" stroke="#0F0F12" strokeWidth="2" strokeLinecap="round" />
-                        <path d="M14 7C16 4 19 4 21 7" stroke="#0F0F12" strokeWidth="2" strokeLinecap="round" />
-                        <path d="M6 12C9.5 16 14.5 16 18 12" stroke="#0F0F12" strokeWidth="2.2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {/* Emma */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSelectPartner("Emma");
-                      navigateTo(4);
-                    }}
-                    className="tap-scale relative w-[74px] h-[52px] rounded-[16px] bg-[#F5F5F8] hover:bg-[#ECECF2] shrink-0 overflow-hidden text-left p-2.5 flex items-end border border-black/[0.04]"
-                  >
-                    <span className="text-[11.5px] font-extrabold text-[#0F0F12] z-10">Emma</span>
-                    <div className="absolute -top-1 -right-1 w-8 h-8 rounded-[9px] bg-[#FBC3A2] rotate-[12deg] flex items-center justify-center shadow-sm">
-                      <svg width="20" height="16" viewBox="0 0 24 18" fill="none">
-                        <circle cx="7" cy="7" r="2" fill="#0F0F12" />
-                        <circle cx="17" cy="7" r="2" fill="#0F0F12" />
-                        <path d="M7 13C10 10.5 14 10.5 17 13" stroke="#0F0F12" strokeWidth="2.2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {/* Sophia */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSelectPartner("Sophia");
-                      navigateTo(4);
-                    }}
-                    className="tap-scale relative w-[76px] h-[52px] rounded-[16px] bg-[#F5F5F8] hover:bg-[#ECECF2] shrink-0 overflow-hidden text-left p-2.5 flex items-end border border-black/[0.04]"
-                  >
-                    <span className="text-[11.5px] font-extrabold text-[#0F0F12] z-10">Sophia</span>
-                    <div className="absolute -top-1 -right-1 w-8 h-8 rounded-t-[16px] rounded-b-[7px] bg-[#B5E2FA] rotate-[-8deg] flex items-center justify-center shadow-sm">
-                      <svg width="20" height="16" viewBox="0 0 24 18" fill="none">
-                        <circle cx="7.5" cy="7" r="2" fill="#0F0F12" />
-                        <circle cx="16.5" cy="7" r="2" fill="#0F0F12" />
-                        <ellipse cx="12" cy="12.5" rx="2.6" ry="2" fill="#0F0F12" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {/* David */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSelectPartner("David");
-                      navigateTo(4);
-                    }}
-                    className="tap-scale relative w-[72px] h-[52px] rounded-[16px] bg-[#F5F5F8] hover:bg-[#ECECF2] shrink-0 overflow-hidden text-left p-2.5 flex items-end border border-black/[0.04]"
-                  >
-                    <span className="text-[11.5px] font-extrabold text-[#0F0F12] z-10">David</span>
-                    <div className="absolute -top-1 -right-1 w-8 h-8 rounded-[10px] bg-[#FDE272] rotate-[10deg] flex items-center justify-center shadow-sm">
-                      <svg width="20" height="16" viewBox="0 0 24 18" fill="none">
-                        <path d="M5 6.5C6.5 5 8.5 5 10 6.5" stroke="#0F0F12" strokeWidth="2" strokeLinecap="round" />
-                        <path d="M14 6.5C15.5 5 17.5 5 19 6.5" stroke="#0F0F12" strokeWidth="2" strokeLinecap="round" />
-                        <path d="M8 12.5H16" stroke="#0F0F12" strokeWidth="2.2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {/* Kenji */}
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleSelectPartner("Kenji");
-                      navigateTo(4);
-                    }}
-                    className="tap-scale relative w-[72px] h-[52px] rounded-[16px] bg-[#F5F5F8] hover:bg-[#ECECF2] shrink-0 overflow-hidden text-left p-2.5 flex items-end border border-black/[0.04]"
-                  >
-                    <span className="text-[11.5px] font-extrabold text-[#0F0F12] z-10">Kenji</span>
-                    <div className="absolute -top-1 -right-1 w-8 h-8 rounded-[10px] bg-[#F9A8A8] rotate-[-12deg] flex items-center justify-center shadow-sm">
-                      <svg width="20" height="16" viewBox="0 0 24 18" fill="none">
-                        <path d="M4 6L9 8L4 10" stroke="#0F0F12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-                        <circle cx="16.5" cy="8" r="2" fill="#0F0F12" />
-                        <path d="M7 13.5C10 15.5 14 15.5 17 13.5" stroke="#0F0F12" strokeWidth="2" strokeLinecap="round" />
-                      </svg>
-                    </div>
-                  </button>
+                  {["Sarah", "Emma", "Sophia", "David", "Kenji"].map((name) => (
+                    <button
+                      key={name}
+                      type="button"
+                      onClick={() => {
+                        handleSelectPartner(name as any);
+                        navigateTo(4);
+                      }}
+                      className="tap-scale relative w-[78px] h-[56px] rounded-[18px] bg-[#F5F5F8] hover:bg-[#ECECF2] shrink-0 overflow-hidden text-left p-2.5 flex items-end border border-black/[0.04]"
+                    >
+                      <span className="text-[11.5px] font-extrabold text-[#0F0F12] z-10">{name}</span>
+                      <div className="absolute -top-1 -right-1 rotate-[-6deg]">
+                        <FlueloCloudSVG name={name} size={38} blink={false} />
+                      </div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
@@ -2249,10 +2039,17 @@ export function SpeakFlowApp() {
                         {isIndonesian ? "Target Bicara Harian" : "Daily Speaking Goal"}
                       </span>
                     </div>
-                    <span className={`text-[10px] font-extrabold px-2 py-0.5 rounded-full ${isDailyTargetReached ? "bg-[#B8F3B8] text-[#0F0F12]" : "bg-white/10 text-[#D8C8FF]"}`}>
-                      {isDailyTargetReached
-                        ? (isIndonesian ? "Tercapai! 🏆" : "Completed! 🏆")
-                        : `${sessionsToday}/${dailyGoalTarget} ${isIndonesian ? "Sesi" : "Sessions"}`}
+                    <span className={`text-[10px] font-extrabold px-2.5 py-0.5 rounded-full flex items-center gap-1 ${isDailyTargetReached ? "bg-[#B8F3B8] text-[#0F0F12]" : "bg-white/10 text-[#D8C8FF]"}`}>
+                      {isDailyTargetReached ? (
+                        <>
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <path d="M5 13L9 17L19 7" stroke="#0F0F12" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span>{isIndonesian ? "Target Tercapai" : "Goal Reached"}</span>
+                        </>
+                      ) : (
+                        `${sessionsToday}/${dailyGoalTarget} ${isIndonesian ? "Sesi" : "Sessions"}`
+                      )}
                     </span>
                   </div>
 
@@ -2390,9 +2187,10 @@ export function SpeakFlowApp() {
                       <button
                         type="button"
                         onClick={() => setIsEditProfileModalOpen(false)}
-                        className="w-7 h-7 rounded-full bg-[#F4F4F7] flex items-center justify-center text-[#71717A] hover:text-[#0F0F12] font-bold"
+                        className="w-7 h-7 rounded-full bg-[#F4F4F7] flex items-center justify-center text-[#71717A] hover:text-[#0F0F12] font-bold tap-scale"
+                        aria-label="Close"
                       >
-                        ✕
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/></svg>
                       </button>
                     </div>
 
@@ -2594,93 +2392,14 @@ export function SpeakFlowApp() {
                     </span>
                   </div>
 
-                  {/* Centered Expressive Vector Mascot with Moving Mouth & Blinking Eyes */}
-                  <div className={`my-auto flex flex-col items-center justify-center z-10 transition-transform duration-300 ${!hasStartedVoice ? "scale-115 my-auto" : ""}`}>
-                    {currentPartnerKey === "Sarah" && (
-                      <div
-                        style={{ transform: "rotate(-6deg)" }}
-                        className="mascot-float w-[122px] h-[122px] rounded-full bg-[#8EE88E] border-[3px] border-[#0F0F12] flex items-center justify-center shadow-sm"
-                      >
-                        <svg width="78" height="60" viewBox="0 0 78 60" fill="none">
-                          <g className="blinking-eyes">
-                            <path d="M12 20C16 12 25 12 29 20" stroke="#0F0F12" strokeWidth="4.2" strokeLinecap="round" />
-                            <path d="M49 20C53 12 62 12 66 20" stroke="#0F0F12" strokeWidth="4.2" strokeLinecap="round" />
-                          </g>
-                          <g className={isCurrentlySpeaking ? "speaking-mouth" : ""}>
-                            <path d="M20 36C30 48 48 48 58 36" stroke="#0F0F12" strokeWidth="4.6" strokeLinecap="round" />
-                          </g>
-                        </svg>
-                      </div>
-                    )}
-                    {currentPartnerKey === "Emma" && (
-                      <div
-                        style={{ transform: "rotate(8deg)" }}
-                        className="mascot-float w-[116px] h-[116px] rounded-[28px] bg-[#F5A678] border-[3px] border-[#0F0F12] flex items-center justify-center shadow-sm"
-                      >
-                        <svg width="74" height="60" viewBox="0 0 74 60" fill="none">
-                          <g className="blinking-eyes">
-                            <path d="M12 15L28 20" stroke="#0F0F12" strokeWidth="4" strokeLinecap="round" />
-                            <path d="M62 15L46 20" stroke="#0F0F12" strokeWidth="4" strokeLinecap="round" />
-                            <circle cx="21" cy="26" r="5" fill="#0F0F12" />
-                            <circle cx="53" cy="26" r="5" fill="#0F0F12" />
-                          </g>
-                          <g className={isCurrentlySpeaking ? "speaking-mouth" : ""}>
-                            <path d="M24 44C33 38 41 38 50 44" stroke="#0F0F12" strokeWidth="4.4" strokeLinecap="round" />
-                          </g>
-                        </svg>
-                      </div>
-                    )}
-                    {currentPartnerKey === "Sophia" && (
-                      <div
-                        style={{ transform: "rotate(-5deg)" }}
-                        className="mascot-float w-[122px] h-[114px] rounded-t-[60px] rounded-b-[26px] bg-[#87C8FA] border-[3px] border-[#0F0F12] flex items-center justify-center shadow-sm"
-                      >
-                        <svg width="72" height="56" viewBox="0 0 72 56" fill="none">
-                          <g className="blinking-eyes">
-                            <circle cx="22" cy="22" r="5.5" fill="#0F0F12" />
-                            <circle cx="20.5" cy="20.5" r="1.8" fill="#FFFFFF" />
-                            <circle cx="50" cy="22" r="5.5" fill="#0F0F12" />
-                            <circle cx="48.5" cy="20.5" r="1.8" fill="#FFFFFF" />
-                          </g>
-                          <g className={isCurrentlySpeaking ? "speaking-mouth" : ""}>
-                            <ellipse cx="36" cy="39" rx="7.5" ry="5" fill="#0F0F12" />
-                          </g>
-                        </svg>
-                      </div>
-                    )}
-                    {currentPartnerKey === "David" && (
-                      <div
-                        style={{ transform: "rotate(-6deg)" }}
-                        className="mascot-float w-[116px] h-[116px] rounded-[28px] bg-[#F7D147] border-[3px] border-[#0F0F12] flex items-center justify-center shadow-sm"
-                      >
-                        <svg width="72" height="56" viewBox="0 0 72 56" fill="none">
-                          <g className="blinking-eyes">
-                            <path d="M14 20C19 13 26 13 30 20" stroke="#0F0F12" strokeWidth="4" strokeLinecap="round" />
-                            <path d="M42 20C46 13 53 13 58 20" stroke="#0F0F12" strokeWidth="4" strokeLinecap="round" />
-                          </g>
-                          <g className={isCurrentlySpeaking ? "speaking-mouth" : ""}>
-                            <path d="M22 37C31 46 41 46 50 37" stroke="#0F0F12" strokeWidth="4.4" strokeLinecap="round" />
-                          </g>
-                        </svg>
-                      </div>
-                    )}
-                    {currentPartnerKey === "Kenji" && (
-                      <div
-                        style={{ transform: "rotate(5deg)" }}
-                        className="mascot-float w-[124px] h-[114px] flex items-center justify-center"
-                      >
-                        <svg width="124" height="114" viewBox="0 0 166 148" fill="none">
-                          <path d="M72 18C78 7 94 7 100 18L154 118C160 129 152 142 140 142H32C20 142 12 129 18 118L72 18Z" fill="#FF8598" stroke="#0F0F12" strokeWidth="4" />
-                          <g className="blinking-eyes">
-                            <path d="M54 68L68 76L54 84" stroke="#0F0F12" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round" />
-                            <path d="M114 68L100 76L114 84" stroke="#0F0F12" strokeWidth="4.6" strokeLinecap="round" strokeLinejoin="round" />
-                          </g>
-                          <g className={isCurrentlySpeaking ? "speaking-mouth" : ""}>
-                            <path d="M58 106C72 96 96 96 110 106" stroke="#0F0F12" strokeWidth="5" strokeLinecap="round" />
-                          </g>
-                        </svg>
-                      </div>
-                    )}
+                  {/* Centered Expressive Frosted Cloud Mascot */}
+                  <div className={`my-auto flex flex-col items-center justify-center z-10 transition-transform duration-300 ${!hasStartedVoice ? "scale-110 my-auto" : ""}`}>
+                    <FlueloCloudSVG
+                      name={partner.name}
+                      size={!hasStartedVoice ? 144 : 124}
+                      isSpeaking={isCurrentlySpeaking}
+                      float={!isCurrentlySpeaking}
+                    />
 
                     {/* Pre-Voice Greeting Text (shown only when !hasStartedVoice) */}
                     {!hasStartedVoice && (
@@ -3006,8 +2725,12 @@ export function SpeakFlowApp() {
                                   </button>
                                 </div>
 
-                                <p className="text-[10px] font-medium text-[#7A7A88] leading-snug px-0.5">
-                                  💡 {corr.explanation}
+                                <p className="text-[10px] font-medium text-[#7A7A88] leading-snug px-0.5 flex items-start gap-1.5">
+                                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" className="shrink-0 mt-0.5 text-[#8F5BFF]">
+                                    <path d="M12 2C8.13 2 5 5.13 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.87-3.13-7-7-7z" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                                    <path d="M9 21h6" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" />
+                                  </svg>
+                                  <span>{corr.explanation}</span>
                                 </p>
                               </div>
                             ))}
@@ -3077,7 +2800,7 @@ export function SpeakFlowApp() {
                           onClick={() => {
                             setInRoomEvaluation(false);
                             navigateTo(3);
-                            showToast(isIndonesian ? "✨ Sesi tersimpan! +50 XP" : "✨ Session saved! +50 XP", "#B8F3B8");
+                            showToast(isIndonesian ? "Sesi tersimpan! +50 XP" : "Session saved! +50 XP", "#B8F3B8");
                           }}
                           className="tap-scale h-[40px] px-3 bg-[#0F0F12] hover:bg-black/85 text-white rounded-full text-[12px] font-extrabold tracking-tight flex items-center justify-center transition-colors font-sans"
                         >
@@ -3358,11 +3081,14 @@ export function SpeakFlowApp() {
                   </p>
 
                   {/* Giant Smiling Face on Right Edge */}
-                  <svg className="absolute -right-3 top-3 w-[124px] h-[112px] pointer-events-none" viewBox="0 0 124 112" fill="none">
-                    <path d="M18 38C28 48 44 48 54 36" stroke="#0F0F12" strokeWidth="7.5" strokeLinecap="round" />
-                    <path d="M88 30C98 40 114 40 124 28" stroke="#0F0F12" strokeWidth="7.5" strokeLinecap="round" />
-                    <path d="M36 74C62 92 98 86 120 64" stroke="#0F0F12" strokeWidth="8" strokeLinecap="round" />
-                  </svg>
+                  <div className="absolute -right-2 bottom-1 pointer-events-none">
+                    <FlueloCloudSVG
+                      name={guestAvatar ? (guestAvatar.charAt(0).toUpperCase() + guestAvatar.slice(1).toLowerCase()) : "Sarah"}
+                      size={102}
+                      float={true}
+                      blink={true}
+                    />
+                  </div>
                 </div>
 
                 {/* BOTTOM 3 WHITE METRIC CARDS (Speaking 14/20 is Clickable to open history!) */}
@@ -3472,8 +3198,9 @@ export function SpeakFlowApp() {
                 type="button"
                 onClick={() => setHistoryOpen(false)}
                 className="tap-scale w-8 h-8 rounded-full bg-[#F4F4F8] flex items-center justify-center text-[#0F0F12] font-bold"
+                aria-label="Close"
               >
-                ✕
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"><path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round"/></svg>
               </button>
             </div>
 

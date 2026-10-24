@@ -1763,3 +1763,33 @@ a {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Fluelo Frosted Cloud Character Animations */
+@keyframes cloudFloat {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-5px) scale(1.015); }
+}
+.cloud-float {
+  animation: cloudFloat 4.2s ease-in-out infinite;
+}
+
+@keyframes cloudSpeakBounce {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  25% { transform: translateY(-6px) scale(1.04, 0.97); }
+  50% { transform: translateY(-2px) scale(0.98, 1.03); }
+  75% { transform: translateY(-7px) scale(1.03, 0.98); }
+}
+.cloud-speaking {
+  animation: cloudSpeakBounce 0.68s ease-in-out infinite;
+}
+
+@keyframes cloudBlink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96% { transform: scaleY(0.08); }
+}
+.cloud-blink {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: cloudBlink 4.2s infinite;
+}
+

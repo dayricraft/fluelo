@@ -1,0 +1,2701 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Fluelo AI — 5 Frosted Cloud Characters Code Studio & UI/UX Prototype</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-studio: #ECEAF2;
+      --ink-black: #0F0F12;
+      --card-white: #FFFFFF;
+      --pastel-mint: #B8F3B8;
+      --pastel-peach: #FBC3A2;
+      --pastel-lavender: #D8C8FF;
+      --pastel-blue: #B5E2FA;
+      --pastel-yellow: #FDE272;
+      --pastel-coral: #F9A8A8;
+      --pill-gray: #F4F4F8;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: var(--bg-studio);
+      background-image:
+        radial-gradient(circle at 15% 15%, rgba(184, 146, 255, 0.25) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(110, 231, 207, 0.25) 0%, transparent 42%);
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      color: var(--ink-black);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    .code-font {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Realistic iPhone 16 Pro Hardware Frame */
+    .iphone-frame {
+      width: 352px;
+      height: 752px;
+      background: #151518;
+      border-radius: 56px;
+      padding: 11px;
+      position: relative;
+      box-shadow:
+        0 0 0 2px #78767E,
+        0 0 0 4px #D2D0D8,
+        0 30px 60px -15px rgba(15, 15, 22, 0.28),
+        0 12px 24px -8px rgba(15, 15, 22, 0.16);
+      transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s ease;
+      flex-shrink: 0;
+      user-select: none;
+    }
+
+    .iphone-frame:hover {
+      box-shadow:
+        0 0 0 2px #626068,
+        0 0 0 4px #C5C3CE,
+        0 38px 72px -12px rgba(15, 15, 22, 0.36),
+        0 16px 32px -8px rgba(15, 15, 22, 0.22);
+    }
+
+    .iphone-frame::before {
+      content: '';
+      position: absolute;
+      left: -6px;
+      top: 138px;
+      width: 3px;
+      height: 84px;
+      background: #9B99A3;
+      border-radius: 3px 0 0 3px;
+      box-shadow: 0 58px 0 #9B99A3;
+    }
+    .iphone-frame::after {
+      content: '';
+      position: absolute;
+      right: -6px;
+      top: 184px;
+      width: 3px;
+      height: 72px;
+      background: #9B99A3;
+      border-radius: 0 3px 3px 0;
+    }
+
+    .iphone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 45px;
+      overflow: hidden;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: var(--ink-black);
+    }
+
+    .showcase-angled .phone-tilt-left {
+      transform: rotate(-1.35deg) translateY(6px);
+    }
+    .showcase-angled .phone-tilt-center {
+      transform: rotate(0.85deg) translateY(18px);
+    }
+    .showcase-angled .phone-tilt-right {
+      transform: rotate(-0.65deg) translateY(10px);
+    }
+    .showcase-angled .phone-tilt-alt {
+      transform: rotate(1.1deg) translateY(8px);
+    }
+
+    .showcase-angled .iphone-frame:hover {
+      transform: rotate(0deg) translateY(-6px) scale(1.012);
+      z-index: 30;
+    }
+
+    .dynamic-island {
+      width: 96px;
+      height: 27px;
+      background: #070709;
+      border-radius: 999px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding-right: 8px;
+      transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .dynamic-island.island-active {
+      width: 126px;
+    }
+    .dynamic-island::after {
+      content: '';
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 35% 35%, #2B3B6B, #0D111C 70%);
+      border: 1px solid #181B24;
+    }
+
+    .no-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .no-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+
+    /* Cloud Character Animations */
+    @keyframes cloudFloat {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      50% { transform: translateY(-5px) scale(1.015); }
+    }
+    .cloud-float {
+      animation: cloudFloat 4.2s ease-in-out infinite;
+    }
+
+    @keyframes cloudSpeakBounce {
+      0%, 100% { transform: translateY(0px) scale(1); }
+      25% { transform: translateY(-6px) scale(1.04, 0.97); }
+      50% { transform: translateY(-2px) scale(0.98, 1.03); }
+      75% { transform: translateY(-7px) scale(1.03, 0.98); }
+    }
+    .cloud-speaking {
+      animation: cloudSpeakBounce 0.68s ease-in-out infinite;
+    }
+
+    @keyframes cloudBlink {
+      0%, 92%, 100% { transform: scaleY(1); }
+      96% { transform: scaleY(0.08); }
+    }
+    .cloud-blink {
+      transform-box: fill-box;
+      transform-origin: center;
+      animation: cloudBlink 4.2s infinite;
+    }
+
+    @keyframes micPulseRing {
+      0% { transform: scale(1); opacity: 0.75; }
+      100% { transform: scale(1.55); opacity: 0; }
+    }
+    .mic-recording-ring::before {
+      content: '';
+      position: absolute;
+      inset: -4px;
+      border-radius: 999px;
+      border: 2.5px solid #B8F3B8;
+      animation: micPulseRing 1.15s cubic-bezier(0.16, 1, 0.3, 1) infinite;
+    }
+
+    .heading-tight {
+      letter-spacing: -0.035em;
+      line-height: 1.08;
+    }
+    .metric-tight {
+      letter-spacing: -0.04em;
+      line-height: 1.0;
+    }
+
+    .tap-scale {
+      transition: transform 0.16s cubic-bezier(0.22, 1, 0.36, 1), background-color 0.2s ease;
+      cursor: pointer;
+    }
+    .tap-scale:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+<body class="pb-16">
+
+  <!-- =====================================================================
+       TOP STUDIO BAR: SWITCH BETWEEN "5 CHARACTER CODE STUDIO" & "FLUELO APP"
+       ===================================================================== -->
+  <header class="sticky top-3 z-50 px-4 mb-6 flex justify-center pointer-events-none">
+    <div class="pointer-events-auto bg-white/95 backdrop-blur-md border border-black/10 shadow-xl rounded-full px-3 py-2 flex flex-wrap items-center gap-2">
+      <!-- Fluelo Brand Identity -->
+      <div class="flex items-center gap-2.5 pl-2 pr-3 border-r border-black/10">
+        <div id="navbarMiniLogo" class="w-8 h-8 rounded-[10px] overflow-hidden shadow-sm flex items-center justify-center"></div>
+        <div>
+          <span class="text-[13px] font-extrabold tracking-tight text-[#0F0F12] block leading-none">Fluelo</span>
+          <span class="text-[9.5px] font-bold text-[#7A7A88] block mt-0.5">Cloud Mascot System</span>
+        </div>
+      </div>
+
+      <!-- Primary Workspace Switcher -->
+      <div class="flex items-center bg-[#F3F2F7] p-1 rounded-full gap-1 flex-wrap">
+        <button id="tabWorkspaceLogo" onclick="switchWorkspace('logo')" class="px-4 py-1.5 rounded-full text-xs font-extrabold transition-all bg-[#0F0F12] text-white flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" fill="#B899FF"/>
+            <circle cx="12" cy="12" r="7.4" fill="#8F5BFF"/>
+            <circle cx="12" cy="12" r="5.5" fill="#F5F0FF"/>
+          </svg>
+          <span>Fluelo Logo SVG (Polosan &amp; Fresh)</span>
+        </button>
+        <button id="tabWorkspaceCode" onclick="switchWorkspace('code')" class="px-4 py-1.5 rounded-full text-xs font-extrabold transition-all text-[#5A5A66] hover:text-[#0F0F12] flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <path d="M8 9L4 12L8 15M16 9L20 12L16 15M13.5 6L10.5 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>5 Character Code Studio</span>
+        </button>
+        <button id="tabWorkspaceApp" onclick="switchWorkspace('app')" class="px-4 py-1.5 rounded-full text-xs font-extrabold transition-all text-[#5A5A66] hover:text-[#0F0F12] flex items-center gap-1.5">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+            <rect x="6" y="2" width="12" height="20" rx="3" stroke="currentColor" stroke-width="2.2"/>
+            <circle cx="12" cy="18" r="1" fill="currentColor"/>
+          </svg>
+          <span>Live Fluelo App UI (5 Screens)</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- =====================================================================
+       WORKSPACE 0: FLUELO OFFICIAL CONCENTRIC LOGO SVG STUDIO (POLOSAN & FRESH)
+       ===================================================================== -->
+  <section id="workspaceLogoStudio" class="max-w-[1380px] mx-auto px-4 mb-8">
+    <div class="bg-white rounded-[32px] p-6 md:p-8 shadow-sm border border-black/[0.06] mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5F0FF] border border-[#8F5BFF]/20 mb-3">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#8F5BFF]"></span>
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-[#6B38E8]">Official Fluelo Brand Mark • Pure SVG</span>
+          </div>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-[#0F0F12] heading-tight">
+            Logo Fluelo Polosan (Enhanced &amp; Fresh Lavender)
+          </h1>
+          <p class="text-[13.5px] font-medium text-[#6E6E7A] mt-1.5 max-w-2xl">
+            Berdasarkan gambar referensi Anda—seluruh elemen mata, alis, dan hidung/mulut telah dibersihkan menjadi <strong>3 lingkaran konsentris polosan yang ikonik</strong> dengan saturasi warna ungu-lavender yang lebih <em>fresh</em>, bersih, dan modern.
+          </p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5 shrink-0">
+          <button onclick="copyLogoSvgCode()" class="tap-scale px-5 py-2.5 rounded-full text-xs font-extrabold bg-[#0F0F12] text-white hover:bg-[#26262E] flex items-center gap-2 shadow-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <rect x="9" y="9" width="11" height="11" rx="2.5" stroke="currentColor" stroke-width="2.2"/>
+              <path d="M5 15H4C2.9 15 2 14.1 2 13V4C2 2.9 2.9 2 4 2H13C14.1 2 15 2.9 15 4V5" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+            <span>Copy SVG Logo</span>
+          </button>
+          <button onclick="downloadLogoSvgFile()" class="tap-scale px-5 py-2.5 rounded-full text-xs font-extrabold bg-[#B8F3B8] text-[#0F0F12] hover:bg-[#a3eca3] flex items-center gap-2 shadow-sm">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <path d="M12 4V16M12 16L7 11M12 16L17 11M5 20H19" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Download .SVG</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 4 ENHANCED & FRESH COLOR PRESET CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mt-7">
+        <!-- Preset 1: Fresh Enhanced Flat (Default) -->
+        <div id="logoPresetCard_freshFlat" onclick="selectLogoPreset('freshFlat')" class="tap-scale rounded-[26px] p-5 bg-[#0F0F12] text-white border-2 border-[#0F0F12] shadow-lg flex flex-col items-center text-center">
+          <div class="w-full flex items-center justify-between mb-3">
+            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-white/15 text-white">Preset 1 • Recommended</span>
+            <span class="text-[10px] font-bold code-font text-[#B899FF]">Flat Fresh</span>
+          </div>
+          <div class="my-2" id="previewCardSvg_freshFlat"></div>
+          <h3 class="text-[15px] font-extrabold mt-3">Fresh Electric Lilac</h3>
+          <p class="text-[11px] text-white/70 mt-0.5">Warna solid yang di-enhance lebih cerah, segar, dan tajam.</p>
+        </div>
+
+        <!-- Preset 2: Fresh Luminous Gradient -->
+        <div id="logoPresetCard_freshGradient" onclick="selectLogoPreset('freshGradient')" class="tap-scale rounded-[26px] p-5 bg-[#F6F6FA] hover:bg-[#EEEEF5] text-[#0F0F12] border-2 border-transparent flex flex-col items-center text-center">
+          <div class="w-full flex items-center justify-between mb-3">
+            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-white text-[#6E6E7A]">Preset 2 • Smooth Glow</span>
+            <span class="text-[10px] font-bold code-font text-[#8F5BFF]">Gradient</span>
+          </div>
+          <div class="my-2" id="previewCardSvg_freshGradient"></div>
+          <h3 class="text-[15px] font-extrabold mt-3">Luminous Fresh Violet</h3>
+          <p class="text-[11px] text-[#6E6E7A] mt-0.5">Sentuhan gradasi halus antar cincin untuk kesan modern.</p>
+        </div>
+
+        <!-- Preset 3: Crisp Vivid Pop -->
+        <div id="logoPresetCard_vividPop" onclick="selectLogoPreset('vividPop')" class="tap-scale rounded-[26px] p-5 bg-[#F6F6FA] hover:bg-[#EEEEF5] text-[#0F0F12] border-2 border-transparent flex flex-col items-center text-center">
+          <div class="w-full flex items-center justify-between mb-3">
+            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-white text-[#6E6E7A]">Preset 3 • High Contrast</span>
+            <span class="text-[10px] font-bold code-font text-[#7C3AED]">Vivid Pop</span>
+          </div>
+          <div class="my-2" id="previewCardSvg_vividPop"></div>
+          <h3 class="text-[15px] font-extrabold mt-3">Vivid Iris Pop</h3>
+          <p class="text-[11px] text-[#6E6E7A] mt-0.5">Kontras cincin tengah lebih tegas agar menonjol di ukuran kecil.</p>
+        </div>
+
+        <!-- Preset 4: Soft Clean Pastel -->
+        <div id="logoPresetCard_softPastel" onclick="selectLogoPreset('softPastel')" class="tap-scale rounded-[26px] p-5 bg-[#F6F6FA] hover:bg-[#EEEEF5] text-[#0F0F12] border-2 border-transparent flex flex-col items-center text-center">
+          <div class="w-full flex items-center justify-between mb-3">
+            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full bg-white text-[#6E6E7A]">Preset 4 • Clean Pastel</span>
+            <span class="text-[10px] font-bold code-font text-[#9E7BFF]">Soft Clean</span>
+          </div>
+          <div class="my-2" id="previewCardSvg_softPastel"></div>
+          <h3 class="text-[15px] font-extrabold mt-3">Pure Lavender Mist</h3>
+          <p class="text-[11px] text-[#6E6E7A] mt-0.5">Versi paling dekat dengan warna asli referensi namun bebas kusam.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- INTERACTIVE LOGO CUSTOMIZER & READY-TO-USE SVG CODE -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <!-- Left Column: Live Canvas + Shape / Color Controls -->
+      <div class="lg:col-span-5 bg-white rounded-[32px] p-6 shadow-sm border border-black/[0.06] flex flex-col items-center">
+        <div class="w-full flex items-center justify-between mb-4">
+          <span class="text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-[#F4F4F8] text-[#0F0F12]">
+            Live Vector Preview
+          </span>
+          <!-- Layout Variant Switcher -->
+          <div class="flex items-center bg-[#F4F4F8] p-1 rounded-full gap-1">
+            <button id="btnLogoShapeCircle" onclick="setLogoFrameStyle('circle')" class="px-2.5 py-1 rounded-full text-[10.5px] font-extrabold bg-[#0F0F12] text-white">Circle</button>
+            <button id="btnLogoShapeSquircle" onclick="setLogoFrameStyle('squircle')" class="px-2.5 py-1 rounded-full text-[10.5px] font-extrabold text-[#5A5A66]">App Icon</button>
+            <button id="btnLogoShapeWordmark" onclick="setLogoFrameStyle('wordmark')" class="px-2.5 py-1 rounded-full text-[10.5px] font-extrabold text-[#5A5A66]">+ Text</button>
+          </div>
+        </div>
+
+        <!-- Preview Stage Box -->
+        <div class="w-full min-h-[250px] py-8 rounded-[28px] bg-[#F8F7FC] border border-black/[0.05] flex flex-col items-center justify-center relative">
+          <div id="mainLogoInteractiveStage" class="transition-all duration-200 flex items-center justify-center"></div>
+        </div>
+
+        <!-- 3 Concentric Layer Color Pickers & Proportion Controls -->
+        <div class="w-full mt-5 pt-4 border-t border-black/[0.06] space-y-3">
+          <div class="text-xs font-extrabold text-[#0F0F12] mb-2">Kustomisasi Warna 3 Lapisan Lingkaran</div>
+          <div class="grid grid-cols-3 gap-2.5">
+            <label class="bg-[#F4F4F8] p-2.5 rounded-2xl flex flex-col items-center cursor-pointer border border-black/[0.04]">
+              <span class="text-[10px] font-extrabold text-[#6E6E7A] mb-1">1. Lingkaran Luar</span>
+              <input type="color" id="pickerOuterColor" value="#B899FF" oninput="onCustomLogoColorChange()" class="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"/>
+              <span id="hexOuterLabel" class="text-[11px] font-bold code-font text-[#0F0F12] mt-1">#B899FF</span>
+            </label>
+            <label class="bg-[#F4F4F8] p-2.5 rounded-2xl flex flex-col items-center cursor-pointer border border-black/[0.04]">
+              <span class="text-[10px] font-extrabold text-[#6E6E7A] mb-1">2. Cincin Tengah</span>
+              <input type="color" id="pickerMiddleColor" value="#8F5BFF" oninput="onCustomLogoColorChange()" class="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"/>
+              <span id="hexMiddleLabel" class="text-[11px] font-bold code-font text-[#0F0F12] mt-1">#8F5BFF</span>
+            </label>
+            <label class="bg-[#F4F4F8] p-2.5 rounded-2xl flex flex-col items-center cursor-pointer border border-black/[0.04]">
+              <span class="text-[10px] font-extrabold text-[#6E6E7A] mb-1">3. Inti Dalam</span>
+              <input type="color" id="pickerInnerColor" value="#F5F0FF" oninput="onCustomLogoColorChange()" class="w-8 h-8 rounded-lg cursor-pointer border-0 bg-transparent"/>
+              <span id="hexInnerLabel" class="text-[11px] font-bold code-font text-[#0F0F12] mt-1">#F5F0FF</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Clean SVG Code Output -->
+      <div class="lg:col-span-7 bg-[#0F0F12] text-white rounded-[32px] p-6 shadow-xl border border-white/10 flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
+          <div class="flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-[#B899FF]"></span>
+            <span class="text-sm font-extrabold tracking-tight">Kode SVG Logo Fluelo (Polosan &amp; Fresh)</span>
+          </div>
+          <div class="flex items-center gap-2">
+            <button onclick="copyLogoSvgCode()" class="tap-scale px-4 py-2 rounded-full text-xs font-extrabold bg-[#B8F3B8] text-[#0F0F12] hover:bg-[#a3eca3] flex items-center gap-1.5">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                <rect x="9" y="9" width="11" height="11" rx="2.5" stroke="#0F0F12" stroke-width="2.2"/>
+                <path d="M5 15H4C2.9 15 2 14.1 2 13V4C2 2.9 2.9 2 4 2H13C14.1 2 15 2.9 15 4V5" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round"/>
+              </svg>
+              <span>Copy SVG Code</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex items-center justify-between py-2.5 text-[11px] text-white/60 border-b border-white/5">
+          <span id="logoCodeFilename" class="code-font font-semibold text-[#B899FF]">fluelo-logo-plain-fresh.svg</span>
+          <span>100% Pure Vector • Tanpa Mata/Alis/Hidung • Siap untuk Web, Android, iOS &amp; Figma</span>
+        </div>
+
+        <div class="relative mt-3">
+          <pre id="logoSvgCodeOutput" class="code-font text-[12.5px] leading-relaxed text-[#E4E4EE] bg-[#17171C] p-5 rounded-[20px] border border-white/10 overflow-x-auto select-all"></pre>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- =====================================================================
+       WORKSPACE 1: 5 FROSTED CLOUD CHARACTERS CODE STUDIO (SVG / REACT / HTML)
+       ===================================================================== -->
+  <section id="workspaceCodeStudio" class="hidden max-w-[1380px] mx-auto px-4">
+
+    <!-- Studio Hero Header & Interactive Animation Controls -->
+    <div class="bg-white rounded-[32px] p-6 md:p-8 shadow-sm border border-black/[0.06] mb-6">
+      <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F4F4F8] border border-black/[0.05] mb-3">
+            <span class="w-2 h-2 rounded-full bg-[#0088FF]"></span>
+            <span class="text-[11px] font-extrabold uppercase tracking-wider text-[#0F0F12]">Maksimov × dovdiz Frosted-Glass Cloud Vector Engine</span>
+          </div>
+          <h1 class="text-2xl md:text-3xl font-extrabold text-[#0F0F12] heading-tight">
+            Kelima Karakter Awan Fluelo (Siap Pakai di Aplikasi Anda)
+          </h1>
+          <p class="text-[13.5px] font-medium text-[#6E6E7A] mt-1.5 max-w-2xl">
+            Seluruh 5 karakter dibuat menggunakan <strong>100% Pure Scalable Vector Graphics (SVG)</strong> dengan efek <em>frosted glass</em>, <em>subsurface diffused glow</em>, <em>inner specular rim</em>, dan animasi mata interaktif—tanpa file gambar eksternal.
+          </p>
+        </div>
+
+        <!-- Live Interactive Animation Controls -->
+        <div class="flex flex-wrap items-center gap-2.5 bg-[#F4F4F8] p-2.5 rounded-[24px] border border-black/[0.05] shrink-0">
+          <button id="btnToggleSpeaking" onclick="toggleStudioSpeaking()" class="tap-scale px-3.5 py-2 rounded-full text-xs font-extrabold bg-white text-[#0F0F12] shadow-sm flex items-center gap-1.5">
+            <span id="dotSpeaking" class="w-2 h-2 rounded-full bg-[#9898A6]"></span>
+            <span>Animasi Bicara: OFF</span>
+          </button>
+
+          <button id="btnToggleTracking" onclick="toggleStudioEyeTracking()" class="tap-scale px-3.5 py-2 rounded-full text-xs font-extrabold bg-[#0F0F12] text-white shadow-sm flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-[#B8F3B8]"></span>
+            <span id="lblTracking">Eye Tracking Kursor: ON</span>
+          </button>
+
+          <button onclick="copyAllFiveSvgBundle()" class="tap-scale px-4 py-2 rounded-full text-xs font-extrabold bg-[#B8F3B8] hover:bg-[#a3eca3] text-[#0F0F12] flex items-center gap-1.5">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <rect x="9" y="9" width="11" height="11" rx="2.5" stroke="#0F0F12" stroke-width="2.2"/>
+              <path d="M5 15H4C2.9 15 2 14.1 2 13V4C2 2.9 2.9 2 4 2H13C14.1 2 15 2.9 15 4V5" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+            <span>Copy Semua 5 Karakter</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 5 CHARACTERS INTERACTIVE SHOWCASE GRID -->
+      <div id="studioCharactersGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-7">
+        <!-- Populated dynamically by JS -->
+      </div>
+    </div>
+
+    <!-- CODE INSPECTOR & EXPORT PANEL (Pure SVG / React Component / HTML+CSS) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+      <!-- Left Column: Selected Character Live Preview & Customization -->
+      <div class="lg:col-span-4 bg-white rounded-[32px] p-6 shadow-sm border border-black/[0.06] flex flex-col items-center text-center">
+        <div class="w-full flex items-center justify-between mb-4">
+          <span id="inspectorBadgeRole" class="text-[11px] font-extrabold uppercase tracking-wider px-3 py-1 rounded-full bg-[#F4F4F8] text-[#0F0F12]">
+            Daily Cafe Partner
+          </span>
+          <span id="inspectorCharIndex" class="text-xs font-extrabold text-[#9898A6]">Character 1 of 5</span>
+        </div>
+
+        <!-- Big Interactive Preview Stage -->
+        <div class="w-full py-7 rounded-[28px] bg-[#F4F4F8] border border-black/[0.04] flex flex-col items-center justify-center relative overflow-hidden">
+          <div id="inspectorStageSvg" class="transition-all duration-200"></div>
+          <p class="text-[11px] font-bold text-[#8C8C99] mt-4">
+            Gerakkan kursor untuk menguji tatapan mata karakter
+          </p>
+        </div>
+
+        <h2 id="inspectorCharName" class="text-2xl font-extrabold text-[#0F0F12] mt-4">Sarah</h2>
+        <p id="inspectorCharDesc" class="text-xs font-semibold text-[#6E6E7A] mt-1 max-w-xs">
+          Sunny Morning Cloud — Gradasi langit cerah & kuning limau dengan matahari tersembunyi dan glow hangat.
+        </p>
+
+        <!-- Size Control Slider -->
+        <div class="w-full mt-5 pt-4 border-t border-black/[0.06] text-left">
+          <div class="flex items-center justify-between mb-1.5">
+            <label class="text-xs font-extrabold text-[#0F0F12]">Ukuran Render (`size`)</label>
+            <span id="inspectorSizeVal" class="text-xs font-extrabold code-font text-[#0088FF]">160px</span>
+          </div>
+          <input id="inspectorSizeSlider" type="range" min="72" max="220" value="160" oninput="updateInspectorSize(this.value)" class="w-full accent-[#0F0F12] cursor-pointer" />
+        </div>
+
+        <!-- Quick Character Switcher Pills -->
+        <div class="w-full grid grid-cols-5 gap-1.5 mt-4">
+          <button onclick="selectStudioCharacter('Sarah')" id="btnInspectSarah" class="py-2 rounded-xl text-[11px] font-extrabold bg-[#0F0F12] text-white">Sarah</button>
+          <button onclick="selectStudioCharacter('Emma')" id="btnInspectEmma" class="py-2 rounded-xl text-[11px] font-extrabold bg-[#F4F4F8] text-[#0F0F12]">Emma</button>
+          <button onclick="selectStudioCharacter('Sophia')" id="btnInspectSophia" class="py-2 rounded-xl text-[11px] font-extrabold bg-[#F4F4F8] text-[#0F0F12]">Sophia</button>
+          <button onclick="selectStudioCharacter('David')" id="btnInspectDavid" class="py-2 rounded-xl text-[11px] font-extrabold bg-[#F4F4F8] text-[#0F0F12]">David</button>
+          <button onclick="selectStudioCharacter('Kenji')" id="btnInspectKenji" class="py-2 rounded-xl text-[11px] font-extrabold bg-[#F4F4F8] text-[#0F0F12]">Kenji</button>
+        </div>
+      </div>
+
+      <!-- Right Column: Multi-Format Code Viewer (Pure SVG, React/Next.js, HTML+CSS) -->
+      <div class="lg:col-span-8 bg-[#0F0F12] text-white rounded-[32px] p-6 shadow-xl border border-white/10 flex flex-col">
+        <div class="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
+          <!-- Format Tabs -->
+          <div class="flex items-center bg-white/10 p-1 rounded-full gap-1 flex-wrap">
+            <button id="codeTabSvg" onclick="switchCodeFormat('svg')" class="px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-[#B8F3B8] text-[#0F0F12] transition-all">
+              1. Pure SVG (Per Karakter)
+            </button>
+            <button id="codeTabReact" onclick="switchCodeFormat('react')" class="px-3.5 py-1.5 rounded-full text-xs font-extrabold text-white/75 hover:text-white transition-all">
+              2. React / Next.js Component (Semua 5 Karakter)
+            </button>
+            <button id="codeTabHtml" onclick="switchCodeFormat('html')" class="px-3.5 py-1.5 rounded-full text-xs font-extrabold text-white/75 hover:text-white transition-all">
+              3. HTML + CSS Animasi
+            </button>
+          </div>
+
+          <!-- Copy Current Code Button -->
+          <button onclick="copyActiveCodeBlock()" class="tap-scale px-4 py-2 rounded-full text-xs font-extrabold bg-white text-[#0F0F12] hover:bg-[#B8F3B8] flex items-center gap-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+              <rect x="9" y="9" width="11" height="11" rx="2.5" stroke="#0F0F12" stroke-width="2.2"/>
+              <path d="M5 15H4C2.9 15 2 14.1 2 13V4C2 2.9 2.9 2 4 2H13C14.1 2 15 2.9 15 4V5" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round"/>
+            </svg>
+            <span id="copyBtnLabel">Copy Code</span>
+          </button>
+        </div>
+
+        <!-- File Info Subtitle -->
+        <div class="flex items-center justify-between py-2.5 text-[11px] text-white/60 border-b border-white/5">
+          <span id="codeFileName" class="code-font font-semibold text-[#B8F3B8]">sarah-cloud-icon.svg</span>
+          <span>Zero external assets • Scalable vector filters • Ready for Web / React Native SVG / Flutter</span>
+        </div>
+
+        <!-- Preformatted Code Box -->
+        <div class="relative mt-3">
+          <pre id="codeOutputPre" class="code-font text-[12px] leading-relaxed text-[#E4E4EE] bg-[#17171C] p-4 rounded-[20px] border border-white/10 overflow-x-auto max-h-[440px] select-all"></pre>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- =====================================================================
+       WORKSPACE 2: LIVE FLUELO APP UI PROTOTYPE (ALL 5 SCREENS WITH NEW CLOUD CHARACTERS)
+       ===================================================================== -->
+  <section id="workspaceAppPreview" class="hidden">
+
+    <!-- Sub-toolbar for App Prototype View Modes -->
+    <div class="max-w-[1400px] mx-auto px-4 mb-5 flex flex-wrap items-center justify-center gap-2">
+      <div class="bg-white/90 backdrop-blur-md border border-black/10 rounded-full p-1.5 flex flex-wrap items-center gap-1 shadow-sm">
+        <button id="btnModeAll5" onclick="setLayoutMode('all5')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all bg-[#0F0F12] text-white">
+          All 5 Screens
+        </button>
+        <button id="btnModeCore3" onclick="setLayoutMode('core3')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#5A5A66] hover:text-[#0F0F12]">
+          Home + Room Talk + Calendar
+        </button>
+        <button id="btnModeRoomOnly" onclick="setLayoutMode('roomOnly')" class="px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#5A5A66] hover:text-[#0F0F12]">
+          Focus: Room Talk
+        </button>
+        <button id="btnToggleTilt" onclick="togglePerspective()" class="px-3 py-1.5 rounded-full text-xs font-bold bg-[#F3F2F7] text-[#0F0F12]">
+          <span id="tiltLabel">Tilt: ON</span>
+        </button>
+        <button id="btnToggleLang" onclick="toggleCopyLanguage()" class="px-3 py-1.5 rounded-full text-xs font-bold bg-[#D8C8FF] text-[#0F0F12]">
+          <span id="langLabel">UI: EN / ID</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Single Screen Selector Pills -->
+    <div id="singleModeNav" class="hidden justify-center gap-2 mb-5 px-4 flex-wrap">
+      <button onclick="focusSinglePhone(1)" id="tabPhone1" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white text-[#0F0F12] border border-black/10">1. Landing Page</button>
+      <button onclick="focusSinglePhone(2)" id="tabPhone2" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white text-[#0F0F12] border border-black/10">2. Login (HP &amp; Gmail)</button>
+      <button onclick="focusSinglePhone(3)" id="tabPhone3" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white text-[#0F0F12] border border-black/10">3. Home Dashboard</button>
+      <button onclick="focusSinglePhone(4)" id="tabPhone4" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#0F0F12] text-white border border-black/10">4. Room Talk (Minimalist)</button>
+      <button onclick="focusSinglePhone(5)" id="tabPhone5" class="px-3.5 py-1.5 rounded-full text-xs font-bold bg-white text-[#0F0F12] border border-black/10">5. Calendar &amp; Level A1</button>
+    </div>
+
+    <!-- 5 IPHONE FRAMES CONTAINER -->
+    <main id="phonesContainer" class="showcase-angled max-w-[1880px] mx-auto px-4 pt-1 pb-10 flex flex-wrap items-center justify-center gap-7">
+
+      <!-- =================================================================
+           SCREEN 1: FLUELO LANDING PAGE (With the 5 Frosted Cloud Characters)
+           ================================================================= -->
+      <div id="phoneFrame1" class="iphone-frame phone-tilt-left">
+        <div class="iphone-screen !bg-white">
+
+          <!-- Status Bar -->
+          <div class="w-full pt-3 pb-1 px-6 flex items-center justify-between bg-white z-20 shrink-0">
+            <span class="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
+            <div class="dynamic-island"></div>
+            <div class="flex items-center gap-1.5 w-14 justify-end">
+              <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
+                <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12"/>
+                <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12"/>
+                <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12"/>
+                <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12"/>
+              </svg>
+              <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
+                <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12"/>
+              </svg>
+              <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
+                <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" stroke-width="1.2"/>
+                <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12"/>
+                <path d="M20.8 3.8V7.2" stroke="#0F0F12" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Editorial Headline & Pill Button -->
+          <div class="pt-6 px-6 text-center flex flex-col items-center z-10">
+            <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#F5F0FF] mb-2.5 border border-[#8F5BFF]/15">
+              <svg width="16" height="16" viewBox="0 0 240 240" fill="none">
+                <circle cx="120" cy="120" r="108" fill="#B899FF"/>
+                <circle cx="120" cy="120" r="80" fill="#8F5BFF"/>
+                <circle cx="120" cy="120" r="60" fill="#F5F0FF"/>
+              </svg>
+              <span class="text-[11px] font-extrabold text-[#0F0F12] tracking-tight">Fluelo AI English</span>
+            </div>
+            <h1 id="landingTitle" class="text-[30px] font-extrabold text-[#0F0F12] heading-tight">
+              Ready to Speak<br/>Fluent English?
+            </h1>
+            <p id="landingSubtitle" class="text-[12px] font-medium text-[#7A7A88] mt-2 max-w-[240px] leading-snug">
+              Practice daily AI voice conversations with Sarah, Emma, Sophia, David &amp; Kenji.
+            </p>
+
+            <!-- Pill CTA Button -->
+            <button onclick="navigateToScreen(2)" class="tap-scale mt-4 bg-[#F4F4F8] hover:bg-[#EAE9F0] pl-6 pr-1.5 py-1.5 rounded-full flex items-center gap-4 shadow-sm border border-black/[0.04]">
+              <span id="landingCtaText" class="text-[13.5px] font-bold text-[#0F0F12] tracking-tight">
+                Let's Start!
+              </span>
+              <div class="w-10 h-10 rounded-full bg-[#0F0F12] flex items-center justify-center text-white">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#FFFFFF" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </button>
+          </div>
+
+          <!-- Bottom Cluster Featuring All 5 New Frosted Cloud Characters -->
+          <div id="landingCloudCluster" class="relative flex-1 w-full mt-2 overflow-hidden">
+            <!-- Populated dynamically with the 5 frosted cloud characters -->
+          </div>
+
+          <!-- Home Indicator -->
+          <div class="w-full py-2 bg-transparent flex justify-center z-30">
+            <div class="w-32 h-1.5 rounded-full bg-[#0F0F12]"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- =================================================================
+           SCREEN 2: LOGIN PAGE (No. HP & Gmail + Official Google Logo)
+           ================================================================= -->
+      <div id="phoneFrame2" class="iphone-frame phone-tilt-alt">
+        <div class="iphone-screen">
+
+          <div class="bg-white rounded-b-[32px] px-5 pt-3 pb-5 flex flex-col shrink-0">
+            <!-- Status Bar -->
+            <div class="w-full pb-2 flex items-center justify-between">
+              <span class="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
+              <div class="dynamic-island"></div>
+              <div class="flex items-center gap-1.5 w-14 justify-end">
+                <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
+                  <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12"/>
+                  <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12"/>
+                  <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12"/>
+                  <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12"/>
+                </svg>
+                <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
+                  <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                  <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12"/>
+                </svg>
+                <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
+                  <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" stroke-width="1.2"/>
+                  <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12"/>
+                  <path d="M20.8 3.8V7.2" stroke="#0F0F12" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-1">
+              <button onclick="navigateToScreen(1)" class="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M15 18L9 12L15 6" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F5F0FF] border border-[#8F5BFF]/15">
+                <svg width="14" height="14" viewBox="0 0 240 240" fill="none">
+                  <circle cx="120" cy="120" r="108" fill="#B899FF"/>
+                  <circle cx="120" cy="120" r="80" fill="#8F5BFF"/>
+                  <circle cx="120" cy="120" r="60" fill="#F5F0FF"/>
+                </svg>
+                <span class="text-[11px] font-extrabold text-[#0F0F12]">Fluelo</span>
+              </div>
+            </div>
+
+            <div class="mt-3.5">
+              <h2 class="text-[24px] font-extrabold text-[#0F0F12] heading-tight">
+                Welcome to Fluelo!
+              </h2>
+              <p class="text-[12px] font-medium text-[#8C8C99] mt-1">
+                Sign in with your phone number or Gmail to start speaking.
+              </p>
+            </div>
+
+            <!-- Phone vs Gmail Toggle -->
+            <div class="mt-4 bg-[#F3F3F7] p-1 rounded-full grid grid-cols-2 gap-1">
+              <button id="tabMethodPhone" onclick="switchLoginMethod('phone')" class="py-2 rounded-full text-[12px] font-bold bg-[#0F0F12] text-white transition-all flex items-center justify-center gap-1.5">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <rect x="6" y="2" width="12" height="20" rx="3" stroke="currentColor" stroke-width="2.2"/>
+                  <circle cx="12" cy="18" r="1" fill="currentColor"/>
+                </svg>
+                <span>Phone Number</span>
+              </button>
+              <button id="tabMethodEmail" onclick="switchLoginMethod('email')" class="py-2 rounded-full text-[12px] font-bold text-[#6E6E7A] hover:text-[#0F0F12] transition-all flex items-center justify-center gap-1.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                  <rect x="3" y="5" width="18" height="14" rx="3" stroke="currentColor" stroke-width="2.2"/>
+                  <path d="M4 7L12 13L20 7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                <span>Gmail Address</span>
+              </button>
+            </div>
+
+            <div id="loginInputPhoneBox" class="mt-3">
+              <label class="text-[11px] font-bold text-[#6E6E7A] block mb-1.5 ml-1">Mobile Number (WhatsApp / SMS OTP)</label>
+              <div class="flex items-center gap-2 bg-[#F4F4F8] rounded-[20px] p-1.5 border border-black/[0.06]">
+                <div class="bg-white px-3 py-2.5 rounded-[15px] flex items-center gap-1.5 shadow-sm shrink-0">
+                  <svg width="16" height="12" viewBox="0 0 16 12" fill="none" class="rounded-[2px] overflow-hidden border border-black/10">
+                    <rect width="16" height="6" fill="#E70011"/>
+                    <rect y="6" width="16" height="6" fill="#FFFFFF"/>
+                  </svg>
+                  <span class="text-[12.5px] font-extrabold text-[#0F0F12]">+62</span>
+                </div>
+                <input type="tel" value="812-8890-4512" class="w-full bg-transparent text-[14px] font-bold text-[#0F0F12] focus:outline-none px-1" />
+              </div>
+            </div>
+
+            <div id="loginInputEmailBox" class="mt-3 hidden">
+              <label class="text-[11px] font-bold text-[#6E6E7A] block mb-1.5 ml-1">Google / Gmail Account</label>
+              <div class="flex items-center gap-2.5 bg-[#F4F4F8] rounded-[20px] px-3.5 py-3 border border-black/[0.06]">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" class="shrink-0">
+                  <rect x="2" y="4" width="20" height="16" rx="4" stroke="#0F0F12" stroke-width="2.2"/>
+                  <path d="M3 6.5L12 13L21 6.5" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+                <input type="email" value="alex.miller@gmail.com" class="w-full bg-transparent text-[13.5px] font-bold text-[#0F0F12] focus:outline-none" />
+              </div>
+            </div>
+
+            <button onclick="handleLoginSubmit('Phone OTP')" class="tap-scale mt-3.5 w-full bg-[#0F0F12] text-white pl-5 pr-1.5 py-1.5 rounded-full flex items-center justify-between">
+              <span class="text-[13px] font-bold">Continue to Fluelo</span>
+              <div class="w-9 h-9 rounded-full bg-[#B8F3B8] flex items-center justify-center text-[#0F0F12]">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 12H19M19 12L13 6M19 12L13 18" stroke="#0F0F12" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </button>
+
+            <div class="flex items-center gap-3 my-3">
+              <div class="h-[1px] flex-1 bg-black/10"></div>
+              <span class="text-[10.5px] font-bold text-[#9A9AA6] uppercase tracking-wider">or instant login</span>
+              <div class="h-[1px] flex-1 bg-black/10"></div>
+            </div>
+
+            <!-- Official Google 4-Color Button -->
+            <button onclick="handleLoginSubmit('Google')" class="tap-scale w-full bg-[#F4F4F8] hover:bg-[#EAEAF0] border border-black/10 py-2.5 px-4 rounded-full flex items-center justify-center gap-2.5">
+              <svg width="18" height="18" viewBox="0 0 48 48" fill="none">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+              </svg>
+              <span class="text-[13px] font-extrabold text-[#0F0F12]">Continue with Google</span>
+            </button>
+          </div>
+
+          <!-- Lower Preview Card with Cloud Characters -->
+          <div class="flex-1 p-[5px] flex flex-col gap-[5px] bg-[#0F0F12]">
+            <div class="bg-[#D8C8FF] rounded-[26px] p-4 relative overflow-hidden flex-1 flex flex-col justify-between">
+              <div class="z-10 max-w-[195px]">
+                <div class="inline-flex items-center gap-1.5 bg-black/10 px-2.5 py-0.5 rounded-full mb-1.5">
+                  <span class="w-2 h-2 rounded-full bg-[#0F0F12]"></span>
+                  <span class="text-[10px] font-extrabold text-[#0F0F12]">5 Cloud AI Partners</span>
+                </div>
+                <h3 class="text-[16.5px] font-extrabold text-[#0F0F12] leading-tight">
+                  Sarah, Emma, Sophia, David &amp; Kenji
+                </h3>
+                <p class="text-[11px] font-semibold text-[#0F0F12]/75 mt-1">
+                  Interactive voice rooms with real-time chat &amp; progress tracking.
+                </p>
+              </div>
+              <div id="loginPreviewMascots" class="absolute right-2 bottom-2 flex items-center -space-x-3"></div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-[5px] h-[78px]">
+              <div class="bg-[#B8F3B8] rounded-[22px] px-3.5 py-2.5 flex flex-col justify-between">
+                <span class="text-[10px] font-bold text-[#0F0F12]/70">Current Level</span>
+                <div class="flex items-baseline justify-between">
+                  <span class="text-[20px] font-extrabold text-[#0F0F12] metric-tight">A1</span>
+                  <span class="text-[10px] font-extrabold bg-[#0F0F12] text-white px-2 py-0.5 rounded-full">Elementary</span>
+                </div>
+              </div>
+              <div class="bg-[#FDE272] rounded-[22px] px-3.5 py-2.5 flex flex-col justify-between">
+                <span class="text-[10px] font-bold text-[#0F0F12]/70">Daily Goal</span>
+                <div class="flex items-baseline justify-between">
+                  <span class="text-[20px] font-extrabold text-[#0F0F12] metric-tight">15 min</span>
+                  <span class="text-[10px] font-bold text-[#0F0F12]/80">Room Talk</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="w-full py-2 bg-[#0F0F12] flex justify-center">
+            <div class="w-32 h-1.5 rounded-full bg-white/90"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- =================================================================
+           SCREEN 3: HOME DASHBOARD (5 Cloud Characters + Pronunciation & Tenses Graphs)
+           ================================================================= -->
+      <div id="phoneFrame3" class="iphone-frame phone-tilt-center">
+        <div class="iphone-screen">
+
+          <!-- TOP WHITE CARD -->
+          <div class="bg-white rounded-b-[30px] px-4 pt-3 pb-4 flex flex-col shrink-0">
+            <!-- Status Bar -->
+            <div class="w-full pb-2 px-1 flex items-center justify-between">
+              <span class="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
+              <div class="dynamic-island"></div>
+              <div class="flex items-center gap-1.5 w-14 justify-end">
+                <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
+                  <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12"/>
+                  <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12"/>
+                  <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12"/>
+                  <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12"/>
+                </svg>
+                <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
+                  <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                  <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12"/>
+                </svg>
+                <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
+                  <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" stroke-width="1.2"/>
+                  <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12"/>
+                  <path d="M20.8 3.8V7.2" stroke="#0F0F12" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+
+            <!-- User Profile Row -->
+            <div class="flex items-center justify-between mt-1">
+              <div class="flex items-center gap-2.5">
+                <div class="w-9 h-9 rounded-full bg-[#D7E3F4] overflow-hidden border border-black/10 flex items-center justify-center shrink-0">
+                  <svg width="36" height="36" viewBox="0 0 36 36" fill="none">
+                    <rect width="36" height="36" fill="#D9E2EC"/>
+                    <path d="M7 36C7 29.5 11.8 25 18 25C24.2 25 29 29.5 29 36" fill="#334E68"/>
+                    <circle cx="18" cy="14.5" r="6.2" fill="#F2C6A0"/>
+                    <path d="M11.8 13.5C11.8 9.2 14.5 7 18 7C21.5 7 24.2 9.2 24.2 13.5C22.5 11.5 19.5 11 16 11.5C13.8 11.8 12.5 12.6 11.8 13.5Z" fill="#243B53"/>
+                  </svg>
+                </div>
+                <div class="leading-tight">
+                  <p class="text-[10.5px] font-semibold text-[#9898A6]">Welcome back</p>
+                  <p class="text-[13px] font-extrabold text-[#0F0F12]">Alex Miller</p>
+                </div>
+              </div>
+
+              <button onclick="navigateToScreen(4)" class="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center" title="Open Room Talk">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M5 9H19M5 15H19" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <!-- Date & Greeting -->
+            <p class="text-[10.5px] font-semibold text-[#A0A0AB] mt-3">Sep 14, 2025</p>
+            <h2 id="dashboardGreeting" class="text-[20px] font-extrabold text-[#0F0F12] heading-tight mt-0.5">
+              Hello Alex! Who do you want to talk to today?
+            </h2>
+
+            <!-- CHARACTER PILL SELECTOR ROW WITH THE 5 NEW CLOUD CHARACTERS -->
+            <div id="dashboardCharacterRow" class="flex items-center gap-2 mt-3.5 overflow-x-auto no-scrollbar pb-0.5">
+              <!-- Populated dynamically with Sarah, Emma, Sophia, David, Kenji cloud icons -->
+            </div>
+          </div>
+
+          <!-- LOWER BLACK BENTO CONTAINER -->
+          <div class="flex-1 p-[5px] flex flex-col gap-[5px] bg-[#0F0F12]">
+
+            <!-- 2 GRAPH CARDS (Left: Pronunciation | Right: Tenses Graph) -->
+            <div class="grid grid-cols-2 gap-[5px] h-[176px]">
+              <!-- LEFT: PRONUNCIATION -->
+              <div onclick="cyclePronunciationMetric()" class="tap-scale bg-[#FBC3A2] rounded-[26px] p-3.5 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex items-center gap-1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="shrink-0">
+                    <rect x="3" y="10" width="3.2" height="7" rx="1.6" fill="#0F0F12"/>
+                    <rect x="8.2" y="5" width="3.2" height="15" rx="1.6" fill="#0F0F12"/>
+                    <rect x="13.4" y="8" width="3.2" height="10" rx="1.6" fill="#0F0F12"/>
+                    <rect x="18.6" y="11" width="3.2" height="5" rx="1.6" fill="#0F0F12"/>
+                  </svg>
+                  <span id="lblGraphLeft" class="text-[11.5px] font-extrabold text-[#0F0F12] tracking-tight truncate">
+                    Pronunciation
+                  </span>
+                </div>
+
+                <div class="flex items-center justify-between gap-1.5 px-0.5 my-1 h-[62px]">
+                  <div class="w-3.5 h-[42px] rounded-full bg-[#C98253] flex flex-col justify-between py-1.5 items-center">
+                    <span class="w-2 h-[1.5px] bg-[#FBC3A2]"></span>
+                    <span class="w-2 h-[1.5px] bg-[#0F0F12]"></span>
+                  </div>
+                  <div class="w-3.5 h-[48px] rounded-full bg-[#C98253] flex flex-col justify-between py-1.5 items-center">
+                    <span class="w-2 h-[1.5px] bg-[#FBC3A2]"></span>
+                    <span class="w-2 h-[1.5px] bg-[#0F0F12]"></span>
+                  </div>
+                  <div class="w-3.5 h-[56px] rounded-full bg-[#C98253] flex flex-col justify-between py-1.5 items-center">
+                    <span class="w-2 h-[1.5px] bg-[#FBC3A2]"></span>
+                    <span class="w-2 h-[1.5px] bg-[#0F0F12]"></span>
+                  </div>
+                  <div class="w-3.5 h-[50px] rounded-full bg-[#C98253] flex flex-col justify-between py-1.5 items-center">
+                    <span class="w-2 h-[1.5px] bg-[#FBC3A2]"></span>
+                    <span class="w-2 h-[1.5px] bg-[#0F0F12]"></span>
+                  </div>
+                  <div class="w-3.5 h-[38px] rounded-full bg-[#C98253] flex flex-col justify-between py-1.5 items-center">
+                    <span class="w-2 h-[1.5px] bg-[#FBC3A2]"></span>
+                    <span class="w-2 h-[1.5px] bg-[#0F0F12]"></span>
+                  </div>
+                  <div class="w-3.5 h-[58px] rounded-full bg-[#C98253] flex flex-col justify-between py-1.5 items-center">
+                    <span class="w-2 h-[1.5px] bg-[#FBC3A2]"></span>
+                    <span class="w-2 h-[1.5px] bg-[#0F0F12]"></span>
+                  </div>
+                  <div class="w-3.5 h-[46px] rounded-full bg-[#C98253] flex flex-col justify-between py-1.5 items-center">
+                    <span class="w-2 h-[1.5px] bg-[#FBC3A2]"></span>
+                    <span class="w-2 h-[1.5px] bg-[#0F0F12]"></span>
+                  </div>
+                </div>
+
+                <div class="flex items-baseline gap-1">
+                  <span id="pronValueBig" class="text-[22px] font-extrabold text-[#0F0F12] metric-tight">86%</span>
+                  <span id="pronValueSub" class="text-[15px] font-bold text-[#0F0F12]">Clear</span>
+                </div>
+              </div>
+
+              <!-- RIGHT: TENSES GRAPH -->
+              <div onclick="cycleTensesMetric()" class="tap-scale bg-[#D8C8FF] rounded-[26px] p-3.5 flex flex-col justify-between relative overflow-hidden">
+                <div class="flex items-center gap-1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" class="shrink-0">
+                    <circle cx="12" cy="12" r="9" fill="#0F0F12"/>
+                    <path d="M12 7.5V12L15 14" stroke="#D8C8FF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
+                  <span id="lblGraphRight" class="text-[11.5px] font-extrabold text-[#0F0F12] tracking-tight truncate">
+                    Tenses Graph
+                  </span>
+                </div>
+
+                <div class="flex items-end justify-between gap-2 px-1 my-1 h-[62px]">
+                  <div class="w-4 h-[14px] rounded-[4px] bg-[#946EC2]"></div>
+                  <div class="w-4 h-[24px] rounded-[4px] bg-[#946EC2]"></div>
+                  <div class="w-4 h-[32px] rounded-[4px] bg-[#946EC2]"></div>
+                  <div class="w-4 h-[44px] rounded-[4px] bg-[#946EC2]"></div>
+                  <div class="w-4 h-[56px] rounded-[4px] bg-[#946EC2]"></div>
+                </div>
+
+                <div class="flex items-baseline justify-between">
+                  <span id="tenseValueBig" class="text-[23px] font-extrabold text-[#0F0F12] metric-tight">Good</span>
+                  <span id="tenseValueSub" class="text-[10.5px] font-extrabold text-[#0F0F12]/70">A1</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- BOTTOM MINT GREEN QUIZ CARD -->
+            <div class="bg-[#B8F3B8] rounded-[26px] p-3.5 flex-1 flex flex-col justify-between">
+              <div class="flex items-center justify-between">
+                <div class="flex items-center gap-1.5">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
+                    <path d="M12 2C14.5 2 16 4.5 14.5 7C17 5.5 19.5 7 19.5 9.5C19.5 12 17 13.5 14.5 12C17 13.5 19.5 15 19.5 17.5C19.5 20 17 21.5 14.5 20C16 22.5 14.5 24 12 24C9.5 24 8 22.5 9.5 20C7 21.5 4.5 20 4.5 17.5C4.5 15 7 13.5 9.5 12C7 13.5 4.5 12 4.5 9.5C4.5 7 7 5.5 9.5 7C8 4.5 9.5 2 12 2Z" fill="#0F0F12"/>
+                  </svg>
+                  <span class="text-[11.5px] font-extrabold text-[#0F0F12]">Yes or No Quiz</span>
+                </div>
+                <span id="quizCounter" class="text-[10.5px] font-bold text-[#0F0F12]/60">Question 1/8</span>
+              </div>
+
+              <p id="quizQuestionText" class="text-[14px] font-extrabold text-[#0F0F12] leading-snug my-1">
+                Is "She has lived in London since 2024" grammatically correct?
+              </p>
+
+              <div class="grid grid-cols-2 gap-2 mt-1">
+                <button onclick="answerGrammarQuiz(true)" class="tap-scale bg-[#0F0F12] hover:bg-[#222228] text-white py-2.5 rounded-full text-[12px] font-bold">
+                  Yes
+                </button>
+                <button onclick="answerGrammarQuiz(false)" class="tap-scale bg-[#0F0F12] hover:bg-[#222228] text-white py-2.5 rounded-full text-[12px] font-bold">
+                  No
+                </button>
+              </div>
+            </div>
+
+            <!-- BOTTOM NAVIGATION DOCK -->
+            <div class="h-[52px] px-4 flex items-center justify-between bg-[#0F0F12]">
+              <button onclick="navigateToScreen(3)" class="tap-scale bg-white text-[#0F0F12] px-4 py-2 rounded-full flex items-center justify-center">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 10.5L12 4L20 10.5V19C20 19.6 19.6 20 19 20H5C4.4 20 4 19.6 4 19V10.5Z" stroke="#0F0F12" stroke-width="2.2" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button onclick="navigateToScreen(4)" class="tap-scale text-white/65 hover:text-white p-2 rounded-full flex items-center justify-center" title="Open Room Talk">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 12C12 10.3 13.3 9 15 9C16.7 9 18 10.3 18 12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12C6 7.6 9.6 4 14 4C18.4 4 21 7.6 21 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <button onclick="navigateToScreen(5)" class="tap-scale text-white/65 hover:text-white p-2 rounded-full flex items-center justify-center" title="Check-In Calendar">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <rect x="4" y="5" width="16" height="15" rx="3" stroke="currentColor" stroke-width="2.2"/>
+                  <path d="M8 3V6M16 3V6M4 10H20" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <button onclick="navigateToScreen(2)" class="tap-scale text-white/65 hover:text-white p-2 rounded-full flex items-center justify-center" title="Account">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <circle cx="7.5" cy="7.5" r="2" fill="currentColor"/>
+                  <circle cx="16.5" cy="7.5" r="2" fill="currentColor"/>
+                  <circle cx="7.5" cy="16.5" r="2" fill="currentColor"/>
+                  <circle cx="16.5" cy="16.5" r="2" fill="currentColor"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="w-full pb-2 bg-[#0F0F12] flex justify-center">
+            <div class="w-32 h-1.5 rounded-full bg-white/90"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- =================================================================
+           SCREEN 4: ROOM TALK (MINIMALIST — ACTIVE CLOUD CHARACTER, "Chat", Voice & End)
+           ================================================================= -->
+      <div id="phoneFrame4" class="iphone-frame phone-tilt-alt">
+        <div class="iphone-screen">
+
+          <!-- 1. MINIMAL TOP WHITE BAR -->
+          <div class="bg-white rounded-b-[28px] px-4 pt-3 pb-3 flex flex-col shrink-0">
+            <div class="w-full pb-1.5 px-1 flex items-center justify-between">
+              <span class="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
+              <div id="roomDynamicIsland" class="dynamic-island"></div>
+              <div class="flex items-center gap-1.5 w-14 justify-end">
+                <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
+                  <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12"/>
+                  <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12"/>
+                  <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12"/>
+                  <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12"/>
+                </svg>
+                <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
+                  <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                  <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12"/>
+                </svg>
+                <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
+                  <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" stroke-width="1.2"/>
+                  <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12"/>
+                  <path d="M20.8 3.8V7.2" stroke="#0F0F12" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-0.5">
+              <button onclick="navigateToScreen(3)" class="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center" title="Back to Dashboard">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M14.5 17.5L9 12L14.5 6.5" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+
+              <div class="text-center">
+                <h2 id="roomHeaderCharacterName" class="text-[16px] font-extrabold text-[#0F0F12] leading-tight">
+                  Sarah
+                </h2>
+                <p class="text-[10.5px] font-bold text-[#9898A6]">
+                  Level A1 • Fluelo Cloud AI
+                </p>
+              </div>
+
+              <span class="px-2.5 py-1 rounded-full bg-[#F4F4F8] text-[10.5px] font-extrabold text-[#0F0F12]">
+                A1
+              </span>
+            </div>
+
+            <!-- Character Switcher Pills -->
+            <div class="flex items-center justify-between gap-1 mt-2.5 overflow-x-auto no-scrollbar">
+              <button id="roomTabSarah" onclick="selectRoomCharacter('Sarah')" class="tap-scale px-2.5 py-1 rounded-full bg-[#0F0F12] text-white text-[10.5px] font-extrabold shrink-0 transition-all">Sarah</button>
+              <button id="roomTabEmma" onclick="selectRoomCharacter('Emma')" class="tap-scale px-2.5 py-1 rounded-full bg-[#F4F4F8] text-[#0F0F12] text-[10.5px] font-extrabold shrink-0 transition-all">Emma</button>
+              <button id="roomTabSophia" onclick="selectRoomCharacter('Sophia')" class="tap-scale px-2.5 py-1 rounded-full bg-[#F4F4F8] text-[#0F0F12] text-[10.5px] font-extrabold shrink-0 transition-all">Sophia</button>
+              <button id="roomTabDavid" onclick="selectRoomCharacter('David')" class="tap-scale px-2.5 py-1 rounded-full bg-[#F4F4F8] text-[#0F0F12] text-[10.5px] font-extrabold shrink-0 transition-all">David</button>
+              <button id="roomTabKenji" onclick="selectRoomCharacter('Kenji')" class="tap-scale px-2.5 py-1 rounded-full bg-[#F4F4F8] text-[#0F0F12] text-[10.5px] font-extrabold shrink-0 transition-all">Kenji</button>
+            </div>
+          </div>
+
+          <!-- LOWER BLACK BENTO CONTAINER (Clean & Spacious — No Graphs) -->
+          <div class="flex-1 p-[5px] flex flex-col gap-[5px] bg-[#0F0F12] overflow-hidden">
+
+            <!-- 2. ACTIVE FROSTED CLOUD CHARACTER STAGE -->
+            <div id="roomHeroStageCard" onclick="replayAiPartnerVoice()" class="tap-scale bg-[#B8F3B8] rounded-[28px] p-4 relative overflow-hidden flex flex-col items-center justify-between h-[215px] shrink-0 transition-colors duration-300">
+              <div class="w-full flex items-center justify-between z-10">
+                <div class="inline-flex items-center gap-1.5 bg-[#0F0F12] text-white px-3 py-1 rounded-full">
+                  <span id="roomVoicePulseDot" class="w-2 h-2 rounded-full bg-[#B8F3B8]"></span>
+                  <span id="roomStageStatusText" class="text-[10.5px] font-extrabold tracking-tight">Sarah is speaking...</span>
+                </div>
+                <span id="roomPartnerTraitBadge" class="text-[10.5px] font-extrabold text-[#0F0F12]/75 bg-white/70 px-2.5 py-1 rounded-full">
+                  Daily Talk
+                </span>
+              </div>
+
+              <!-- Centered Frosted Cloud Character SVG -->
+              <div id="roomStageMascotContainer" class="my-auto flex items-center justify-center z-10"></div>
+            </div>
+
+            <!-- 3. "Chat" BOX (Strictly labeled "Chat") -->
+            <div class="bg-white rounded-[28px] p-4 flex-1 flex flex-col overflow-hidden">
+              <div class="flex items-center justify-between pb-2.5 border-b border-black/[0.06] shrink-0">
+                <h3 class="text-[15px] font-extrabold text-[#0F0F12] tracking-tight">Chat</h3>
+                <span id="roomChatSubtleHint" class="text-[10.5px] font-semibold text-[#9898A6]">Tap Voice to reply</span>
+              </div>
+
+              <div id="roomChatMessagesList" class="flex-1 overflow-y-auto no-scrollbar py-3 flex flex-col gap-2.5"></div>
+            </div>
+
+            <!-- 4. ONLY VOICE & END BUTTONS -->
+            <div class="h-[62px] px-2 pt-1 flex items-center gap-2 bg-[#0F0F12] shrink-0">
+              <button id="btnRoomMic" onclick="triggerVoiceMicSimulation()" class="tap-scale relative flex-1 h-[48px] bg-[#B8F3B8] hover:bg-[#a3eca3] text-[#0F0F12] rounded-full flex items-center justify-center gap-2 shadow-sm">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <rect x="9" y="2" width="6" height="11" rx="3" stroke="#0F0F12" stroke-width="2.3"/>
+                  <path d="M5 10V11C5 14.866 8.13401 18 12 18C15.866 18 19 14.866 19 11V10" stroke="#0F0F12" stroke-width="2.3" stroke-linecap="round"/>
+                  <path d="M12 18V22M8 22H16" stroke="#0F0F12" stroke-width="2.3" stroke-linecap="round"/>
+                </svg>
+                <span id="lblMicButtonText" class="text-[13px] font-extrabold tracking-tight">Voice</span>
+              </button>
+
+              <button onclick="endRoomTalkSession()" class="tap-scale w-[114px] h-[48px] bg-[#F9A8A8] hover:bg-[#f79494] text-[#0F0F12] rounded-full flex items-center justify-center gap-2 shadow-sm">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <path d="M3 15.5C6.5 11.5 17.5 11.5 21 15.5" stroke="#0F0F12" stroke-width="2.4" stroke-linecap="round"/>
+                  <path d="M5.5 14L4 17.5M18.5 14L20 17.5" stroke="#0F0F12" stroke-width="2.4" stroke-linecap="round"/>
+                </svg>
+                <span class="text-[13px] font-extrabold tracking-tight">End</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="w-full pb-2 bg-[#0F0F12] flex justify-center">
+            <div class="w-32 h-1.5 rounded-full bg-white/90"></div>
+          </div>
+        </div>
+      </div>
+
+
+      <!-- =================================================================
+           SCREEN 5: CHECK-IN CALENDAR, WEEKLY STREAK & LEVEL A1 STATUS
+           ================================================================= -->
+      <div id="phoneFrame5" class="iphone-frame phone-tilt-right">
+        <div class="iphone-screen">
+
+          <div class="bg-white rounded-b-[30px] px-4 pt-3 pb-4 flex flex-col shrink-0">
+            <div class="w-full pb-2 px-1 flex items-center justify-between">
+              <span class="text-[13px] font-bold tracking-tight text-[#0F0F12] w-12">9:41</span>
+              <div class="dynamic-island"></div>
+              <div class="flex items-center gap-1.5 w-14 justify-end">
+                <svg width="15" height="11" viewBox="0 0 16 11" fill="none">
+                  <rect x="1" y="7" width="2.5" height="4" rx="1" fill="#0F0F12"/>
+                  <rect x="4.8" y="5" width="2.5" height="6" rx="1" fill="#0F0F12"/>
+                  <rect x="8.6" y="2.8" width="2.5" height="8.2" rx="1" fill="#0F0F12"/>
+                  <rect x="12.4" y="0.5" width="2.5" height="10.5" rx="1" fill="#0F0F12"/>
+                </svg>
+                <svg width="14" height="11" viewBox="0 0 15 11" fill="none">
+                  <path d="M1.5 3.6C4.9 0.8 10.1 0.8 13.5 3.6" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                  <path d="M3.8 6.2C6 4.4 9 4.4 11.2 6.2" stroke="#0F0F12" stroke-width="1.6" stroke-linecap="round"/>
+                  <circle cx="7.5" cy="9.1" r="1.4" fill="#0F0F12"/>
+                </svg>
+                <svg width="22" height="11" viewBox="0 0 23 11" fill="none">
+                  <rect x="0.7" y="1" width="18.6" height="9" rx="2.6" stroke="#0F0F12" stroke-width="1.2"/>
+                  <rect x="2.4" y="2.6" width="15.2" height="5.8" rx="1.4" fill="#0F0F12"/>
+                  <path d="M20.8 3.8V7.2" stroke="#0F0F12" stroke-width="1.5" stroke-linecap="round"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between mt-1">
+              <button onclick="navigateToScreen(3)" class="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <path d="M14.5 17.5L9 12L14.5 6.5" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+
+              <div class="text-center">
+                <h2 id="calendarTitle" class="text-[15.5px] font-extrabold text-[#0F0F12] leading-tight">
+                  Study Calendar
+                </h2>
+                <p class="text-[10.5px] font-semibold text-[#9898A6]">
+                  September, 2025
+                </p>
+              </div>
+
+              <button onclick="triggerTodayCheckIn()" class="tap-scale w-9 h-9 rounded-full border border-black/10 flex items-center justify-center" title="Check In Today">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none">
+                  <rect x="4" y="5" width="16" height="15" rx="3" stroke="#0F0F12" stroke-width="2"/>
+                  <path d="M8 3V6M16 3V6M9.5 13L11.5 15L15 11" stroke="#0F0F12" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-7 gap-1.5 text-center mt-3.5 mb-1.5 px-0.5">
+              <span class="text-[10px] font-semibold text-[#A0A0AB]">Sun</span>
+              <span class="text-[10px] font-semibold text-[#A0A0AB]">Mon</span>
+              <span class="text-[10px] font-semibold text-[#A0A0AB]">Tue</span>
+              <span class="text-[10px] font-semibold text-[#A0A0AB]">Wed</span>
+              <span class="text-[10px] font-semibold text-[#A0A0AB]">Thu</span>
+              <span class="text-[10px] font-semibold text-[#A0A0AB]">Fri</span>
+              <span class="text-[10px] font-semibold text-[#A0A0AB]">Sat</span>
+            </div>
+
+            <!-- 35-Tile Check-In Calendar Grid using Mini Cloud Icons -->
+            <div id="calendarGridContainer" class="grid grid-cols-7 gap-1.5 px-0.5"></div>
+          </div>
+
+          <!-- LOWER BLACK BENTO CONTAINER -->
+          <div class="flex-1 p-[5px] flex flex-col gap-[5px] bg-[#0F0F12]">
+
+            <div onclick="cycleEnglishLevelPreview()" class="tap-scale bg-[#B8F3B8] rounded-[26px] p-4 relative overflow-hidden flex-1 flex flex-col justify-between">
+              <div class="z-10">
+                <span id="lblLevelSummaryTop" class="text-[11px] font-bold text-[#0F0F12]/75">
+                  English Level &amp; Streak
+                </span>
+                <div class="flex items-center gap-2 mt-1">
+                  <h3 id="levelMainHeading" class="text-[28px] font-extrabold text-[#0F0F12] metric-tight">
+                    Level A1
+                  </h3>
+                  <span id="streakBadge" class="text-[10px] font-extrabold bg-[#0F0F12] text-[#B8F3B8] px-2.5 py-0.5 rounded-full">
+                    7 Days Streak
+                  </span>
+                </div>
+              </div>
+
+              <p id="levelDescriptionText" class="text-[10.5px] font-semibold text-[#0F0F12]/75 max-w-[186px] leading-snug z-10">
+                Elementary Speaker • You're calm and confident. Keep up the daily streak!
+              </p>
+
+              <div id="calendarSummaryMascot" class="absolute -right-2 bottom-2 pointer-events-none"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-[5px] h-[106px]">
+              <div class="bg-white rounded-[22px] p-3 flex flex-col justify-between">
+                <span id="lblMetric1" class="text-[10.5px] font-bold text-[#0F0F12]">Weekly Streak</span>
+                <div>
+                  <p class="text-[18px] font-extrabold text-[#0F0F12] metric-tight">7/7</p>
+                  <p class="text-[9.5px] font-semibold text-[#9898A6] mt-1">Days active</p>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-[22px] p-3 flex flex-col justify-between">
+                <span class="text-[10.5px] font-bold text-[#0F0F12]">Speaking</span>
+                <div>
+                  <p class="text-[18px] font-extrabold text-[#0F0F12] metric-tight">14/20</p>
+                  <p class="text-[9.5px] font-semibold text-[#9898A6] mt-1">Sessions</p>
+                </div>
+              </div>
+
+              <div class="bg-white rounded-[22px] p-3 flex flex-col justify-between">
+                <span class="text-[10.5px] font-bold text-[#0F0F12]">Level Progress</span>
+                <div>
+                  <p class="text-[18px] font-extrabold text-[#0F0F12] metric-tight">88%</p>
+                  <p class="text-[9.5px] font-semibold text-[#9898A6] mt-1">To Level A2</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="h-[52px] px-4 flex items-center justify-between bg-[#0F0F12]">
+              <button onclick="navigateToScreen(3)" class="tap-scale text-white/60 hover:text-white p-2 rounded-full flex items-center justify-center">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <path d="M4 10.5L12 4L20 10.5V19C20 19.6 19.6 20 19 20H5C4.4 20 4 19.6 4 19V10.5Z" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button onclick="navigateToScreen(4)" class="tap-scale text-white/60 hover:text-white p-2 rounded-full flex items-center justify-center">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                  <path d="M12 12C12 10.3 13.3 9 15 9C16.7 9 18 10.3 18 12C18 15.3 15.3 18 12 18C8.7 18 6 15.3 6 12C6 7.6 9.6 4 14 4C18.4 4 21 7.6 21 12" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <button onclick="navigateToScreen(5)" class="tap-scale bg-white text-[#0F0F12] px-4 py-2 rounded-full flex items-center justify-center">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <rect x="4" y="5" width="16" height="15" rx="3" stroke="#0F0F12" stroke-width="2.2"/>
+                  <path d="M8 3V6M16 3V6M4 10H20" stroke="#0F0F12" stroke-width="2.2" stroke-linecap="round"/>
+                </svg>
+              </button>
+              <button onclick="navigateToScreen(2)" class="tap-scale text-white/60 hover:text-white p-2 rounded-full flex items-center justify-center">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none">
+                  <circle cx="7.5" cy="7.5" r="2" fill="currentColor"/>
+                  <circle cx="16.5" cy="7.5" r="2" fill="currentColor"/>
+                  <circle cx="7.5" cy="16.5" r="2" fill="currentColor"/>
+                  <circle cx="16.5" cy="16.5" r="2" fill="currentColor"/>
+                </svg>
+              </button>
+            </div>
+          </div>
+
+          <div class="w-full pb-2 bg-[#0F0F12] flex justify-center">
+            <div class="w-32 h-1.5 rounded-full bg-white/90"></div>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </section>
+
+  <!-- FLOATING TOAST FEEDBACK BANNER -->
+  <div id="toastBanner" class="fixed bottom-5 left-1/2 -translate-x-1/2 z-50 bg-[#0F0F12] text-white px-5 py-3 rounded-full shadow-xl border border-white/15 flex items-center gap-2.5 transition-all duration-300 opacity-0 pointer-events-none translate-y-4">
+    <div id="toastDot" class="w-3 h-3 rounded-full bg-[#B8F3B8]"></div>
+    <span id="toastMessage" class="text-xs font-bold tracking-tight">Action completed</span>
+  </div>
+
+  <script>
+    // =========================================================================
+    // 0. OFFICIAL FLUELO CONCENTRIC LOGO SVG ENGINE (POLOSAN & FRESH ENHANCED)
+    // =========================================================================
+    const FLUELO_LOGO_PRESETS = {
+      freshFlat: {
+        name: 'Fresh Electric Lilac',
+        useGradient: false,
+        outer: '#B899FF',  // Enhanced fresh soft lilac
+        middle: '#8F5BFF', // Vibrant electric violet ring
+        inner: '#F5F0FF'   // Crisp icy lavender-white core
+      },
+      freshGradient: {
+        name: 'Luminous Fresh Violet',
+        useGradient: true,
+        outer: '#C4A8FF',
+        outerEnd: '#A378FF',
+        middle: '#9A6BFF',
+        middleEnd: '#7B3FE4',
+        inner: '#FAF7FF',
+        innerEnd: '#EDE3FF'
+      },
+      vividPop: {
+        name: 'Vivid Iris Pop',
+        useGradient: false,
+        outer: '#C2A6FF',
+        middle: '#7C3AED',
+        inner: '#F7F3FF'
+      },
+      softPastel: {
+        name: 'Pure Lavender Mist',
+        useGradient: false,
+        outer: '#C7B2FF',
+        middle: '#A383FF',
+        inner: '#F3EDFF'
+      }
+    };
+
+    let activeLogoPresetKey = 'freshFlat';
+    let activeLogoFrameStyle = 'circle'; // 'circle' | 'squircle' | 'wordmark'
+    let customLogoColors = {
+      outer: '#B899FF',
+      middle: '#8F5BFF',
+      inner: '#F5F0FF',
+      useGradient: false
+    };
+
+    function buildFlueloOfficialLogoSVG(size = 180, options = {}) {
+      const styleMode = options.frameStyle || activeLogoFrameStyle;
+      const preset = options.preset || customLogoColors;
+
+      if (styleMode === 'wordmark') {
+        return `<svg width="${Math.round(size * 2.1)}" height="${size}" viewBox="0 0 500 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Lingkaran Luar (Fresh Soft Lilac) -->
+  <circle cx="120" cy="120" r="108" fill="${preset.outer}"/>
+  <!-- Cincin Tengah (Vibrant Violet) -->
+  <circle cx="120" cy="120" r="80" fill="${preset.middle}"/>
+  <!-- Lingkaran Inti Dalam (Icy Lavender White) -->
+  <circle cx="120" cy="120" r="60" fill="${preset.inner}"/>
+  <!-- Tipografi Brand Fluelo -->
+  <text x="256" y="146" fill="#0F0F12" font-family="'Plus Jakarta Sans', sans-serif" font-size="82" font-weight="800" letter-spacing="-0.04em">Fluelo</text>
+</svg>`;
+      }
+
+      if (styleMode === 'squircle') {
+        return `<svg width="${size}" height="${size}" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- App Icon Squircle Base -->
+  <rect x="12" y="12" width="216" height="216" rx="56" fill="#FFFFFF"/>
+  <!-- Lingkaran Luar (Fresh Soft Lilac) -->
+  <circle cx="120" cy="120" r="92" fill="${preset.outer}"/>
+  <!-- Cincin Tengah (Vibrant Violet) -->
+  <circle cx="120" cy="120" r="68" fill="${preset.middle}"/>
+  <!-- Lingkaran Inti Dalam (Icy Lavender White) -->
+  <circle cx="120" cy="120" r="51" fill="${preset.inner}"/>
+</svg>`;
+      }
+
+      if (preset.useGradient) {
+        return `<svg width="${size}" height="${size}" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="flueloOuterGrad" x1="30" y1="20" x2="210" y2="220" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="${preset.outer}"/>
+      <stop offset="100%" stop-color="${preset.outerEnd || '#A378FF'}"/>
+    </linearGradient>
+    <linearGradient id="flueloMidGrad" x1="50" y1="40" x2="190" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="${preset.middle}"/>
+      <stop offset="100%" stop-color="${preset.middleEnd || '#7B3FE4'}"/>
+    </linearGradient>
+    <linearGradient id="flueloInnerGrad" x1="70" y1="65" x2="170" y2="180" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="${preset.inner}"/>
+      <stop offset="100%" stop-color="${preset.innerEnd || '#EDE3FF'}"/>
+    </linearGradient>
+  </defs>
+  <!-- 1. Lingkaran Luar Polosan (Fresh Lilac) -->
+  <circle cx="120" cy="120" r="108" fill="url(#flueloOuterGrad)"/>
+  <!-- 2. Cincin Tengah Polosan (Vibrant Fresh Violet) -->
+  <circle cx="120" cy="120" r="80" fill="url(#flueloMidGrad)"/>
+  <!-- 3. Lingkaran Inti Dalam Polosan (Crisp Icy Lavender) -->
+  <circle cx="120" cy="120" r="60" fill="url(#flueloInnerGrad)"/>
+</svg>`;
+      }
+
+      // Default Clean Flat Concentric Circle Logo (Exact 3 concentric circles without facial features)
+      return `<svg width="${size}" height="${size}" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- 1. Lingkaran Luar Polosan (Fresh Soft Lilac) -->
+  <circle cx="120" cy="120" r="108" fill="${preset.outer}"/>
+  <!-- 2. Cincin Tengah Polosan (Vibrant Fresh Violet) -->
+  <circle cx="120" cy="120" r="80" fill="${preset.middle}"/>
+  <!-- 3. Lingkaran Inti Dalam Polosan (Crisp Icy Lavender) -->
+  <circle cx="120" cy="120" r="60" fill="${preset.inner}"/>
+</svg>`;
+    }
+
+    function initLogoStudio() {
+      // Render mini previews inside the 4 preset cards
+      Object.keys(FLUELO_LOGO_PRESETS).forEach((key) => {
+        const box = document.getElementById('previewCardSvg_' + key);
+        if (box) {
+          box.innerHTML = buildFlueloOfficialLogoSVG(96, {
+            frameStyle: 'circle',
+            preset: FLUELO_LOGO_PRESETS[key]
+          });
+        }
+      });
+      selectLogoPreset('freshFlat');
+    }
+
+    function selectLogoPreset(presetKey) {
+      activeLogoPresetKey = presetKey;
+      const p = FLUELO_LOGO_PRESETS[presetKey];
+      customLogoColors = { ...p };
+
+      // Sync color pickers
+      document.getElementById('pickerOuterColor').value = p.outer;
+      document.getElementById('pickerMiddleColor').value = p.middle;
+      document.getElementById('pickerInnerColor').value = p.inner;
+      document.getElementById('hexOuterLabel').textContent = p.outer.toUpperCase();
+      document.getElementById('hexMiddleLabel').textContent = p.middle.toUpperCase();
+      document.getElementById('hexInnerLabel').textContent = p.inner.toUpperCase();
+
+      // Highlight active card
+      Object.keys(FLUELO_LOGO_PRESETS).forEach((k) => {
+        const card = document.getElementById('logoPresetCard_' + k);
+        if (!card) return;
+        if (k === presetKey) {
+          card.className = 'tap-scale rounded-[26px] p-5 bg-[#0F0F12] text-white border-2 border-[#0F0F12] shadow-lg flex flex-col items-center text-center';
+        } else {
+          card.className = 'tap-scale rounded-[26px] p-5 bg-[#F6F6FA] hover:bg-[#EEEEF5] text-[#0F0F12] border-2 border-transparent flex flex-col items-center text-center';
+        }
+      });
+
+      refreshLogoStudioStage();
+    }
+
+    function onCustomLogoColorChange() {
+      customLogoColors.useGradient = false;
+      customLogoColors.outer = document.getElementById('pickerOuterColor').value;
+      customLogoColors.middle = document.getElementById('pickerMiddleColor').value;
+      customLogoColors.inner = document.getElementById('pickerInnerColor').value;
+
+      document.getElementById('hexOuterLabel').textContent = customLogoColors.outer.toUpperCase();
+      document.getElementById('hexMiddleLabel').textContent = customLogoColors.middle.toUpperCase();
+      document.getElementById('hexInnerLabel').textContent = customLogoColors.inner.toUpperCase();
+
+      refreshLogoStudioStage();
+    }
+
+    function setLogoFrameStyle(styleMode) {
+      activeLogoFrameStyle = styleMode;
+      const btns = {
+        circle: document.getElementById('btnLogoShapeCircle'),
+        squircle: document.getElementById('btnLogoShapeSquircle'),
+        wordmark: document.getElementById('btnLogoShapeWordmark')
+      };
+      Object.keys(btns).forEach((k) => {
+        btns[k].className = k === styleMode
+          ? 'px-2.5 py-1 rounded-full text-[10.5px] font-extrabold bg-[#0F0F12] text-white'
+          : 'px-2.5 py-1 rounded-full text-[10.5px] font-extrabold text-[#5A5A66] hover:text-[#0F0F12]';
+      });
+      refreshLogoStudioStage();
+    }
+
+    function refreshLogoStudioStage() {
+      const stage = document.getElementById('mainLogoInteractiveStage');
+      const codeOut = document.getElementById('logoSvgCodeOutput');
+      const svgMarkup = buildFlueloOfficialLogoSVG(180);
+
+      stage.innerHTML = svgMarkup;
+      codeOut.textContent = buildFlueloOfficialLogoSVG(240);
+
+      // Update top navbar mini brand icon as well
+      const navLogo = document.getElementById('navbarMiniLogo');
+      if (navLogo) {
+        navLogo.innerHTML = buildFlueloOfficialLogoSVG(32, { frameStyle: 'circle' });
+      }
+    }
+
+    function copyLogoSvgCode() {
+      const svgText = document.getElementById('logoSvgCodeOutput').textContent;
+      copyTextToClipboard(svgText, 'Kode SVG Logo Fluelo berhasil disalin!');
+    }
+
+    function downloadLogoSvgFile() {
+      const svgText = document.getElementById('logoSvgCodeOutput').textContent;
+      const blob = new Blob([svgText], { type: 'image/svg+xml;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'fluelo-logo.svg';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      showToast('File fluelo-logo.svg berhasil diunduh!', '#B8F3B8');
+    }
+
+    // =========================================================================
+    // 1. MASTER SVG ENGINE FOR THE 5 FROSTED-GLASS CLOUD CHARACTERS
+    //    (Sarah, Emma, Sophia, David, Kenji — Maksimov x dovdiz style)
+    // =========================================================================
+    let uidCounter = 1;
+
+    function buildFlueloCloudSVG(charKey, size = 160, options = {}) {
+      const id = options.staticId ? charKey.toLowerCase() : `${charKey.toLowerCase()}_${uidCounter++}`;
+      const animClass = options.isSpeaking ? 'cloud-speaking' : (options.float ? 'cloud-float' : '');
+      const blinkClass = options.blink !== false ? 'cloud-blink' : '';
+
+      // Common Fluffy Cloud Path inside 240x240 squircle
+      const cloudPath = "M 18 152 C 18 116 48 96 76 105 C 94 74 140 72 164 98 C 194 98 216 122 212 152 C 228 164 230 192 214 212 L 22 212 Z";
+
+      if (charKey === 'Sarah') {
+        // 1. SARAH: Sunny Day Cloud (Left icon from reference: Blue-to-Lime squircle, yellow sun tucked top-left, warm orange subsurface glow, 2 big round eyes bottom-left)
+        return `<svg width="${size}" height="${size}" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="${animClass}">
+  <defs>
+    <clipPath id="sq_${id}">
+      <rect x="16" y="16" width="208" height="208" rx="54"/>
+    </clipPath>
+    <linearGradient id="bg_${id}" x1="20" y1="20" x2="215" y2="215" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0D99FF"/>
+      <stop offset="48%" stop-color="#7EE8B8"/>
+      <stop offset="100%" stop-color="#ECFA8C"/>
+    </linearGradient>
+    <linearGradient id="sun_${id}" x1="40" y1="45" x2="115" y2="135" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFF147"/>
+      <stop offset="100%" stop-color="#FFAE19"/>
+    </linearGradient>
+    <linearGradient id="cloud_${id}" x1="120" y1="78" x2="135" y2="224" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.96"/>
+      <stop offset="55%" stop-color="#E8F9C8" stop-opacity="0.90"/>
+      <stop offset="100%" stop-color="#D4F5B4" stop-opacity="0.95"/>
+    </linearGradient>
+    <radialGradient id="eyeRim_${id}" cx="45%" cy="40%" r="58%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="76%" stop-color="#F2F9FC"/>
+      <stop offset="100%" stop-color="#CBE4F0"/>
+    </radialGradient>
+    <filter id="glow_${id}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#sq_${id})">
+    <!-- Squircle Sky Background -->
+    <rect x="16" y="16" width="208" height="208" fill="url(#bg_${id})"/>
+    <!-- Tucked Golden Sun (Top-Left) -->
+    <circle cx="72" cy="94" r="46" fill="url(#sun_${id})"/>
+    <!-- Frosted Cloud Body -->
+    <path d="${cloudPath}" fill="url(#cloud_${id})"/>
+    <!-- Subsurface Warm Sun Glow Bleeding Through Frosted Cloud -->
+    <circle cx="76" cy="112" r="38" fill="#FFB82E" opacity="0.68" filter="url(#glow_${id})"/>
+    <circle cx="118" cy="166" r="44" fill="#9AE6B4" opacity="0.45" filter="url(#glow_${id})"/>
+    <!-- Frosted Glass Inner Specular Highlight Rim -->
+    <path d="${cloudPath}" stroke="#FFFFFF" stroke-opacity="0.78" stroke-width="3.5" fill="none"/>
+    <!-- Expressive Big Round Eyes (Bottom-Left) -->
+    <g class="${blinkClass}">
+      <circle cx="64" cy="162" r="24" fill="url(#eyeRim_${id})"/>
+      <circle cx="114" cy="162" r="24" fill="url(#eyeRim_${id})"/>
+      <g class="fluelo-pupil">
+        <circle cx="65" cy="162" r="12.5" fill="#0B0E14"/>
+        <circle cx="115" cy="162" r="12.5" fill="#0B0E14"/>
+      </g>
+    </g>
+  </g>
+</svg>`;
+      }
+
+      if (charKey === 'Emma') {
+        // 2. EMMA: Sky Visor Cloud (Center icon from reference: Vibrant Blue squircle, recessed dark-blue visor slot, angled lower-right cloud cheek fold overlapping right eye)
+        return `<svg width="${size}" height="${size}" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="${animClass}">
+  <defs>
+    <clipPath id="sq_${id}">
+      <rect x="16" y="16" width="208" height="208" rx="54"/>
+    </clipPath>
+    <clipPath id="visorClip_${id}">
+      <rect x="64" y="128" width="108" height="54" rx="27" transform="rotate(-5 118 155)"/>
+    </clipPath>
+    <linearGradient id="bg_${id}" x1="25" y1="20" x2="210" y2="215" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0084FF"/>
+      <stop offset="100%" stop-color="#76B7FF"/>
+    </linearGradient>
+    <linearGradient id="cloud_${id}" x1="120" y1="76" x2="120" y2="224" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF" stop-opacity="0.98"/>
+      <stop offset="48%" stop-color="#87C8FF" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#D6EDFF" stop-opacity="0.96"/>
+    </linearGradient>
+    <linearGradient id="cheek_${id}" x1="90" y1="158" x2="180" y2="218" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6EB8FF"/>
+      <stop offset="55%" stop-color="#B5DDFF"/>
+      <stop offset="100%" stop-color="#E6F4FF"/>
+    </linearGradient>
+    <filter id="glow_${id}" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#sq_${id})">
+    <rect x="16" y="16" width="208" height="208" fill="url(#bg_${id})"/>
+    <!-- Frosted Cloud Base -->
+    <path d="${cloudPath}" fill="url(#cloud_${id})"/>
+    <!-- Soft Blue Inner Depth Glow -->
+    <ellipse cx="122" cy="142" rx="64" ry="36" fill="#4BA8FF" opacity="0.45" filter="url(#glow_${id})"/>
+    <path d="${cloudPath}" stroke="#FFFFFF" stroke-opacity="0.82" stroke-width="3.5" fill="none"/>
+    <!-- Recessed Dark-Blue Visor Cutout -->
+    <rect x="64" y="128" width="108" height="54" rx="27" transform="rotate(-5 118 155)" fill="#184B78" stroke="#85C7FF" stroke-width="2.2"/>
+    <!-- Eyes Inside Visor -->
+    <g clip-path="url(#visorClip_${id})" class="${blinkClass}">
+      <circle cx="93" cy="158" r="24" fill="#FFFFFF"/>
+      <circle cx="141" cy="154" r="22" fill="#FFFFFF"/>
+      <g class="fluelo-pupil">
+        <circle cx="94" cy="158" r="13.5" fill="#07090E"/>
+        <circle cx="140" cy="155" r="13" fill="#07090E"/>
+      </g>
+    </g>
+    <!-- Signature Angled Lower-Right Cloud Cheek Fold Overlapping Right Eye -->
+    <path d="M 88 184 L 182 162 C 194 176 192 214 168 220 L 76 220 Z" fill="url(#cheek_${id})"/>
+    <path d="M 96 180 L 172 163" stroke="#BEE1FF" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>`;
+      }
+
+      if (charKey === 'Sophia') {
+        // 3. SOPHIA: Night Crescent Cloud (Right icon from reference: Deep Cobalt-Navy squircle, pale lavender crescent moon top-left, icy glow on cloud, 2 round eyes bottom-right)
+        return `<svg width="${size}" height="${size}" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="${animClass}">
+  <defs>
+    <clipPath id="sq_${id}">
+      <rect x="16" y="16" width="208" height="208" rx="54"/>
+    </clipPath>
+    <linearGradient id="bg_${id}" x1="20" y1="20" x2="220" y2="210" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#0077E6"/>
+      <stop offset="100%" stop-color="#022954"/>
+    </linearGradient>
+    <linearGradient id="cloud_${id}" x1="120" y1="78" x2="128" y2="224" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#DCEEFF" stop-opacity="0.92"/>
+      <stop offset="50%" stop-color="#4B88B8" stop-opacity="0.88"/>
+      <stop offset="100%" stop-color="#6989A3" stop-opacity="0.95"/>
+    </linearGradient>
+    <radialGradient id="eyeRim_${id}" cx="45%" cy="40%" r="58%">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="76%" stop-color="#EDF6FC"/>
+      <stop offset="100%" stop-color="#B9D7EC"/>
+    </radialGradient>
+    <filter id="glow_${id}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="13"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#sq_${id})">
+    <rect x="16" y="16" width="208" height="208" fill="url(#bg_${id})"/>
+    <!-- Pale Lavender Crescent Moon Tucked Behind Top-Left -->
+    <path d="M 74 38 C 46 62 46 108 78 130 C 102 146 136 138 152 114 C 122 122 92 106 86 78 C 82 60 86 46 74 38 Z" fill="#EFE8FF"/>
+    <!-- Frosted Twilight Cloud Body -->
+    <path d="${cloudPath}" fill="url(#cloud_${id})"/>
+    <!-- Subsurface Icy-Blue Moon Glow on Cloud -->
+    <path d="M 62 112 C 84 132 126 130 152 106" stroke="#A6D8FF" stroke-width="18" stroke-linecap="round" opacity="0.65" filter="url(#glow_${id})"/>
+    <path d="${cloudPath}" stroke="#E3F2FF" stroke-opacity="0.72" stroke-width="3.2" fill="none"/>
+    <!-- Expressive Round Eyes (Lower-Right) -->
+    <g class="${blinkClass}">
+      <circle cx="94" cy="162" r="24" fill="url(#eyeRim_${id})"/>
+      <circle cx="146" cy="162" r="24" fill="url(#eyeRim_${id})"/>
+      <g class="fluelo-pupil">
+        <circle cx="95" cy="163" r="12.5" fill="#07090E"/>
+        <circle cx="147" cy="163" r="12.5" fill="#07090E"/>
+      </g>
+    </g>
+  </g>
+</svg>`;
+      }
+
+      if (charKey === 'David') {
+        // 4. DAVID: Coral-Peach Star Cloud (Newly created character 4: Coral-to-Peach squircle, soft rounded yellow star top-left, warm golden glow, cocoa visor slot + angled cheek fold with coral blush)
+        return `<svg width="${size}" height="${size}" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="${animClass}">
+  <defs>
+    <clipPath id="sq_${id}">
+      <rect x="16" y="16" width="208" height="208" rx="54"/>
+    </clipPath>
+    <clipPath id="visorClip_${id}">
+      <rect x="64" y="126" width="110" height="56" rx="28" transform="rotate(-4 119 154)"/>
+    </clipPath>
+    <linearGradient id="bg_${id}" x1="20" y1="20" x2="215" y2="215" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FF666E"/>
+      <stop offset="100%" stop-color="#FFA97A"/>
+    </linearGradient>
+    <linearGradient id="cloud_${id}" x1="120" y1="78" x2="125" y2="224" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFDFB" stop-opacity="0.97"/>
+      <stop offset="52%" stop-color="#FFD0B5" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#FFE6D6" stop-opacity="0.96"/>
+    </linearGradient>
+    <linearGradient id="cheek_${id}" x1="90" y1="158" x2="180" y2="218" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFA686"/>
+      <stop offset="55%" stop-color="#FFD2BA"/>
+      <stop offset="100%" stop-color="#FFF0E6"/>
+    </linearGradient>
+    <filter id="glow_${id}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="13"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#sq_${id})">
+    <rect x="16" y="16" width="208" height="208" fill="url(#bg_${id})"/>
+    <!-- Soft Rounded Yellow 5-Point Star Tucked Top-Left -->
+    <path d="M 88 46 L 100 66 L 122 70 L 106 86 L 110 108 L 88 98 L 66 108 L 70 86 L 54 70 L 76 66 Z" fill="#FFF099" stroke="#FFE36E" stroke-width="6" stroke-linejoin="round"/>
+    <!-- Frosted Warm Peach Cloud Body -->
+    <path d="${cloudPath}" fill="url(#cloud_${id})"/>
+    <!-- Subsurface Golden Star Glow -->
+    <circle cx="88" cy="100" r="30" fill="#FFE875" opacity="0.68" filter="url(#glow_${id})"/>
+    <path d="${cloudPath}" stroke="#FFFFFF" stroke-opacity="0.82" stroke-width="3.5" fill="none"/>
+    <!-- Recessed Warm Cocoa Visor Slot -->
+    <rect x="64" y="126" width="110" height="56" rx="28" transform="rotate(-4 119 154)" fill="#6E3F33" stroke="#FFC5A8" stroke-width="2.2"/>
+    <g clip-path="url(#visorClip_${id})" class="${blinkClass}">
+      <circle cx="93" cy="156" r="24" fill="#FFFFFF"/>
+      <circle cx="142" cy="153" r="23" fill="#FFFFFF"/>
+      <g class="fluelo-pupil">
+        <circle cx="96" cy="154" r="12.5" fill="#0B090A"/>
+        <circle cx="89" cy="150" r="3.2" fill="#FFFFFF"/>
+        <circle cx="144" cy="152" r="12.5" fill="#0B090A"/>
+        <circle cx="137" cy="148" r="3.2" fill="#FFFFFF"/>
+      </g>
+    </g>
+    <!-- Angled Lower-Right Cloud Cheek Fold + Subtle Coral Blush -->
+    <path d="M 88 184 L 182 162 C 194 176 192 214 168 220 L 76 220 Z" fill="url(#cheek_${id})"/>
+    <ellipse cx="126" cy="182" rx="22" ry="9" fill="#FF7E6B" opacity="0.45" filter="url(#glow_${id})"/>
+    <path d="M 96 180 L 172 163" stroke="#FFE3D3" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>`;
+      }
+
+      // 5. KENJI: Lavender-Mint Lightning Cloud (Newly created character 5: Purple-Lavender to Aqua-Mint squircle, pastel yellow lightning bolt top-left, slate visor slot + angled cheek fold)
+      return `<svg width="${size}" height="${size}" viewBox="0 0 240 240" fill="none" xmlns="http://www.w3.org/2000/svg" class="${animClass}">
+  <defs>
+    <clipPath id="sq_${id}">
+      <rect x="16" y="16" width="208" height="208" rx="54"/>
+    </clipPath>
+    <clipPath id="visorClip_${id}">
+      <rect x="64" y="128" width="108" height="54" rx="27" transform="rotate(-5 118 155)"/>
+    </clipPath>
+    <linearGradient id="bg_${id}" x1="20" y1="30" x2="220" y2="205" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#B892FF"/>
+      <stop offset="52%" stop-color="#8EC5FC"/>
+      <stop offset="100%" stop-color="#6EE7CF"/>
+    </linearGradient>
+    <linearGradient id="cloud_${id}" x1="35" y1="90" x2="205" y2="215" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#F6F2FF" stop-opacity="0.96"/>
+      <stop offset="48%" stop-color="#D7E6FF" stop-opacity="0.92"/>
+      <stop offset="100%" stop-color="#9BF2DF" stop-opacity="0.95"/>
+    </linearGradient>
+    <linearGradient id="cheek_${id}" x1="88" y1="160" x2="185" y2="215" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#C8CCFF"/>
+      <stop offset="100%" stop-color="#A8F2E2"/>
+    </linearGradient>
+    <filter id="glow_${id}" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="12"/>
+    </filter>
+  </defs>
+  <g clip-path="url(#sq_${id})">
+    <rect x="16" y="16" width="208" height="208" fill="url(#bg_${id})"/>
+    <!-- Pastel Yellow Lightning Bolt Tucked Top-Left -->
+    <path d="M 96 42 L 66 86 L 90 88 L 78 122 L 116 74 L 92 72 Z" fill="#FFEE82" stroke="#FFE66D" stroke-width="5" stroke-linejoin="round"/>
+    <!-- Frosted Lavender-Mint Cloud Body -->
+    <path d="${cloudPath}" fill="url(#cloud_${id})"/>
+    <!-- Soft Lemon Glow from Lightning Bolt -->
+    <circle cx="88" cy="102" r="24" fill="#FFF088" opacity="0.58" filter="url(#glow_${id})"/>
+    <path d="${cloudPath}" stroke="#FFFFFF" stroke-opacity="0.82" stroke-width="3.5" fill="none"/>
+    <!-- Recessed Slate-Indigo Visor Slot -->
+    <rect x="64" y="128" width="108" height="54" rx="27" transform="rotate(-5 118 155)" fill="#5E6E8C" stroke="#D7E8FF" stroke-width="2.2"/>
+    <g clip-path="url(#visorClip_${id})" class="${blinkClass}">
+      <circle cx="93" cy="158" r="24" fill="#FFFFFF"/>
+      <circle cx="141" cy="154" r="22" fill="#FFFFFF"/>
+      <g class="fluelo-pupil">
+        <circle cx="94" cy="158" r="13.5" fill="#07090E"/>
+        <circle cx="140" cy="155" r="13" fill="#07090E"/>
+      </g>
+    </g>
+    <!-- Angled Lower-Right Cloud Cheek Fold -->
+    <path d="M 88 184 L 182 162 C 194 176 192 214 168 220 L 76 220 Z" fill="url(#cheek_${id})"/>
+    <path d="M 96 180 L 172 163" stroke="#E6F7FF" stroke-width="3" stroke-linecap="round"/>
+  </g>
+</svg>`;
+    }
+
+    // =========================================================================
+    // 2. CHARACTER METADATA & CONVERSATION DATA FOR ALL 5 PARTNERS
+    // =========================================================================
+    const FLUELO_CHARACTERS = {
+      Sarah: {
+        index: 1,
+        name: 'Sarah',
+        trait: 'Daily Talk',
+        roleBadge: 'Sunny Morning Cloud • Daily Talk',
+        stageColor: '#B8F3B8',
+        desc: 'Sunny Morning Cloud — Gradasi langit cerah & kuning limau dengan matahari tersembunyi dan glow hangat.',
+        initialChat: [
+          { sender: 'ai', text: 'Hi Alex! Welcome to Perk Cafe. What would you like to order this morning?' },
+          { sender: 'user', text: 'Hi Sarah! Can I get an iced oat latte, please?' },
+          { sender: 'ai', text: 'Sure thing! Would you like that for here or to go?' }
+        ],
+        nextExchanges: [
+          { user: 'For here, please. I also want a butter croissant.', ai: 'Great choice! I will warm up the croissant for you. What are your plans for today?' },
+          { user: 'I am practicing my English speaking skills on Fluelo.', ai: 'You are doing awesome! Your sentences sound super natural.' }
+        ]
+      },
+      Emma: {
+        index: 2,
+        name: 'Emma',
+        trait: 'Grammar Coach',
+        roleBadge: 'Sky Visor Cloud • Grammar Coach',
+        stageColor: '#B5E2FA',
+        desc: 'Sky Visor Cloud — Awan biru es kaca buram dengan celah visor biru tua dan lipatan pipi awan miring.',
+        initialChat: [
+          { sender: 'ai', text: 'Hello Alex! Have you ever visited another country or city recently?' },
+          { sender: 'user', text: 'Yes, I visited Bali with my family last year.' },
+          { sender: 'ai', text: 'Lovely! What was your favorite place in Bali?' }
+        ],
+        nextExchanges: [
+          { user: 'I really enjoyed the beach in Uluwatu and the local food.', ai: 'That sounds wonderful! How long did you stay there?' },
+          { user: 'We stayed there for five days.', ai: 'Perfect past tense! Keep it up, Alex.' }
+        ]
+      },
+      Sophia: {
+        index: 3,
+        name: 'Sophia',
+        trait: 'Travel Buddy',
+        roleBadge: 'Night Crescent Cloud • Travel Buddy',
+        stageColor: '#D8C8FF',
+        desc: 'Night Crescent Cloud — Gradasi biru malam dengan bulan sabit ungu muda dan pendaran cahaya dingin.',
+        initialChat: [
+          { sender: 'ai', text: 'Hey Alex! Welcome to the airport check-in desk. Where are you flying today?' },
+          { sender: 'user', text: 'Hi Sophia! I am flying to Tokyo today.' },
+          { sender: 'ai', text: 'Exciting! Would you prefer a window seat or an aisle seat?' }
+        ],
+        nextExchanges: [
+          { user: 'Could I have a window seat, please?', ai: 'Here is your boarding pass for seat 14A. Boarding starts at gate 7!' },
+          { user: 'Thank you so much for your help!', ai: 'You are welcome! Have a safe and pleasant flight!' }
+        ]
+      },
+      David: {
+        index: 4,
+        name: 'David',
+        trait: 'Career Mentor',
+        roleBadge: 'Coral Star Cloud • Career Mentor',
+        stageColor: '#FBC3A2',
+        desc: 'Coral Star Cloud — Gradasi coral-peach hangat dengan bintang kuning membulat dan rona pipi halus.',
+        initialChat: [
+          { sender: 'ai', text: 'Good morning Alex! Tell me a little bit about what you do.' },
+          { sender: 'user', text: 'Good morning David! I am a product designer building Fluelo.' },
+          { sender: 'ai', text: 'That is awesome! What feature are you working on right now?' }
+        ],
+        nextExchanges: [
+          { user: 'I am integrating the five frosted cloud characters into the app.', ai: 'Impressive! They look super friendly and cohesive.' },
+          { user: 'Thank you! Practicing with you makes me more confident.', ai: 'Great answer! Clear and confident communication.' }
+        ]
+      },
+      Kenji: {
+        index: 5,
+        name: 'Kenji',
+        trait: 'Casual & Hobbies',
+        roleBadge: 'Lavender-Mint Lightning Cloud • Casual',
+        stageColor: '#B8F3B8',
+        desc: 'Lavender-Mint Lightning Cloud — Gradasi ungu-mint segar dengan kilat kuning pastel dan mata ekspresif.',
+        initialChat: [
+          { sender: 'ai', text: 'Yo Alex! The weekend is almost here. Any fun plans for Saturday?' },
+          { sender: 'user', text: 'Hey Kenji! I am going to watch a movie with my friends.' },
+          { sender: 'ai', text: 'Nice! What kind of movies do you usually enjoy watching?' }
+        ],
+        nextExchanges: [
+          { user: 'I really like sci-fi and animated adventure movies.', ai: 'Same here! Nothing beats a good sci-fi movie with popcorn.' },
+          { user: 'Totally agree! What about you, Kenji?', ai: 'I am going to play some music and practice guitar all weekend!' }
+        ]
+      }
+    };
+
+    // =========================================================================
+    // 3. CODE STUDIO LOGIC (PREVIEW, EYE TRACKING, SVG / REACT / HTML EXPORT)
+    // =========================================================================
+    let selectedStudioChar = 'Sarah';
+    let studioInspectorSize = 160;
+    let studioSpeakingActive = false;
+    let studioEyeTrackingActive = true;
+    let activeCodeFormat = 'svg'; // 'svg' | 'react' | 'html'
+
+    function renderStudioCharacterGrid() {
+      const grid = document.getElementById('studioCharactersGrid');
+      grid.innerHTML = '';
+
+      Object.keys(FLUELO_CHARACTERS).forEach((key) => {
+        const item = FLUELO_CHARACTERS[key];
+        const isSelected = key === selectedStudioChar;
+        const card = document.createElement('div');
+        card.className = `tap-scale rounded-[26px] p-4 transition-all flex flex-col items-center text-center border ${
+          isSelected
+            ? 'bg-[#0F0F12] text-white border-[#0F0F12] shadow-lg'
+            : 'bg-[#F6F6FA] hover:bg-[#EEEEF5] text-[#0F0F12] border-black/[0.05]'
+        }`;
+        card.onclick = () => selectStudioCharacter(key);
+
+        card.innerHTML = `
+          <div class="w-full flex items-center justify-between mb-2">
+            <span class="text-[10px] font-extrabold px-2.5 py-0.5 rounded-full ${isSelected ? 'bg-white/15 text-white' : 'bg-white text-[#6E6E7A]'}">
+              #${item.index} ${item.trait}
+            </span>
+            <button onclick="event.stopPropagation(); copySingleCharacterSvg('${key}')" class="text-[10.5px] font-extrabold px-2.5 py-0.5 rounded-full ${isSelected ? 'bg-[#B8F3B8] text-[#0F0F12]' : 'bg-[#0F0F12] text-white'}">
+              Copy SVG
+            </button>
+          </div>
+          <div class="my-2">
+            ${buildFlueloCloudSVG(key, 118, { isSpeaking: studioSpeakingActive, float: !studioSpeakingActive })}
+          </div>
+          <h3 class="text-[16px] font-extrabold mt-1">${item.name}</h3>
+          <p class="text-[11px] font-medium ${isSelected ? 'text-white/70' : 'text-[#7A7A88]'} line-clamp-2 mt-0.5">
+            ${item.desc}
+          </p>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    function selectStudioCharacter(charKey) {
+      selectedStudioChar = charKey;
+      const charObj = FLUELO_CHARACTERS[charKey];
+
+      document.getElementById('inspectorBadgeRole').textContent = charObj.roleBadge;
+      document.getElementById('inspectorCharIndex').textContent = `Character ${charObj.index} of 5`;
+      document.getElementById('inspectorCharName').textContent = charObj.name;
+      document.getElementById('inspectorCharDesc').textContent = charObj.desc;
+      document.getElementById('inspectorStageSvg').innerHTML = buildFlueloCloudSVG(charKey, studioInspectorSize, {
+        isSpeaking: studioSpeakingActive,
+        float: !studioSpeakingActive
+      });
+
+      ['Sarah', 'Emma', 'Sophia', 'David', 'Kenji'].forEach((k) => {
+        const btn = document.getElementById('btnInspect' + k);
+        if (btn) {
+          btn.className = k === charKey
+            ? 'py-2 rounded-xl text-[11px] font-extrabold bg-[#0F0F12] text-white'
+            : 'py-2 rounded-xl text-[11px] font-extrabold bg-[#F4F4F8] text-[#0F0F12] hover:bg-[#E6E6F0]';
+        }
+      });
+
+      renderStudioCharacterGrid();
+      updateCodeViewer();
+    }
+
+    function updateInspectorSize(val) {
+      studioInspectorSize = parseInt(val, 10);
+      document.getElementById('inspectorSizeVal').textContent = `${studioInspectorSize}px`;
+      document.getElementById('inspectorStageSvg').innerHTML = buildFlueloCloudSVG(selectedStudioChar, studioInspectorSize, {
+        isSpeaking: studioSpeakingActive,
+        float: !studioSpeakingActive
+      });
+      updateCodeViewer();
+    }
+
+    function toggleStudioSpeaking() {
+      studioSpeakingActive = !studioSpeakingActive;
+      const btn = document.getElementById('btnToggleSpeaking');
+      if (studioSpeakingActive) {
+        btn.className = 'tap-scale px-3.5 py-2 rounded-full text-xs font-extrabold bg-[#0F0F12] text-white shadow-sm flex items-center gap-1.5';
+        btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#B8F3B8]"></span><span>Animasi Bicara: ON</span>`;
+      } else {
+        btn.className = 'tap-scale px-3.5 py-2 rounded-full text-xs font-extrabold bg-white text-[#0F0F12] shadow-sm flex items-center gap-1.5';
+        btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#9898A6]"></span><span>Animasi Bicara: OFF</span>`;
+      }
+      selectStudioCharacter(selectedStudioChar);
+    }
+
+    function toggleStudioEyeTracking() {
+      studioEyeTrackingActive = !studioEyeTrackingActive;
+      const btn = document.getElementById('btnToggleTracking');
+      if (studioEyeTrackingActive) {
+        btn.className = 'tap-scale px-3.5 py-2 rounded-full text-xs font-extrabold bg-[#0F0F12] text-white shadow-sm flex items-center gap-1.5';
+        btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#B8F3B8]"></span><span>Eye Tracking Kursor: ON</span>`;
+      } else {
+        btn.className = 'tap-scale px-3.5 py-2 rounded-full text-xs font-extrabold bg-white text-[#0F0F12] shadow-sm flex items-center gap-1.5';
+        btn.innerHTML = `<span class="w-2 h-2 rounded-full bg-[#9898A6]"></span><span>Eye Tracking Kursor: OFF</span>`;
+        document.querySelectorAll('.fluelo-pupil').forEach(el => {
+          el.style.transform = 'translate(0px, 0px)';
+        });
+      }
+    }
+
+    // Cursor Eye Tracking across all visible cloud characters
+    window.addEventListener('mousemove', (e) => {
+      if (!studioEyeTrackingActive) return;
+      const pupils = document.querySelectorAll('.fluelo-pupil');
+      pupils.forEach((pupil) => {
+        const rect = pupil.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const dx = e.clientX - centerX;
+        const dy = e.clientY - centerY;
+        const angle = Math.atan2(dy, dx);
+        const maxDist = 4.2;
+        const dist = Math.min(maxDist, Math.hypot(dx, dy) / 28);
+        const tx = Math.cos(angle) * dist;
+        const ty = Math.sin(angle) * dist;
+        pupil.style.transform = `translate(${tx.toFixed(1)}px, ${ty.toFixed(1)}px)`;
+      });
+    });
+
+    function switchCodeFormat(fmt) {
+      activeCodeFormat = fmt;
+      const tabs = {
+        svg: document.getElementById('codeTabSvg'),
+        react: document.getElementById('codeTabReact'),
+        html: document.getElementById('codeTabHtml')
+      };
+      Object.keys(tabs).forEach((k) => {
+        tabs[k].className = k === fmt
+          ? 'px-3.5 py-1.5 rounded-full text-xs font-extrabold bg-[#B8F3B8] text-[#0F0F12] transition-all'
+          : 'px-3.5 py-1.5 rounded-full text-xs font-extrabold text-white/75 hover:text-white transition-all';
+      });
+      updateCodeViewer();
+    }
+
+    function generateReactComponentCode() {
+      const sarahSvg = buildFlueloCloudSVG('Sarah', '__SIZE__', { staticId: true, blink: false }).replace('class=""', '');
+      const emmaSvg = buildFlueloCloudSVG('Emma', '__SIZE__', { staticId: true, blink: false }).replace('class=""', '');
+      const sophiaSvg = buildFlueloCloudSVG('Sophia', '__SIZE__', { staticId: true, blink: false }).replace('class=""', '');
+      const davidSvg = buildFlueloCloudSVG('David', '__SIZE__', { staticId: true, blink: false }).replace('class=""', '');
+      const kenjiSvg = buildFlueloCloudSVG('Kenji', '__SIZE__', { staticId: true, blink: false }).replace('class=""', '');
+
+      return `import React from 'react';
+
+/**
+ * FlueloCloudCharacter — Reusable Component for all 5 Frosted-Glass Cloud Mascots
+ * @param {'Sarah' | 'Emma' | 'Sophia' | 'David' | 'Kenji'} name - Character name
+ * @param {number} size - Width & height in pixels (default: ${studioInspectorSize})
+ * @param {boolean} isSpeaking - Enables speaking bounce animation
+ */
+export function FlueloCloudCharacter({ name = '${selectedStudioChar}', size = ${studioInspectorSize}, isSpeaking = false }) {
+  const wrapperStyle = {
+    width: size,
+    height: size,
+    display: 'inline-flex',
+    animation: isSpeaking ? 'flueloSpeak 0.68s ease-in-out infinite' : 'flueloFloat 4.2s ease-in-out infinite'
+  };
+
+  const renderCharacterSvg = () => {
+    switch (name) {
+      case 'Sarah':
+        return (${sarahSvg.replace(/width="__SIZE__" height="__SIZE__"/g, 'width={size} height={size}')});
+      case 'Emma':
+        return (${emmaSvg.replace(/width="__SIZE__" height="__SIZE__"/g, 'width={size} height={size}')});
+      case 'Sophia':
+        return (${sophiaSvg.replace(/width="__SIZE__" height="__SIZE__"/g, 'width={size} height={size}')});
+      case 'David':
+        return (${davidSvg.replace(/width="__SIZE__" height="__SIZE__"/g, 'width={size} height={size}')});
+      case 'Kenji':
+      default:
+        return (${kenjiSvg.replace(/width="__SIZE__" height="__SIZE__"/g, 'width={size} height={size}')});
+    }
+  };
+
+  return (
+    <div style={wrapperStyle}>
+      {renderCharacterSvg()}
+    </div>
+  );
+}`;
+    }
+
+    function generateHtmlCssSnippet(charKey) {
+      const cleanSvg = buildFlueloCloudSVG(charKey, studioInspectorSize, { staticId: true });
+      return `<!-- Fluelo Frosted Cloud Character: ${charKey} -->
+<style>
+  @keyframes cloudFloat {
+    0%, 100% { transform: translateY(0px) scale(1); }
+    50% { transform: translateY(-5px) scale(1.015); }
+  }
+  @keyframes cloudBlink {
+    0%, 92%, 100% { transform: scaleY(1); }
+    96% { transform: scaleY(0.08); }
+  }
+  .cloud-float { animation: cloudFloat 4.2s ease-in-out infinite; }
+  .cloud-blink { transform-box: fill-box; transform-origin: center; animation: cloudBlink 4.2s infinite; }
+</style>
+
+<div class="fluelo-character-card">
+  ${cleanSvg}
+</div>`;
+    }
+
+    function updateCodeViewer() {
+      const pre = document.getElementById('codeOutputPre');
+      const fileName = document.getElementById('codeFileName');
+
+      if (activeCodeFormat === 'svg') {
+        fileName.textContent = `${selectedStudioChar.toLowerCase()}-fluelo-cloud.svg`;
+        pre.textContent = buildFlueloCloudSVG(selectedStudioChar, studioInspectorSize, { staticId: true });
+      } else if (activeCodeFormat === 'react') {
+        fileName.textContent = `FlueloCloudCharacter.jsx (All 5 Characters: Sarah, Emma, Sophia, David, Kenji)`;
+        pre.textContent = generateReactComponentCode();
+      } else {
+        fileName.textContent = `${selectedStudioChar.toLowerCase()}-snippet.html`;
+        pre.textContent = generateHtmlCssSnippet(selectedStudioChar);
+      }
+    }
+
+    function copyTextToClipboard(text, message) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.style.position = 'fixed';
+      textarea.style.opacity = '0';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast(message, '#B8F3B8');
+      } catch (err) {
+        showToast('Gagal menyalin kode', '#F9A8A8');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function copyActiveCodeBlock() {
+      const code = document.getElementById('codeOutputPre').textContent;
+      copyTextToClipboard(code, `Kode ${activeCodeFormat.toUpperCase()} untuk ${selectedStudioChar} berhasil disalin!`);
+    }
+
+    function copySingleCharacterSvg(charKey) {
+      const svgCode = buildFlueloCloudSVG(charKey, studioInspectorSize, { staticId: true });
+      copyTextToClipboard(svgCode, `SVG karakter ${charKey} berhasil disalin!`);
+    }
+
+    function copyAllFiveSvgBundle() {
+      const bundle = ['Sarah', 'Emma', 'Sophia', 'David', 'Kenji']
+        .map(k => `<!-- ==================== ${k.toUpperCase()} ==================== -->\n` + buildFlueloCloudSVG(k, studioInspectorSize, { staticId: true }))
+        .join('\n\n');
+      copyTextToClipboard(bundle, 'Semua 5 karakter SVG (Sarah, Emma, Sophia, David, Kenji) berhasil disalin!');
+    }
+
+    function switchWorkspace(mode) {
+      const secLogo = document.getElementById('workspaceLogoStudio');
+      const secCode = document.getElementById('workspaceCodeStudio');
+      const secApp = document.getElementById('workspaceAppPreview');
+      const tabLogo = document.getElementById('tabWorkspaceLogo');
+      const tabCode = document.getElementById('tabWorkspaceCode');
+      const tabApp = document.getElementById('tabWorkspaceApp');
+
+      const activeClass = 'px-4 py-1.5 rounded-full text-xs font-extrabold transition-all bg-[#0F0F12] text-white flex items-center gap-1.5';
+      const inactiveClass = 'px-4 py-1.5 rounded-full text-xs font-extrabold transition-all text-[#5A5A66] hover:text-[#0F0F12] flex items-center gap-1.5';
+
+      secLogo.classList.add('hidden');
+      secCode.classList.add('hidden');
+      secApp.classList.add('hidden');
+      tabLogo.className = inactiveClass;
+      tabCode.className = inactiveClass;
+      tabApp.className = inactiveClass;
+
+      if (mode === 'logo') {
+        secLogo.classList.remove('hidden');
+        tabLogo.className = activeClass;
+      } else if (mode === 'code') {
+        secCode.classList.remove('hidden');
+        tabCode.className = activeClass;
+      } else {
+        secApp.classList.remove('hidden');
+        tabApp.className = activeClass;
+      }
+    }
+
+    // =========================================================================
+    // 4. POPULATE FLUELO APP SCREENS WITH THE 5 NEW CLOUD CHARACTERS
+    // =========================================================================
+    function renderAppCloudMascots() {
+      // Navbar mini logo (Official Concentric Fluelo Logo)
+      document.getElementById('navbarMiniLogo').innerHTML = buildFlueloOfficialLogoSVG(32, { frameStyle: 'circle' });
+
+      // Screen 1: Landing Page Bottom Cluster of all 5 Frosted Cloud Characters
+      const landingCluster = document.getElementById('landingCloudCluster');
+      landingCluster.innerHTML = `
+        <div onclick="selectRoomCharacter('Sarah'); navigateToScreen(4);" class="tap-scale absolute left-[16px] top-[22px] rotate-[-8deg] z-10 drop-shadow-md" title="Talk with Sarah">
+          ${buildFlueloCloudSVG('Sarah', 132, { float: true })}
+        </div>
+        <div onclick="selectRoomCharacter('Emma'); navigateToScreen(4);" class="tap-scale absolute right-[14px] top-[14px] rotate-[9deg] z-20 drop-shadow-md" title="Talk with Emma">
+          ${buildFlueloCloudSVG('Emma', 136, { float: true })}
+        </div>
+        <div onclick="selectRoomCharacter('David'); navigateToScreen(4);" class="tap-scale absolute left-[96px] top-[134px] rotate-[-3deg] z-30 drop-shadow-xl" title="Talk with David">
+          ${buildFlueloCloudSVG('David', 142, { float: true })}
+        </div>
+        <div onclick="selectRoomCharacter('Sophia'); navigateToScreen(4);" class="tap-scale absolute left-[10px] bottom-[10px] rotate-[6deg] z-20 drop-shadow-md" title="Talk with Sophia">
+          ${buildFlueloCloudSVG('Sophia', 124, { float: true })}
+        </div>
+        <div onclick="selectRoomCharacter('Kenji'); navigateToScreen(4);" class="tap-scale absolute right-[10px] bottom-[8px] rotate-[-7deg] z-20 drop-shadow-md" title="Talk with Kenji">
+          ${buildFlueloCloudSVG('Kenji', 128, { float: true })}
+        </div>
+      `;
+
+      // Screen 2: Login Preview Mini Mascots
+      document.getElementById('loginPreviewMascots').innerHTML = ['Sarah', 'Emma', 'David']
+        .map(k => `<div class="rounded-[16px] shadow-md">${buildFlueloCloudSVG(k, 54, { blink: false })}</div>`)
+        .join('');
+
+      // Screen 3: Home Dashboard Character Pill Selector Row
+      const dashRow = document.getElementById('dashboardCharacterRow');
+      dashRow.innerHTML = ['Sarah', 'Emma', 'Sophia', 'David', 'Kenji'].map((name) => `
+        <button onclick="selectRoomCharacter('${name}'); navigateToScreen(4);" class="tap-scale relative w-[78px] h-[56px] rounded-[18px] bg-[#F5F5F8] hover:bg-[#ECECF2] shrink-0 overflow-hidden text-left p-2.5 flex items-end border border-black/[0.04]">
+          <span class="text-[11.5px] font-extrabold text-[#0F0F12] z-10">${name}</span>
+          <div class="absolute -top-1 -right-1 rotate-[-6deg]">
+            ${buildFlueloCloudSVG(name, 38, { blink: false })}
+          </div>
+        </button>
+      `).join('');
+
+      // Screen 5: Calendar Summary Mascot
+      document.getElementById('calendarSummaryMascot').innerHTML = buildFlueloCloudSVG('Sarah', 102, { float: true });
+    }
+
+    // =========================================================================
+    // 5. ROOM TALK MINIMALIST ENGINE (ACTIVE CHARACTER + "Chat" + Voice & End)
+    // =========================================================================
+    let currentRoomPartner = 'Sarah';
+    let roomChatHistory = [];
+    let nextExchangeIdx = 0;
+    let isMicRecording = false;
+
+    function playVoiceTone(freqStart = 440, freqEnd = 580) {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freqStart, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(freqEnd, ctx.currentTime + 0.16);
+        gain.gain.setValueAtTime(0.05, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.18);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.18);
+      } catch (e) {}
+    }
+
+    function selectRoomCharacter(charKey) {
+      if (!FLUELO_CHARACTERS[charKey]) return;
+      currentRoomPartner = charKey;
+      nextExchangeIdx = 0;
+      roomChatHistory = [...FLUELO_CHARACTERS[charKey].initialChat];
+
+      ['Sarah', 'Emma', 'Sophia', 'David', 'Kenji'].forEach(name => {
+        const tab = document.getElementById('roomTab' + name);
+        if (!tab) return;
+        tab.className = name === charKey
+          ? 'tap-scale px-2.5 py-1 rounded-full bg-[#0F0F12] text-white text-[10.5px] font-extrabold shrink-0 transition-all'
+          : 'tap-scale px-2.5 py-1 rounded-full bg-[#F4F4F8] text-[#0F0F12] text-[10.5px] font-extrabold shrink-0 transition-all';
+      });
+
+      const partner = FLUELO_CHARACTERS[charKey];
+      document.getElementById('roomHeaderCharacterName').textContent = partner.name;
+      document.getElementById('roomPartnerTraitBadge').textContent = partner.trait;
+      document.getElementById('roomHeroStageCard').style.backgroundColor = partner.stageColor;
+      document.getElementById('roomVoicePulseDot').style.backgroundColor = partner.stageColor;
+
+      renderChatMessages();
+      setStageSpeakingState(true);
+    }
+
+    function renderChatMessages() {
+      const partner = FLUELO_CHARACTERS[currentRoomPartner];
+      const list = document.getElementById('roomChatMessagesList');
+      list.innerHTML = '';
+
+      roomChatHistory.forEach((msg) => {
+        const wrapper = document.createElement('div');
+        if (msg.sender === 'ai') {
+          wrapper.className = 'flex flex-col items-start max-w-[88%]';
+          wrapper.innerHTML = `
+            <span class="text-[9.5px] font-extrabold text-[#9898A6] mb-0.5 ml-1">${partner.name}</span>
+            <div class="bg-[#F4F4F8] text-[#0F0F12] rounded-[18px] rounded-tl-[6px] px-3.5 py-2.5 text-[12px] font-bold leading-snug border border-black/[0.04]">
+              ${msg.text}
+            </div>
+          `;
+        } else {
+          wrapper.className = 'flex flex-col items-end self-end max-w-[88%]';
+          wrapper.innerHTML = `
+            <span class="text-[9.5px] font-extrabold text-[#9898A6] mb-0.5 mr-1">You</span>
+            <div class="bg-[#0F0F12] text-white rounded-[18px] rounded-tr-[6px] px-3.5 py-2.5 text-[12px] font-bold leading-snug">
+              ${msg.text}
+            </div>
+          `;
+        }
+        list.appendChild(wrapper);
+      });
+
+      list.scrollTop = list.scrollHeight;
+    }
+
+    function setStageSpeakingState(active) {
+      const partner = FLUELO_CHARACTERS[currentRoomPartner];
+      const mascotBox = document.getElementById('roomStageMascotContainer');
+      const statusText = document.getElementById('roomStageStatusText');
+      const island = document.getElementById('roomDynamicIsland');
+
+      mascotBox.innerHTML = buildFlueloCloudSVG(currentRoomPartner, 134, {
+        isSpeaking: active,
+        float: !active
+      });
+
+      if (active) {
+        statusText.textContent = `${partner.name} is speaking...`;
+        island.classList.add('island-active');
+        playVoiceTone(420, 540);
+        setTimeout(() => {
+          if (!isMicRecording) {
+            mascotBox.innerHTML = buildFlueloCloudSVG(currentRoomPartner, 134, {
+              isSpeaking: false,
+              float: true
+            });
+            statusText.textContent = `${partner.name} is listening`;
+            island.classList.remove('island-active');
+          }
+        }, 1800);
+      } else {
+        statusText.textContent = `${partner.name} is listening`;
+        island.classList.remove('island-active');
+      }
+    }
+
+    function replayAiPartnerVoice() {
+      setStageSpeakingState(true);
+    }
+
+    function triggerVoiceMicSimulation() {
+      const micBtn = document.getElementById('btnRoomMic');
+      const micLbl = document.getElementById('lblMicButtonText');
+      const statusText = document.getElementById('roomStageStatusText');
+      const hintText = document.getElementById('roomChatSubtleHint');
+      const partner = FLUELO_CHARACTERS[currentRoomPartner];
+
+      if (!isMicRecording) {
+        isMicRecording = true;
+        micBtn.classList.add('mic-recording-ring');
+        micLbl.textContent = 'Listening...';
+        statusText.textContent = 'Listening to you...';
+        hintText.textContent = 'Recording voice...';
+        playVoiceTone(480, 620);
+
+        setTimeout(() => {
+          if (!isMicRecording) return;
+          isMicRecording = false;
+          micBtn.classList.remove('mic-recording-ring');
+          micLbl.textContent = 'Voice';
+          hintText.textContent = 'Tap Voice to reply';
+
+          const exchange = partner.nextExchanges[nextExchangeIdx % partner.nextExchanges.length];
+          nextExchangeIdx++;
+
+          roomChatHistory.push({ sender: 'user', text: exchange.user });
+          renderChatMessages();
+
+          setTimeout(() => {
+            roomChatHistory.push({ sender: 'ai', text: exchange.ai });
+            renderChatMessages();
+            setStageSpeakingState(true);
+          }, 550);
+        }, 1350);
+      } else {
+        isMicRecording = false;
+        micBtn.classList.remove('mic-recording-ring');
+        micLbl.textContent = 'Voice';
+        hintText.textContent = 'Tap Voice to reply';
+        setStageSpeakingState(false);
+      }
+    }
+
+    function endRoomTalkSession() {
+      isMicRecording = false;
+      const micBtn = document.getElementById('btnRoomMic');
+      const micLbl = document.getElementById('lblMicButtonText');
+      micBtn.classList.remove('mic-recording-ring');
+      micLbl.textContent = 'Voice';
+      showToast(`Room Talk with ${FLUELO_CHARACTERS[currentRoomPartner].name} ended.`, '#F9A8A8');
+      navigateToScreen(3);
+    }
+
+    // =========================================================================
+    // 6. DASHBOARD QUIZ, GRAPHS & CALENDAR INTERACTIONS
+    // =========================================================================
+    const GRAMMAR_QUESTIONS = [
+      { q: 'Is "She has lived in London since 2024" grammatically correct?', ans: true, note: 'Correct! Present Perfect + "since" for a starting point.' },
+      { q: 'Is "I have went to the English class yesterday" correct?', ans: false, note: 'Spot on! With "yesterday", use Simple Past: "I went".' },
+      { q: 'Does "Sarah speaks English very fluently" use Simple Present?', ans: true, note: 'Correct! Third-person singular uses "speaks".' },
+      { q: 'Is "They was practicing pronunciation with Emma" correct?', ans: false, note: 'Correct! Plural "They" takes "were practicing".' }
+    ];
+    let currentQuizIndex = 0;
+
+    function answerGrammarQuiz(userAnswer) {
+      const currentQ = GRAMMAR_QUESTIONS[currentQuizIndex];
+      const isCorrect = userAnswer === currentQ.ans;
+      showToast(isCorrect ? `Correct! ${currentQ.note}` : `Keep learning! ${currentQ.note}`, isCorrect ? '#B8F3B8' : '#FBC3A2');
+      currentQuizIndex = (currentQuizIndex + 1) % GRAMMAR_QUESTIONS.length;
+      document.getElementById('quizCounter').textContent = `Question ${currentQuizIndex + 1}/8`;
+      document.getElementById('quizQuestionText').textContent = GRAMMAR_QUESTIONS[currentQuizIndex].q;
+    }
+
+    const pronMetrics = [
+      { big: '86%', sub: 'Clear' },
+      { big: '92%', sub: 'Fluent' },
+      { big: '89%', sub: 'Natural' }
+    ];
+    let pronIdx = 0;
+    function cyclePronunciationMetric() {
+      pronIdx = (pronIdx + 1) % pronMetrics.length;
+      document.getElementById('pronValueBig').textContent = pronMetrics[pronIdx].big;
+      document.getElementById('pronValueSub').textContent = pronMetrics[pronIdx].sub;
+      showToast(`Pronunciation Indicator: ${pronMetrics[pronIdx].big} ${pronMetrics[pronIdx].sub}`, '#FBC3A2');
+    }
+
+    const tenseMetrics = [
+      { big: 'Good', sub: 'A1' },
+      { big: 'Solid', sub: '12/16' },
+      { big: '91%', sub: 'Past/Pres' }
+    ];
+    let tenseIdx = 0;
+    function cycleTensesMetric() {
+      tenseIdx = (tenseIdx + 1) % tenseMetrics.length;
+      document.getElementById('tenseValueBig').textContent = tenseMetrics[tenseIdx].big;
+      document.getElementById('tenseValueSub').textContent = tenseMetrics[tenseIdx].sub;
+      showToast(`Tenses Graph: ${tenseMetrics[tenseIdx].big} (${tenseMetrics[tenseIdx].sub})`, '#D8C8FF');
+    }
+
+    const CALENDAR_TILES = [
+      { type: 'empty' }, { type: 'empty' },
+      { char: 'David', log: 'Sep 1 • Vowel Practice with David (82%)' },
+      { char: 'David', log: 'Sep 2 • Past Tense Drill with David (84%)' },
+      { char: 'Emma', log: 'Sep 3 • Cafe Roleplay with Emma (86%)' },
+      { char: 'Emma', log: 'Sep 4 • Travel Check-In with Emma (87%)' },
+      { char: 'Sophia', log: 'Sep 5 • Night Talk with Sophia (88%)' },
+      { type: 'empty' },
+      { char: 'Sarah', log: 'Sep 7 • Idioms Booster with Sarah (90%)' },
+      { char: 'Sarah', log: 'Sep 8 • Morning Talk with Sarah (91%)' },
+      { char: 'Kenji', log: 'Sep 9 • New A1 Vocabulary with Kenji (89%)' },
+      { char: 'Emma', log: 'Sep 10 • Present Perfect with Emma (91%)' },
+      { char: 'Sarah', log: 'Sep 11 • 15m Room Talk with Sarah (93%)' },
+      { char: 'Sarah', log: 'Sep 12 • Weekly Streak Completed (95%)' },
+      { char: 'Kenji', log: 'Sep 13 • Storytelling with Kenji (89%)' },
+      { type: 'empty' }, { type: 'empty' },
+      { char: 'Sarah', log: 'Sep 16 • Grammar Quiz 8/8 (92%)' },
+      { char: 'Emma', log: 'Sep 17 • Pronunciation Streak with Emma (93%)' },
+      { char: 'Sophia', log: 'Sep 18 • Airport Roleplay with Sophia (90%)' },
+      { char: 'Sarah', log: 'Sep 19 • Fluent Dialogue with Sarah (94%)' },
+      { char: 'Sarah', log: 'Sep 20 • Streak Day 1 • Sarah Room Talk (91%)' },
+      { char: 'Kenji', log: 'Sep 21 • Streak Day 2 • Kenji Room Talk (92%)' },
+      { type: 'empty' }, { type: 'empty' },
+      { char: 'Emma', log: 'Sep 24 • Active Streak • Emma Room Talk (90%)' },
+      { char: 'Sarah', log: 'Sep 25 • Active Streak • Sarah Room Talk (93%)' },
+      { char: 'Kenji', log: 'Sep 26 • Active Streak • Kenji Room Talk (95%)' },
+      { char: 'David', log: 'Sep 27 • Speed Speaking Challenge (89%)' },
+      { char: 'David', log: 'Sep 28 • Tenses Review Drill (86%)' },
+      { char: 'Sophia', log: 'Sep 29 • Vocabulary Check-In (91%)' },
+      { char: 'Sarah', log: 'Sep 30 • 7-Day Weekly Streak Milestone! (95%)' },
+      { char: 'Emma', log: 'Oct 1 • Level A1 Assessment Ready (93%)' },
+      { type: 'empty' }, { type: 'empty' }
+    ];
+
+    function renderCalendarGrid() {
+      const container = document.getElementById('calendarGridContainer');
+      container.innerHTML = '';
+      CALENDAR_TILES.forEach((tile) => {
+        const btn = document.createElement('button');
+        if (tile.type === 'empty') {
+          btn.className = 'tap-scale aspect-square rounded-[10px] bg-[#F4F4F7] flex items-center justify-center';
+          btn.innerHTML = `<svg width="8" height="2" viewBox="0 0 8 2" fill="none"><path d="M1 1H7" stroke="#C4C4CE" stroke-width="1.6" stroke-linecap="round"/></svg>`;
+          btn.onclick = () => {
+            tile.type = 'checked';
+            tile.char = selectedStudioChar || 'Sarah';
+            tile.log = `New Check-In with ${tile.char}! +50 XP Level A1 Streak`;
+            renderCalendarGrid();
+            showToast(tile.log, '#B8F3B8');
+          };
+        } else {
+          btn.className = 'tap-scale aspect-square rounded-[10px] flex items-center justify-center overflow-hidden';
+          btn.innerHTML = buildFlueloCloudSVG(tile.char || 'Sarah', 36, { blink: false });
+          btn.onclick = () => showToast(tile.log, '#B8F3B8');
+        }
+        container.appendChild(btn);
+      });
+    }
+
+    function triggerTodayCheckIn() {
+      const emptyTile = CALENDAR_TILES.find(t => t.type === 'empty');
+      if (emptyTile) {
+        emptyTile.type = 'checked';
+        emptyTile.char = 'Sarah';
+        emptyTile.log = 'Today Checked In! Weekly Streak extended!';
+        renderCalendarGrid();
+      }
+      showToast('Daily Check-In Completed! Level A1 Streak +1', '#B8F3B8');
+    }
+
+    const cefrLevels = [
+      { level: 'Level A1', streak: '7 Days Streak', desc: "Elementary Speaker • You're calm and confident. Keep up the daily streak!" },
+      { level: 'Level A2', streak: 'Next Goal', desc: 'Complete 6 more Room Talk sessions with Sarah or Emma to unlock Level A2!' }
+    ];
+    let levelIdx = 0;
+    function cycleEnglishLevelPreview() {
+      levelIdx = (levelIdx + 1) % cefrLevels.length;
+      document.getElementById('levelMainHeading').textContent = cefrLevels[levelIdx].level;
+      document.getElementById('streakBadge').textContent = cefrLevels[levelIdx].streak;
+      document.getElementById('levelDescriptionText').textContent = cefrLevels[levelIdx].desc;
+    }
+
+    // =========================================================================
+    // 7. APP PROTOTYPE NAVIGATION & LANGUAGE CONTROLS
+    // =========================================================================
+    let currentLayoutMode = 'all5';
+    let isTilted = true;
+    let isIndonesianLabels = false;
+
+    function setLayoutMode(mode) {
+      currentLayoutMode = mode;
+      const f1 = document.getElementById('phoneFrame1');
+      const f2 = document.getElementById('phoneFrame2');
+      const f3 = document.getElementById('phoneFrame3');
+      const f4 = document.getElementById('phoneFrame4');
+      const f5 = document.getElementById('phoneFrame5');
+      const singleNav = document.getElementById('singleModeNav');
+
+      ['btnModeCore3', 'btnModeRoomOnly', 'btnModeAll5'].forEach(id => {
+        document.getElementById(id).className = 'px-3 py-1.5 rounded-full text-xs font-bold transition-all text-[#5A5A66] hover:text-[#0F0F12]';
+      });
+
+      if (mode === 'core3') {
+        document.getElementById('btnModeCore3').className = 'px-3 py-1.5 rounded-full text-xs font-bold transition-all bg-[#0F0F12] text-white';
+        f1.classList.add('hidden');
+        f2.classList.add('hidden');
+        f3.classList.remove('hidden');
+        f4.classList.remove('hidden');
+        f5.classList.remove('hidden');
+        singleNav.classList.add('hidden');
+        singleNav.classList.remove('flex');
+      } else if (mode === 'roomOnly') {
+        document.getElementById('btnModeRoomOnly').className = 'px-3 py-1.5 rounded-full text-xs font-bold transition-all bg-[#0F0F12] text-white';
+        singleNav.classList.remove('hidden');
+        singleNav.classList.add('flex');
+        focusSinglePhone(4);
+      } else {
+        document.getElementById('btnModeAll5').className = 'px-3 py-1.5 rounded-full text-xs font-bold transition-all bg-[#0F0F12] text-white';
+        [f1, f2, f3, f4, f5].forEach(f => f.classList.remove('hidden'));
+        singleNav.classList.add('hidden');
+        singleNav.classList.remove('flex');
+      }
+    }
+
+    function focusSinglePhone(screenNum) {
+      [1, 2, 3, 4, 5].forEach(n => {
+        const frame = document.getElementById('phoneFrame' + n);
+        const tab = document.getElementById('tabPhone' + n);
+        if (n === screenNum) {
+          frame.classList.remove('hidden');
+          if (tab) tab.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold bg-[#0F0F12] text-white border border-black/10';
+        } else {
+          frame.classList.add('hidden');
+          if (tab) tab.className = 'px-3.5 py-1.5 rounded-full text-xs font-bold bg-white text-[#0F0F12] border border-black/10';
+        }
+      });
+    }
+
+    function navigateToScreen(screenNum) {
+      switchWorkspace('app');
+      if (currentLayoutMode === 'roomOnly') {
+        focusSinglePhone(screenNum);
+      } else {
+        const target = document.getElementById('phoneFrame' + screenNum);
+        if (target.classList.contains('hidden')) {
+          setLayoutMode('all5');
+        }
+        target.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'center' });
+      }
+    }
+
+    function togglePerspective() {
+      isTilted = !isTilted;
+      const container = document.getElementById('phonesContainer');
+      const label = document.getElementById('tiltLabel');
+      if (isTilted) {
+        container.classList.add('showcase-angled');
+        label.textContent = 'Tilt: ON';
+      } else {
+        container.classList.remove('showcase-angled');
+        label.textContent = 'Tilt: FLAT';
+      }
+    }
+
+    function toggleCopyLanguage() {
+      isIndonesianLabels = !isIndonesianLabels;
+      document.getElementById('landingTitle').innerHTML = isIndonesianLabels
+        ? 'Siap Lancar Ngobrol<br/>Bahasa Inggris?'
+        : 'Ready to Speak<br/>Fluent English?';
+      document.getElementById('landingCtaText').textContent = isIndonesianLabels
+        ? 'Mulai Belajar!'
+        : "Let's Start!";
+      document.getElementById('dashboardGreeting').textContent = isIndonesianLabels
+        ? 'Halo Alex! Mau latihan ngobrol sama siapa hari ini?'
+        : 'Hello Alex! Who do you want to talk to today?';
+      document.getElementById('lblGraphLeft').textContent = isIndonesianLabels
+        ? 'Grafik Pengucapan'
+        : 'Pronunciation';
+      document.getElementById('lblGraphRight').textContent = isIndonesianLabels
+        ? 'Grafik Tenses'
+        : 'Tenses Graph';
+      document.getElementById('calendarTitle').textContent = isIndonesianLabels
+        ? 'Kalender Check-In'
+        : 'Study Calendar';
+      showToast(isIndonesianLabels ? 'Label diubah ke Bahasa Indonesia' : 'Labels switched to English UI', '#D8C8FF');
+    }
+
+    function switchLoginMethod(method) {
+      const phoneBox = document.getElementById('loginInputPhoneBox');
+      const emailBox = document.getElementById('loginInputEmailBox');
+      const tabPhone = document.getElementById('tabMethodPhone');
+      const tabEmail = document.getElementById('tabMethodEmail');
+
+      if (method === 'phone') {
+        phoneBox.classList.remove('hidden');
+        emailBox.classList.add('hidden');
+        tabPhone.className = 'py-2 rounded-full text-[12px] font-bold bg-[#0F0F12] text-white transition-all flex items-center justify-center gap-1.5';
+        tabEmail.className = 'py-2 rounded-full text-[12px] font-bold text-[#6E6E7A] hover:text-[#0F0F12] transition-all flex items-center justify-center gap-1.5';
+      } else {
+        phoneBox.classList.add('hidden');
+        emailBox.classList.remove('hidden');
+        tabEmail.className = 'py-2 rounded-full text-[12px] font-bold bg-[#0F0F12] text-white transition-all flex items-center justify-center gap-1.5';
+        tabPhone.className = 'py-2 rounded-full text-[12px] font-bold text-[#6E6E7A] hover:text-[#0F0F12] transition-all flex items-center justify-center gap-1.5';
+      }
+    }
+
+    function handleLoginSubmit(provider) {
+      showToast(`Signed in via ${provider}! Welcome to Fluelo, Alex.`, '#B8F3B8');
+      navigateToScreen(3);
+    }
+
+    let toastTimer = null;
+    function showToast(message, dotColor = '#B8F3B8') {
+      const banner = document.getElementById('toastBanner');
+      const msg = document.getElementById('toastMessage');
+      const dot = document.getElementById('toastDot');
+      msg.textContent = message;
+      dot.style.backgroundColor = dotColor;
+      banner.classList.remove('opacity-0', 'translate-y-4');
+      banner.classList.add('opacity-100', 'translate-y-0');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => {
+        banner.classList.add('opacity-0', 'translate-y-4');
+        banner.classList.remove('opacity-100', 'translate-y-0');
+      }, 2800);
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      initLogoStudio();
+      selectStudioCharacter('Sarah');
+      renderAppCloudMascots();
+      renderCalendarGrid();
+      selectRoomCharacter('Sarah');
+    });
+  </script>
+</body>
+</html>
