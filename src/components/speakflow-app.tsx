@@ -6,6 +6,14 @@ import { useLiveSession, type StartLiveSessionOptions } from "@/hooks/useLiveSes
 import { formatBand } from "@/lib/levels";
 import { useAppData, saveSession, newId, updateProfile } from "@/lib/storage";
 import type { SessionRecord, TranscriptTurn } from "@/lib/types";
+import {
+  LEVEL_CONVERSATION_MODULES,
+  getActiveModule,
+  getModulesForPartnerAndLevel,
+  getAllModulesForLevel,
+  generateLevelAdaptivePartnerResponse,
+  type ConversationModule,
+} from "@/lib/level-conversation-modules";
 
 interface ChatTurn {
   sender: "ai" | "user";
@@ -337,7 +345,8 @@ interface RichSessionEvaluation {
 function generateSessionEvaluation(
   turns: ChatTurn[],
   partnerName: string,
-  level: string
+  level: string,
+  activeModule?: ConversationModule
 ): RichSessionEvaluation {
   const userTurns = turns.filter((t) => t.sender === "user");
   const turnCount = userTurns.length;
@@ -531,7 +540,10 @@ function generateSessionEvaluation(
     ],
   };
 
-  const vocabUpgrades = VOCAB_MAP[partnerName] || VOCAB_MAP.Sarah;
+  const vocabUpgrades =
+    activeModule?.vocabUpgrades && activeModule.vocabUpgrades.length > 0
+      ? activeModule.vocabUpgrades
+      : VOCAB_MAP[partnerName] || VOCAB_MAP.Sarah;
 
   const summary =
     userTurns.length >= 3
@@ -955,6 +967,16 @@ export function SpeakFlowApp() {
     return false;
   });
 
+  // Guest & Profile State
+  const [isGuestSetup, setIsGuestSetup] = useState(false);
+  const [guestName, setGuestName] = useState("Alex");
+  const [guestAgeRange, setGuestAgeRange] = useState("18 to 24");
+  const [guestLevel, setGuestLevel] = useState("A1");
+  const [guestAvatar, setGuestAvatar] = useState("sarah");
+  const [dailyGoalTarget, setDailyGoalTarget] = useState<number>(3);
+  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
+  const currentGuestAvatar = CALENDAR_PARTNERS.find((p) => p.id === guestAvatar) || CALENDAR_PARTNERS[0];
+
   // Home State
   const [pronIdx, setPronIdx] = useState(0);
   const pronMetrics = [
@@ -967,18 +989,8 @@ export function SpeakFlowApp() {
   const grammarMetrics = [
     { big: "94%", sub: "Good" },
     { big: "Solid", sub: "12 of 16" },
-    { big: "91%", sub: "Level A1" }
+    { big: "91%", sub: `Level ${guestLevel}` }
   ];
-
-  // Guest & Profile State
-  const [isGuestSetup, setIsGuestSetup] = useState(false);
-  const [guestName, setGuestName] = useState("Alex");
-  const [guestAgeRange, setGuestAgeRange] = useState("18 to 24");
-  const [guestLevel, setGuestLevel] = useState("A1");
-  const [guestAvatar, setGuestAvatar] = useState("sarah");
-  const [dailyGoalTarget, setDailyGoalTarget] = useState<number>(3);
-  const [isEditProfileModalOpen, setIsEditProfileModalOpen] = useState(false);
-  const currentGuestAvatar = CALENDAR_PARTNERS.find((p) => p.id === guestAvatar) || CALENDAR_PARTNERS[0];
 
   const persistUserProfile = (
     name: string,
@@ -1226,6 +1238,9 @@ export function SpeakFlowApp() {
   const [currentEvaluation, setCurrentEvaluation] = useState<RichSessionEvaluation | null>(null);
   const [evalTab, setEvalTab] = useState<"scores" | "corrections" | "vocab">("scores");
   const [hasStartedVoice, setHasStartedVoice] = useState(false);
+  const [selectedModuleId, setSelectedModuleId] = useState<string | null>(null);
+  const [isTopicModalOpen, setIsTopicModalOpen] = useState(false);
+  const [isLevelSwitcherOpen, setIsLevelSwitcherOpen] = useState(false);
 
   // Real Web Speech Recognition & Interactive Input
   const [isWebSpeechListening, setIsWebSpeechListening] = useState(false);
@@ -1282,6 +1297,45 @@ export function SpeakFlowApp() {
   };
 
   const partner = ROOM_PARTNERS[currentPartnerKey] ?? ROOM_PARTNERS.Sarah;
+  const activeModule = getActiveModule(partner.name, guestLevel, selectedModuleId);
+
+  const handleQuickChangeLevel = (newLevel: string) => {
+    setGuestLevel(newLevel);
+    setSelectedModuleId(null);
+    setChatHistory([]);
+    setHasStartedVoice(false);
+    setIsLevelSwitcherOpen(false);
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("fluelo_user_profile");
+        const parsed = saved ? JSON.parse(saved) : {};
+        localStorage.setItem(
+          "fluelo_user_profile",
+          JSON.stringify({ ...parsed, level: newLevel, name: guestName, avatar: guestAvatar, dailyTarget: dailyGoalTarget })
+        );
+      } catch {}
+    }
+    showToast(
+      isIndonesian
+        ? `Level berganti ke ${newLevel}! Modul percakapan diperbarui.`
+        : `Level switched to ${newLevel}! Conversation module updated.`,
+      partner.color
+    );
+  };
+
+  const handleSelectModule = (moduleId: string) => {
+    setSelectedModuleId(moduleId);
+    setChatHistory([]);
+    setHasStartedVoice(false);
+    setIsTopicModalOpen(false);
+    const mod = LEVEL_CONVERSATION_MODULES.find((m) => m.id === moduleId);
+    showToast(
+      isIndonesian
+        ? `Topik: "${mod?.topicTitleId || mod?.topicTitle}" dipilih!`
+        : `Topic: "${mod?.topicTitle}" selected!`,
+      partner.color
+    );
+  };
 
   const toggleTheme = () => {
     setIsDarkMode((prev) => {
@@ -1342,6 +1396,7 @@ export function SpeakFlowApp() {
     }
     stopWebSpeech();
     setCurrentPartnerKey(name);
+    setSelectedModuleId(null);
     setNextExchangeIdx(0);
     setChatHistory([]);
     setInRoomEvaluation(false);
@@ -1523,7 +1578,12 @@ export function SpeakFlowApp() {
     setChatHistory((prev) => [...prev, { sender: "user", text: userText }]);
 
     setTimeout(() => {
-      const aiResponse = generatePartnerResponse(userText, partner.name);
+      const aiResponse = generateLevelAdaptivePartnerResponse(
+        userText,
+        partner.name,
+        guestLevel,
+        activeModule
+      );
       setChatHistory((prev) => [...prev, { sender: "ai", text: aiResponse }]);
       setSimulatedSpeaking(true);
       playChime(420, 540);
@@ -1540,7 +1600,11 @@ export function SpeakFlowApp() {
   // Fallback interactive exchange if needed
   const triggerFallbackExchange = (customAiText?: string) => {
     playChime(480, 620);
-    const exchange = partner.nextExchanges[nextExchangeIdx % partner.nextExchanges.length];
+    const exchanges =
+      activeModule.nextExchanges.length > 0
+        ? activeModule.nextExchanges
+        : partner.nextExchanges;
+    const exchange = exchanges[nextExchangeIdx % exchanges.length];
     setNextExchangeIdx((prev) => prev + 1);
     const userText = exchange.user;
     handleSendUserSpeech(userText);
@@ -1579,8 +1643,8 @@ export function SpeakFlowApp() {
 
     if (chatHistory.length === 0) {
       const initialGreeting =
-        partner.initialChat[0]?.text ||
-        `Hi Alex! Welcome to Perk Cafe. What would you like to order this morning?`;
+        activeModule.initialGreeting ||
+        `Hi Alex! Welcome to our conversation. What would you like to discuss today?`;
       setChatHistory([{ sender: "ai", text: initialGreeting }]);
       setSimulatedSpeaking(true);
       playChime(420, 540);
@@ -1604,8 +1668,13 @@ export function SpeakFlowApp() {
     setSimulatedSpeaking(false);
     setSimulatedListening(false);
 
-    // Generate rich educational evaluation
-    const evaluation = generateSessionEvaluation(chatHistory, partner.name, guestLevel);
+    // Generate rich educational evaluation calibrated to level and active module
+    const evaluation = generateSessionEvaluation(
+      chatHistory,
+      partner.name,
+      guestLevel,
+      activeModule
+    );
     setCurrentEvaluation(evaluation);
     setInRoomEvaluation(true);
     setEvalTab("scores");
@@ -1620,8 +1689,8 @@ export function SpeakFlowApp() {
         id: sessionId,
         mode: "practice",
         level: (guestLevel as any) || "A1",
-        topicId: partner.id,
-        topicTitle: `Daily Talk with ${partner.name}`,
+        topicId: activeModule.id,
+        topicTitle: `${activeModule.topicTitle} (${partner.name})`,
         startedAt: new Date().toISOString(),
         durationSec,
         transcript: chatHistory.map((t) => ({
@@ -2692,16 +2761,26 @@ export function SpeakFlowApp() {
                       {partner.name}
                     </h2>
                     <p className="text-[10.5px] font-bold text-[#9898A6]">
-                      Level A1 AI Partner
+                      Level {guestLevel} AI Partner
                     </p>
                   </div>
 
-                  {/* Level A1 Badge Pill on Right (Replaces sidebar menu) */}
-                  <div className={`w-9 h-9 rounded-full border flex items-center justify-center font-extrabold text-[11px] ${
-                    isDarkMode ? "border-white/15 bg-white/10 text-white" : "border-black/10 bg-[#F4F4F8] text-[#0F0F12]"
-                  }`}>
-                    A1
-                  </div>
+                  {/* Interactive Level Badge Pill on Right (Tap to Switch CEFR Level) */}
+                  <button
+                    type="button"
+                    onClick={() => setIsLevelSwitcherOpen(true)}
+                    className={`tap-scale px-2.5 h-8 rounded-full border flex items-center gap-1 font-extrabold text-[11px] transition-all shadow-xs ${
+                      isDarkMode
+                        ? "border-white/15 bg-white/10 text-[#B8F3B8] hover:bg-white/20"
+                        : "border-black/10 bg-[#F4F4F8] text-[#0F0F12] hover:bg-[#EAEAF0]"
+                    }`}
+                    title={isIndonesian ? `Ganti Level CEFR (Saat ini: ${guestLevel})` : `Switch CEFR Level (Currently: ${guestLevel})`}
+                  >
+                    <span>{guestLevel}</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                      <path d="M6 9L12 15L18 9" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
                 </div>
 
                 {/* Character Switcher Pills */}
@@ -2720,6 +2799,28 @@ export function SpeakFlowApp() {
                       {charName}
                     </button>
                   ))}
+                </div>
+
+                {/* Active Module / Topic Indicator with Switcher */}
+                <div className={`flex items-center justify-between px-1 mt-2.5 pt-2 border-t ${isDarkMode ? "border-white/10" : "border-black/[0.06]"}`}>
+                  <div className="flex items-center gap-1.5 overflow-hidden">
+                    <span className="text-[9px] font-black text-[#8F5BFF] bg-[#8F5BFF]/15 px-1.5 py-0.5 rounded-md shrink-0">
+                      MODUL {guestLevel}
+                    </span>
+                    <span className={`text-[11px] font-bold truncate ${isDarkMode ? "text-white/90" : "text-[#0F0F12]"}`}>
+                      {isIndonesian ? activeModule.topicTitleId : activeModule.topicTitle}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setIsTopicModalOpen(true)}
+                    className="text-[10px] font-extrabold text-[#8F5BFF] hover:underline shrink-0 tap-scale ml-2 flex items-center gap-1"
+                  >
+                    <span>{isIndonesian ? "Ganti Topik" : "Change Topic"}</span>
+                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                      <path d="M9 5L16 12L9 19" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </button>
                 </div>
               </div>
 
@@ -2769,17 +2870,20 @@ export function SpeakFlowApp() {
 
                     {/* Pre-Voice Greeting Text (shown only when !hasStartedVoice) */}
                     {!hasStartedVoice && (
-                      <div className="mt-5 text-center px-4 animate-in fade-in duration-300">
+                      <div className="mt-4 text-center px-4 animate-in fade-in duration-300">
                         <h3 className="text-[20px] font-extrabold text-[#0F0F12] tracking-tight">
                           {partner.name}
                         </h3>
-                        <p className="text-[12px] font-semibold text-[#0F0F12]/80 mt-1 max-w-[240px] mx-auto leading-snug">
-                          {isIndonesian
-                            ? `Siap mengobrol santai bersama ${partner.name}? Tekan tombol Voice di bawah untuk mulai.`
-                            : `Ready to practice speaking? Tap Voice below to start talking.`}
+                        <p className="text-[12px] font-extrabold text-[#0F0F12]/90 mt-1 max-w-[260px] mx-auto leading-snug">
+                          {isIndonesian ? activeModule.topicTitleId : activeModule.topicTitle}
                         </p>
-                        <div className="inline-flex items-center px-3.5 py-1 rounded-full bg-white/70 text-[10.5px] font-extrabold text-[#0F0F12] mt-3 shadow-2xs">
-                          <span>Level {guestLevel} {partner.trait}</span>
+                        <p className="text-[10.5px] font-medium text-[#0F0F12]/70 mt-0.5 max-w-[250px] mx-auto leading-tight">
+                          {isIndonesian ? activeModule.brief : "Tap Voice to start speaking at your level."}
+                        </p>
+                        <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/70 text-[10px] font-extrabold text-[#0F0F12] mt-2.5 shadow-2xs">
+                          <span>Level {guestLevel}</span>
+                          <span>•</span>
+                          <span>{activeModule.category}</span>
                         </div>
                       </div>
                     )}
@@ -2867,7 +2971,7 @@ export function SpeakFlowApp() {
 
                       {/* Quick Suggestion Prompt Chips */}
                       <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-2 pb-1.5 border-t border-black/[0.06] shrink-0">
-                        {PARTNER_SUGGESTIONS[currentPartnerKey]?.map((sug, idx) => (
+                        {activeModule.suggestions.map((sug, idx) => (
                           <button
                             key={idx}
                             type="button"
@@ -3669,6 +3773,162 @@ export function SpeakFlowApp() {
             >
               Start New Room Talk Session
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* QUICK LEVEL SWITCHER MODAL */}
+      {isLevelSwitcherOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] max-w-sm w-full p-6 shadow-2xl relative border border-black/10 flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between pb-3 border-b border-black/10">
+              <div>
+                <h3 className="text-[17px] font-extrabold text-[#0F0F12]">
+                  {isIndonesian ? "Pilih Level Bahasa" : "Choose English Level"}
+                </h3>
+                <p className="text-[11px] font-bold text-[#8C8C99]">
+                  {isIndonesian ? "Modul & respons AI akan otomatis beradaptasi" : "Modules & AI difficulty will adapt instantly"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsLevelSwitcherOpen(false)}
+                className="tap-scale w-8 h-8 rounded-full bg-[#F4F4F8] flex items-center justify-center text-[#0F0F12] font-bold"
+                aria-label="Close"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto no-scrollbar py-3 space-y-2">
+              {[
+                { code: "A1", titleEn: "Beginner", titleId: "Pemula", descId: "500 kata dasar, kalimat 3-7 kata, pesan kafe & perkenalan sederhana.", band: "TOEFL 1.0 - 1.5" },
+                { code: "A2", titleEn: "Elementary", titleId: "Dasar", descId: "Rutinitas harian, liburan lampau, hobi & petunjuk arah santai.", band: "TOEFL 2.0 - 2.5" },
+                { code: "B1", titleEn: "Intermediate", titleId: "Menengah", descId: "Opini, alasan, phrasal verbs, persiapan interview & studi.", band: "TOEFL 3.0 - 3.5" },
+                { code: "B2", titleEn: "Upper-Intermediate", titleId: "Menengah Atas", descId: "Negosiasi bisnis, debat pro-kontra, komparasi strategi & analisis kerja.", band: "TOEFL 4.0 - 4.5" },
+                { code: "C1", titleEn: "Advanced", titleId: "Mahir", descId: "Retorika diplomasi, etika teknologi & AI, kepemimpinan eksekutif berbobot.", band: "TOEFL 5.0 - 5.5" },
+              ].map((lvl) => {
+                const isSelected = guestLevel === lvl.code;
+                return (
+                  <button
+                    key={lvl.code}
+                    type="button"
+                    onClick={() => handleQuickChangeLevel(lvl.code)}
+                    className={`w-full text-left p-3 rounded-[20px] border transition-all tap-scale flex items-start justify-between gap-3 ${
+                      isSelected
+                        ? "bg-[#F5F0FF] border-[#8F5BFF] ring-2 ring-[#8F5BFF]/30 shadow-xs"
+                        : "bg-[#F8F8FC] border-black/[0.06] hover:bg-[#F2F2F8]"
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2 py-0.5 rounded-full text-[11px] font-black ${
+                          isSelected ? "bg-[#8F5BFF] text-white" : "bg-black/10 text-[#0F0F12]"
+                        }`}>
+                          {lvl.code}
+                        </span>
+                        <span className="text-[13px] font-extrabold text-[#0F0F12]">
+                          {isIndonesian ? lvl.titleId : lvl.titleEn}
+                        </span>
+                        <span className="text-[9.5px] font-bold text-[#8C8C99]">
+                          {lvl.band}
+                        </span>
+                      </div>
+                      <p className="text-[10.5px] font-medium text-[#71717A] mt-1 leading-snug">
+                        {lvl.descId}
+                      </p>
+                    </div>
+                    {isSelected && (
+                      <div className="w-5 h-5 rounded-full bg-[#8F5BFF] flex items-center justify-center text-white shrink-0 mt-0.5">
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                          <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                        </svg>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* TOPIC & MODULE SELECTION MODAL */}
+      {isTopicModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-[32px] max-w-md w-full p-6 shadow-2xl relative border border-black/10 flex flex-col max-h-[85vh]">
+            <div className="flex items-center justify-between pb-3 border-b border-black/10">
+              <div>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-[#8F5BFF] text-white">
+                    Level {guestLevel}
+                  </span>
+                  <h3 className="text-[17px] font-extrabold text-[#0F0F12]">
+                    {isIndonesian ? `Pilih Topik (${partner.name})` : `Select Topic (${partner.name})`}
+                  </h3>
+                </div>
+                <p className="text-[11px] font-bold text-[#8C8C99] mt-0.5">
+                  {isIndonesian ? "Modul percakapan khusus yang sesuai level Anda" : "Conversation modules tailored for your current level"}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsTopicModalOpen(false)}
+                className="tap-scale w-8 h-8 rounded-full bg-[#F4F4F8] flex items-center justify-center text-[#0F0F12] font-bold"
+                aria-label="Close"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none">
+                  <path d="M18 6L6 18M6 6L18 18" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto no-scrollbar py-3 space-y-2.5">
+              {getModulesForPartnerAndLevel(partner.name, guestLevel).map((mod) => {
+                const isSelected = activeModule.id === mod.id;
+                return (
+                  <button
+                    key={mod.id}
+                    type="button"
+                    onClick={() => handleSelectModule(mod.id)}
+                    className={`w-full text-left p-3.5 rounded-[22px] border transition-all tap-scale flex flex-col gap-1.5 ${
+                      isSelected
+                        ? "bg-[#F5F0FF] border-[#8F5BFF] ring-2 ring-[#8F5BFF]/30 shadow-xs"
+                        : "bg-[#F8F8FC] border-black/[0.06] hover:bg-[#F2F2F8]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-[9.5px] font-extrabold px-2 py-0.5 rounded-full bg-white text-[#8F5BFF] shadow-2xs">
+                        {mod.category}
+                      </span>
+                      {isSelected && (
+                        <span className="text-[9.5px] font-black text-[#8F5BFF] flex items-center gap-1">
+                          <svg width="10" height="10" viewBox="0 0 24 24" fill="none">
+                            <path d="M5 13L9 17L19 7" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+                          </svg>
+                          <span>Aktif</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <h4 className="text-[13px] font-extrabold text-[#0F0F12] leading-tight mt-0.5">
+                      {isIndonesian ? mod.topicTitleId : mod.topicTitle}
+                    </h4>
+
+                    <p className="text-[10.5px] font-medium text-[#71717A] leading-snug">
+                      {mod.brief}
+                    </p>
+
+                    <div className="mt-1 pt-1.5 border-t border-black/[0.04] flex items-center gap-1.5 text-[10px] text-[#4E3883] italic">
+                      <span className="font-bold text-[#8F5BFF] shrink-0">Opening:</span>
+                      <span className="truncate">"{mod.initialGreeting}"</span>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
           </div>
         </div>
       )}
