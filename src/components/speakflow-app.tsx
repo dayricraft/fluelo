@@ -1247,6 +1247,7 @@ export function SpeakFlowApp() {
   const [interimSpeechText, setInterimSpeechText] = useState("");
   const [roomInputText, setRoomInputText] = useState("");
   const recognitionRef = useRef<any>(null);
+  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
 
   // Preload browser speech voices
   useEffect(() => {
@@ -1262,9 +1263,16 @@ export function SpeakFlowApp() {
     }
   }, []);
 
-  // Cleanup speech recognition and synthesis on unmount
+  // Cleanup speech recognition and audio playback on unmount
   useEffect(() => {
     return () => {
+      if (currentAudioRef.current) {
+        try {
+          currentAudioRef.current.pause();
+          currentAudioRef.current.currentTime = 0;
+        } catch {}
+        currentAudioRef.current = null;
+      }
       if (typeof window !== "undefined" && "speechSynthesis" in window) {
         window.speechSynthesis.cancel();
       }
@@ -1385,15 +1393,29 @@ export function SpeakFlowApp() {
     } catch {}
   };
 
+  const stopAudioPlayback = () => {
+    if (currentAudioRef.current) {
+      try {
+        currentAudioRef.current.pause();
+        currentAudioRef.current.currentTime = 0;
+      } catch {}
+      currentAudioRef.current = null;
+    }
+    if (typeof window !== "undefined" && "speechSynthesis" in window) {
+      try {
+        window.speechSynthesis.cancel();
+      } catch {}
+    }
+    setSimulatedSpeaking(false);
+  };
+
   // Change active partner in Room Talk
   const handleSelectPartner = (name: string) => {
     if (!ROOM_PARTNERS[name]) return;
     if (live.isActive) {
       void live.endSession();
     }
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
+    stopAudioPlayback();
     stopWebSpeech();
     setCurrentPartnerKey(name);
     setSelectedModuleId(null);
@@ -1424,7 +1446,58 @@ export function SpeakFlowApp() {
     }
   }, [live.feedback]);
 
-  // Web Speech API text-to-speech with persona-matching accents
+  // High-fidelity natural Gemini 3.8 Flash TTS with authentic persona voice
+  const playPartnerVoice = async (text: string, partnerName: string, onEnd?: () => void) => {
+    stopAudioPlayback();
+    setSimulatedSpeaking(true);
+
+    let finished = false;
+    const finish = () => {
+      if (!finished) {
+        finished = true;
+        currentAudioRef.current = null;
+        setSimulatedSpeaking(false);
+        onEnd?.();
+      }
+    };
+
+    try {
+      const res = await fetch("/api/tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text,
+          partnerName,
+          level: guestLevel,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.audioBase64) {
+          const audioUrl = `data:${data.mimeType || "audio/wav"};base64,${data.audioBase64}`;
+          const audio = new Audio(audioUrl);
+          currentAudioRef.current = audio;
+
+          audio.onended = finish;
+          audio.onerror = () => {
+            currentAudioRef.current = null;
+            speakWithBrowserTTS(text, partnerName, finish);
+          };
+
+          await audio.play();
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn("Gemini TTS fetch error, falling back to browser:", err);
+    }
+
+    // Fallback to browser TTS if offline or error
+    speakWithBrowserTTS(text, partnerName, finish);
+  };
+
+  // Browser TTS fallback with persona-matching accents
   const speakWithBrowserTTS = (text: string, partnerName: string, onEnd?: () => void) => {
     if (typeof window !== "undefined" && "speechSynthesis" in window) {
       try {
@@ -1434,35 +1507,40 @@ export function SpeakFlowApp() {
         // Matching accent by partner
         if (partnerName === "Sarah") {
           utterance.lang = "en-GB"; // British English barista
-          utterance.rate = 0.95;
-          utterance.pitch = 1.05;
+          utterance.rate = 0.98;
+          utterance.pitch = 1.02;
         } else if (partnerName === "Sophia") {
           utterance.lang = "en-AU"; // Australian English travel buddy
           utterance.rate = 1.0;
-          utterance.pitch = 1.08;
+          utterance.pitch = 1.04;
         } else if (partnerName === "David") {
           utterance.lang = "en-US"; // American English mentor
-          utterance.rate = 0.94;
-          utterance.pitch = 0.92;
+          utterance.rate = 0.96;
+          utterance.pitch = 0.94;
         } else if (partnerName === "Emma") {
           utterance.lang = "en-US"; // Clear American English grammar coach
-          utterance.rate = 0.95;
-          utterance.pitch = 1.02;
+          utterance.rate = 0.98;
+          utterance.pitch = 1.05;
         } else {
           utterance.lang = "en-US";
-          utterance.rate = 1.0;
-          utterance.pitch = 1.0;
+          utterance.rate = 0.96;
+          utterance.pitch = 0.92;
         }
 
         const voices = window.speechSynthesis.getVoices();
         if (voices && voices.length > 0) {
           const targetLang = utterance.lang.toLowerCase();
-          const match =
+          const naturalVoice =
+            voices.find(
+              (v) =>
+                v.lang.toLowerCase() === targetLang &&
+                (v.name.includes("Natural") || v.name.includes("Online") || v.name.includes("Neural"))
+            ) ||
             voices.find((v) => v.lang.toLowerCase() === targetLang) ||
             voices.find((v) => v.lang.toLowerCase().startsWith(targetLang.slice(0, 2))) ||
             voices.find((v) => v.lang.toLowerCase().includes("en"));
-          if (match) {
-            utterance.voice = match;
+          if (naturalVoice) {
+            utterance.voice = naturalVoice;
           }
         }
 
@@ -1574,6 +1652,7 @@ export function SpeakFlowApp() {
     if (!userText.trim()) return;
 
     stopWebSpeech();
+    stopAudioPlayback();
     playChime(520, 680);
     setChatHistory((prev) => [...prev, { sender: "user", text: userText }]);
 
@@ -1585,11 +1664,9 @@ export function SpeakFlowApp() {
         activeModule
       );
       setChatHistory((prev) => [...prev, { sender: "ai", text: aiResponse }]);
-      setSimulatedSpeaking(true);
       playChime(420, 540);
 
-      speakWithBrowserTTS(aiResponse, partner.name, () => {
-        setSimulatedSpeaking(false);
+      void playPartnerVoice(aiResponse, partner.name, () => {
         setTimeout(() => {
           startWebSpeech();
         }, 350);
@@ -1636,9 +1713,8 @@ export function SpeakFlowApp() {
       return;
     }
 
-    if (simulatedSpeaking && typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-      setSimulatedSpeaking(false);
+    if (simulatedSpeaking) {
+      stopAudioPlayback();
     }
 
     if (chatHistory.length === 0) {
@@ -1646,10 +1722,8 @@ export function SpeakFlowApp() {
         activeModule.initialGreeting ||
         `Hi Alex! Welcome to our conversation. What would you like to discuss today?`;
       setChatHistory([{ sender: "ai", text: initialGreeting }]);
-      setSimulatedSpeaking(true);
       playChime(420, 540);
-      speakWithBrowserTTS(initialGreeting, partner.name, () => {
-        setSimulatedSpeaking(false);
+      void playPartnerVoice(initialGreeting, partner.name, () => {
         startWebSpeech();
       });
       return;
@@ -1662,10 +1736,7 @@ export function SpeakFlowApp() {
   // End Room Talk Session -> triggers In-Room Evaluation
   const handleEndSession = async () => {
     stopWebSpeech();
-    if (typeof window !== "undefined" && "speechSynthesis" in window) {
-      window.speechSynthesis.cancel();
-    }
-    setSimulatedSpeaking(false);
+    stopAudioPlayback();
     setSimulatedListening(false);
 
     // Generate rich educational evaluation calibrated to level and active module
@@ -2882,7 +2953,7 @@ export function SpeakFlowApp() {
                         </p>
                         <div className="inline-flex items-center gap-1.5 px-3.5 py-1 rounded-full bg-white/70 text-[10px] font-extrabold text-[#0F0F12] mt-2.5 shadow-2xs">
                           <span>Level {guestLevel}</span>
-                          <span>•</span>
+                          <span>|</span>
                           <span>{activeModule.category}</span>
                         </div>
                       </div>
@@ -3184,7 +3255,7 @@ export function SpeakFlowApp() {
                                   </div>
                                   <button
                                     type="button"
-                                    onClick={() => speakWithBrowserTTS(corr.corrected, partner.name)}
+                                    onClick={() => void playPartnerVoice(corr.corrected, partner.name)}
                                     className="tap-scale w-7 h-7 rounded-full bg-[#F4F4F8] hover:bg-[#EAEAF0] flex items-center justify-center shrink-0 text-[#0F0F12]"
                                     title="Dengarkan pengucapan"
                                   >
@@ -3225,7 +3296,7 @@ export function SpeakFlowApp() {
                                   </div>
                                   <button
                                     type="button"
-                                    onClick={() => speakWithBrowserTTS(item.example, partner.name)}
+                                    onClick={() => void playPartnerVoice(item.example, partner.name)}
                                     className="tap-scale w-7 h-7 rounded-full bg-white hover:bg-[#EAEAF0] flex items-center justify-center shrink-0 text-[#0F0F12] border border-black/[0.06]"
                                     title="Dengarkan contoh kalimat"
                                   >
@@ -3257,9 +3328,7 @@ export function SpeakFlowApp() {
                             setChatHistory([]);
                             setHasStartedVoice(false);
                             stopWebSpeech();
-                            if (typeof window !== "undefined" && "speechSynthesis" in window) {
-                              window.speechSynthesis.cancel();
-                            }
+                            stopAudioPlayback();
                           }}
                           className="tap-scale h-[40px] px-3 bg-[#F4F4F8] hover:bg-[#EAEAF0] text-[#0F0F12] rounded-full text-[12px] font-extrabold tracking-tight flex items-center justify-center transition-colors font-sans"
                         >

@@ -89,9 +89,18 @@ export const AI_SPEAKING_PARTNERS: readonly SpeakingPartnerProfile[] = [
 
 export function findSpeakingPartner(idOrName?: string): SpeakingPartnerProfile {
   if (!idOrName) return AI_SPEAKING_PARTNERS[0];
-  const cleaned = idOrName.toLowerCase().trim();
-  const match = AI_SPEAKING_PARTNERS.find(
-    (p) => p.id.toLowerCase() === cleaned || p.name.toLowerCase() === cleaned,
-  );
+  const cleaned = idOrName.toLowerCase().trim().replace(/^partner-/, "");
+  const match = AI_SPEAKING_PARTNERS.find((p) => {
+    const pCleanId = p.id.toLowerCase().replace(/^partner-/, "");
+    const pCleanName = p.name.toLowerCase();
+    if (cleaned === "sophia" && (pCleanId === "sofia" || pCleanName === "sofia")) {
+      return true;
+    }
+    return (
+      p.id.toLowerCase() === cleaned ||
+      pCleanId === cleaned ||
+      pCleanName === cleaned
+    );
+  });
   return match ?? AI_SPEAKING_PARTNERS[0];
 }

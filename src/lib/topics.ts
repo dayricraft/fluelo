@@ -1,5 +1,6 @@
 import type { CefrLevel } from "./levels";
 import { levelIndex } from "./levels";
+import { LEVEL_CONVERSATION_MODULES } from "./level-conversation-modules";
 
 export interface Topic {
   id: string;
@@ -50,5 +51,18 @@ export function topicsForLevel(topics: Topic[], level: CefrLevel): Topic[] {
 
 export function findTopic(id: string | undefined): Topic | undefined {
   if (!id) return undefined;
-  return [...PRACTICE_TOPICS, ...TOEFL_INTERVIEW_TOPICS].find((t) => t.id === id);
+  const standard = [...PRACTICE_TOPICS, ...TOEFL_INTERVIEW_TOPICS].find((t) => t.id === id);
+  if (standard) return standard;
+  const mod = LEVEL_CONVERSATION_MODULES.find((m) => m.id === id);
+  if (mod) {
+    return {
+      id: mod.id,
+      title: mod.topicTitle,
+      titleId: mod.topicTitleId,
+      emoji: "💬",
+      minLevel: mod.level,
+      brief: mod.brief,
+    };
+  }
+  return undefined;
 }

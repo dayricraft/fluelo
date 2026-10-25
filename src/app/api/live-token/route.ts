@@ -108,9 +108,7 @@ export async function POST(request: Request) {
             : partner.defaultTopicId || (mode === "toefl-interview" ? "t-online-learning" : "intro");
 
         const topic = findTopic(resolvedTopicId);
-        const allowedTopics =
-          mode === "toefl-interview" ? TOEFL_INTERVIEW_TOPICS : PRACTICE_TOPICS;
-        if (!topic || !allowedTopics.some((item) => item.id === topic.id)) {
+        if (!topic) {
           throw new ValidationError("Topik tidak ditemukan untuk mode yang dipilih.");
         }
         if (mode === "toefl-interview") {
