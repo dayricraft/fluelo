@@ -1,0 +1,16 @@
+# Local keys/secrets and user data
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+local.properties
+**/build/
+.gradle/
+.idea/
+*.iml
+*.apk
+*.aab
+*.log
+**/captures/
+**/user-data/

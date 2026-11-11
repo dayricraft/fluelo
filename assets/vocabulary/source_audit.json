@@ -1,0 +1,28 @@
+{
+  "source_filename": "kosakata(1).txt",
+  "source_sha256": "c58ff677d692d0ec591c539337110f4819d071604cbcfef7980f89a666bec668",
+  "raw_line_count": 3000,
+  "nonempty_word_count": 3000,
+  "casefold_unique_word_count": 3000,
+  "empty_line_count": 0,
+  "duplicate_word_count": 0,
+  "first_words": [
+    "a",
+    "abandon",
+    "ability",
+    "able",
+    "abortion",
+    "about"
+  ],
+  "last_words": [
+    "young",
+    "your",
+    "yours",
+    "yourself",
+    "youth",
+    "zone"
+  ],
+  "content_enriched": false,
+  "verified_english_ipa_indonesian_translation": false,
+  "description": "Initial machine audit of owner-provided source headwords, NOT a lexical quality audit."
+}

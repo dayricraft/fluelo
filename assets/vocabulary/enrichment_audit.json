@@ -1,0 +1,16 @@
+{
+  "source_file": "assets/vocabulary/kosakata_3000_source.txt",
+  "total_source_count": 3000,
+  "total_enriched_count": 3000,
+  "content_status_counts": {
+    "ready": 3000,
+    "needs_review": 0
+  },
+  "all_ids_contiguous_1_to_3000": true,
+  "all_headwords_non_empty": true,
+  "all_meanings_non_empty": true,
+  "all_ipa_enclosed_in_slashes": true,
+  "all_examples_non_empty": true,
+  "dataset_version": 1,
+  "enriched_at_epoch": 1793114007
+}
