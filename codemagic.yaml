@@ -26,6 +26,8 @@ workflows:
           # Zero code signing, zero provisioning profiles, zero Apple account needed
           ./gradlew :shared:linkReleaseFrameworkIosArm64 :shared:linkReleaseFrameworkIosSimulatorArm64
     artifacts:
+      - android-project/shared/build/bin/iosArm64/releaseFramework/**
+      - android-project/shared/build/bin/iosSimulatorArm64/releaseFramework/**
       - shared/build/bin/iosArm64/releaseFramework/**
       - shared/build/bin/iosSimulatorArm64/releaseFramework/**
 

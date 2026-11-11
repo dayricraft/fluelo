@@ -219,15 +219,15 @@ Sesuai instruksi mutlak untuk **melindungi data pengguna eksis**:
    - Nama file database tetap `"fluelo.db"`.
    - Skema 8 tabel Room (`conversation_sessions`, `conversation_messages`, `structured_corrections`, `session_summaries`, `learning_memory_signals`, `vocabulary_entries`, `vocabulary_progress`, `flashcard_deck_state`) dipertahankan secara utuh di modul `:app`.
    - Migrasi manual `MIGRATION_1_2` tetap terdaftar aktif pada database builder.
-   - **Zero Destructive Migration:** Tidak ada penggunaan `fallbackToDestructiveMigration()`. Database pengguna yang sudah terpasang di perangkat fisik Samsung Galaxy A55 5G tidak akan terhapus atau corrupt.
+   - **Zero Destructive Migration:** Tidak ada pemanggilan `fallbackToDestructiveMigration()`. Konfigurasi database builder mempertahankan integritas database lokal eksisting. *(Catatan validitas: Verifikasi dilakukan melalui inspeksi statis kode, skema Room, dan automated unit tests; pengujian langsung pada perangkat fisik Samsung Galaxy A55 5G telah terverifikasi saat rilis v1.0 M0–M6 dan belum diuji ulang secara fisik pada sesi build KMP ini)*.
 2. **Integritas Data Kosakata 3.000 Kata:**
    - File dataset `fluelo_vocabulary_v1.json` tetap berada di aset aplikasi.
-   - Algoritma pengacakan Option A dengan seed 42 terbukti 100% deterministik (`FlashcardOrderEngineTest` lulus).
-   - Invariant active recall dan status bookmark tetap terjaga.
+   - Algoritma pengacakan Option A dengan seed 42 terbukti 100% deterministik (`FlashcardOrderEngineTest` lulus 7/7).
+   - Invariant active recall dan status bookmark tetap terjaga secara logika.
 3. **Integritas Jetpack DataStore Preferences:**
    - Class `UserPreferencesRepository` dipindahkan ke `commonMain` menggunakan library resmi `androidx.datastore:datastore-preferences:1.1.1`.
    - File penyimpanan di Android tetap menunjuk ke `context.filesDir.resolve("user_preferences.preferences_pb")` melalui helper `AndroidDataStore.kt`.
-   - Preferensi tema, bahasa, nama pengguna, reduced motion, dan haptics yang tersimpan pada versi Android v1.0 terbaca tanpa migrasi ulang.
+   - Kunci preferensi (tema, bahasa, nama pengguna, reduced motion, haptics) tetap identik dengan versi Android v1.0 sehingga tidak memerlukan migrasi ulang.
 
 ---
 
