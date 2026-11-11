@@ -1,13 +1,10 @@
 package com.aibuddy.data.preferences
 
-import android.content.Context
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.*
-import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import java.io.IOException
 
 enum class ThemeMode {
     DARK,
@@ -29,11 +26,9 @@ data class UserPreferences(
     val hapticFeedbackEnabled: Boolean = true
 )
 
-private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "user_preferences")
+class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
 
-class UserPreferencesRepository(private val context: Context) {
-
-    private object PreferencesKeys {
+    object PreferencesKeys {
         val THEME_MODE = stringPreferencesKey("theme_mode")
         val APP_LANGUAGE = stringPreferencesKey("app_language")
         val AI_VOICE = stringPreferencesKey("ai_voice")
@@ -42,13 +37,9 @@ class UserPreferencesRepository(private val context: Context) {
         val HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback")
     }
 
-    val userPreferencesFlow: Flow<UserPreferences> = context.dataStore.data
-        .catch { exception ->
-            if (exception is IOException) {
-                emit(emptyPreferences())
-            } else {
-                throw exception
-            }
+    val userPreferencesFlow: Flow<UserPreferences> = dataStore.data
+        .catch {
+            emit(emptyPreferences())
         }
         .map { preferences ->
             val themeModeStr = preferences[PreferencesKeys.THEME_MODE] ?: ThemeMode.DARK.name
@@ -81,38 +72,39 @@ class UserPreferencesRepository(private val context: Context) {
         }
 
     suspend fun setThemeMode(mode: ThemeMode) {
-        context.dataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[PreferencesKeys.THEME_MODE] = mode.name
         }
     }
 
     suspend fun setLanguage(language: AppLanguage) {
-        context.dataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[PreferencesKeys.APP_LANGUAGE] = language.name
         }
     }
 
     suspend fun setAiVoice(voice: String) {
-        context.dataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[PreferencesKeys.AI_VOICE] = voice
         }
     }
 
     suspend fun setUserName(name: String) {
-        context.dataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[PreferencesKeys.USER_NAME] = name
         }
     }
 
-    suspend fun setReducedMotion(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.REDUCED_MOTION] = enabled
+    suspend fun setReducedMotion(reduced: Boolean) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.REDUCED_MOTION] = reduced
         }
     }
 
     suspend fun setHapticFeedback(enabled: Boolean) {
-        context.dataStore.edit { preferences ->
+        dataStore.edit { preferences ->
             preferences[PreferencesKeys.HAPTIC_FEEDBACK] = enabled
         }
     }
 }
+
