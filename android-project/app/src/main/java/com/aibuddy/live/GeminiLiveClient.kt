@@ -1,6 +1,6 @@
 package com.aibuddy.live
 
-import android.util.Base64
+import com.aibuddy.util.Base64Util
 import android.util.Log
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
@@ -318,7 +318,7 @@ class GeminiLiveClient(
                             isAwaitingFirstAudio = false
                         }
 
-                        val pcmBytes = Base64.decode(base64Data, Base64.NO_WRAP)
+                        val pcmBytes = Base64Util.decode(base64Data)
                         _metrics.value = _metrics.value.copy(
                             chunksReceived = _metrics.value.chunksReceived + 1
                         )
@@ -551,7 +551,7 @@ class GeminiLiveClient(
             return
         }
 
-        val base64 = Base64.encodeToString(pcmChunk, Base64.NO_WRAP)
+        val base64 = Base64Util.encode(pcmChunk)
         val blob = LiveBlob(data = base64)
         val realtimeInput = LiveRealtimeInput(
             realtimeInput = LiveRealtimeInputPayload(

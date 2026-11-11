@@ -1,0 +1,72 @@
+# Fluelo 2.0 — Codemagic CI/CD Pipeline
+# Cloud macOS Build & TestFlight Deployment Configuration
+
+workflows:
+  ios-shared-framework-check:
+    name: Fluelo iOS Shared Framework Compilation & Tests
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      vars:
+        JAVA_VERSION: "17"
+    scripts:
+      - name: Select Java 17
+        script: |
+          jdk-select 17
+      - name: Check Gradle Wrapper & Permissions
+        script: |
+          cd android-project
+          chmod +x gradlew
+      - name: Run KMP Common Unit Tests
+        script: |
+          cd android-project
+          ./gradlew :shared:testDebugUnitTest
+      - name: Compile Shared XCFramework for iOS
+        script: |
+          cd android-project
+          ./gradlew :shared:assembleSharedReleaseXCFramework
+    artifacts:
+      - android-project/shared/build/XCFrameworks/release/*.xcframework
+
+  ios-testflight-release:
+    name: Fluelo iOS TestFlight Release
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+    environment:
+      groups:
+        - apple_credentials # APP_STORE_CONNECT_PRIVATE_KEY, KEY_ID, ISSUER_ID
+      vars:
+        XCODE_WORKSPACE: "iosApp/iosApp.xcworkspace"
+        XCODE_SCHEME: "iosApp"
+        BUNDLE_ID: "com.aibuddy.fluelo"
+    scripts:
+      - name: Select Java 17
+        script: |
+          jdk-select 17
+      - name: Compile Shared XCFramework
+        script: |
+          cd android-project
+          chmod +x gradlew
+          ./gradlew :shared:assembleSharedReleaseXCFramework
+      - name: Set up code signing settings on Xcode project
+        script: |
+          xcode-project use-profiles
+      - name: Build and Package IPA
+        script: |
+          xcodebuild -workspace "$XCODE_WORKSPACE" \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -archivePath build/ios.xcarchive \
+            archive
+          xcodebuild -exportArchive \
+            -archivePath build/ios.xcarchive \
+            -exportOptionsPlist iosApp/ExportOptions.plist \
+            -exportPath build/ipa
+    artifacts:
+      - build/ipa/*.ipa
+    publishing:
+      app_store_connect:
+        auth: integration
+        submit_to_testflight: true
+        beta_groups:
+          - Fluelo-Alpha-Testers
