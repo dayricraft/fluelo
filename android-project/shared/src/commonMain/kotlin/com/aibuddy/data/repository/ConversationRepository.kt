@@ -11,7 +11,6 @@ import com.aibuddy.util.randomUuidString
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlin.concurrent.Volatile
 
 enum class TurnSender {
     USER,
@@ -188,13 +187,8 @@ class ConversationRepository private constructor() {
     companion object {
         private const val MAX_HISTORY_TURNS = 100
 
-        @Volatile
-        private var instance: ConversationRepository? = null
+        private val defaultInstance by lazy { ConversationRepository() }
 
-        fun getInstance(): ConversationRepository {
-            return instance ?: synchronized(this) {
-                instance ?: ConversationRepository().also { instance = it }
-            }
-        }
+        fun getInstance(): ConversationRepository = defaultInstance
     }
 }
