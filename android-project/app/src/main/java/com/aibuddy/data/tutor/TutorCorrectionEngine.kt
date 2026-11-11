@@ -148,13 +148,14 @@ class TutorCorrectionEngine(
     ): Result<TutorFeedback?> {
         return try {
             val analysis = json.decodeFromString<TutorAnalysisResponse>(jsonText)
-            if (!analysis.needsCorrection || analysis.correctedText.isNullOrBlank()) {
+            val corrected = analysis.correctedText
+            if (!analysis.needsCorrection || corrected.isNullOrBlank()) {
                 Result.success(null)
             } else {
                 val feedback = TutorFeedback(
                     turnId = turnId,
                     originalText = analysis.originalText?.ifBlank { originalUtterance } ?: originalUtterance,
-                    correctedText = analysis.correctedText.trim(),
+                    correctedText = corrected.trim(),
                     explanation = analysis.explanation?.trim() ?: "Perhatikan penggunaan kalimat ini agar lebih natural.",
                     category = FeedbackCategory.fromString(analysis.category),
                     severity = FeedbackSeverity.fromString(analysis.severity),

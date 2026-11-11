@@ -1,7 +1,7 @@
 package com.aibuddy.data.mode
 
 import kotlinx.serialization.Serializable
-import java.util.UUID
+import com.aibuddy.util.randomUuidString
 
 @Serializable
 enum class ExerciseDirection {
@@ -31,7 +31,7 @@ data class RoleplayScenario(
 
 @Serializable
 data class ExerciseProgress(
-    val exerciseId: String = UUID.randomUUID().toString(),
+    val exerciseId: String = randomUuidString(),
     val mode: LearningMode,
     val topicOrTitle: String,
     val direction: ExerciseDirection = ExerciseDirection.ID_TO_EN,
@@ -62,3 +62,4 @@ data class SessionModeState(
     val activeExercise: ExerciseProgress? = null,
     val previousExercise: ExerciseProgress? = null
 )
+

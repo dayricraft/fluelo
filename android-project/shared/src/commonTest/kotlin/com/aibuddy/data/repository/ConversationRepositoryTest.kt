@@ -1,15 +1,16 @@
 package com.aibuddy.data.repository
 
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertTrue
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertTrue
 
 class ConversationRepositoryTest {
 
     private lateinit var repository: ConversationRepository
 
-    @Before
+    @BeforeTest
     fun setUp() {
         repository = ConversationRepository.getInstance()
         repository.clearTurns()

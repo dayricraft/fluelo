@@ -230,8 +230,9 @@ class GeminiLiveClient(
             val message = json.decodeFromString<LiveServerMessage>(text)
 
             // Check for server error
-            if (message.error != null) {
-                val err = "Server error ${message.error.code ?: ""}: ${message.error.message ?: "Unknown"}"
+            val serverError = message.error
+            if (serverError != null) {
+                val err = "Server error ${serverError.code ?: ""}: ${serverError.message ?: "Unknown"}"
                 Log.e(TAG, err)
                 if (!isManualDisconnect.get() && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
                     triggerAutoReconnect(err)

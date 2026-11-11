@@ -71,3 +71,4 @@ enum class LanguagePreference {
             INDONESIAN_EXPLANATION -> "Penjelasan Bahasa Indonesia"
         }
 }
+

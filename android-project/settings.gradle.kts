@@ -21,3 +21,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "AIBuddy"
 include(":app")
+include(":shared")

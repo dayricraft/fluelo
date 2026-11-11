@@ -5,16 +5,19 @@ import com.aibuddy.data.mode.ExerciseDirection
 import com.aibuddy.data.mode.ExerciseProgress
 import com.aibuddy.data.mode.LearningMode
 import com.aibuddy.data.mode.SessionModeState
-import org.junit.Assert.*
-import org.junit.Before
-import org.junit.Test
+import kotlin.test.BeforeTest
+import kotlin.test.Test
+import kotlin.test.assertEquals
+import kotlin.test.assertNotNull
+import kotlin.test.assertNull
+import kotlin.test.assertTrue
 
 class ModeRouterTest {
 
     private lateinit var router: ModeRouter
     private val defaultState = SessionModeState(activeMode = LearningMode.FREE_CONVERSATION)
 
-    @Before
+    @BeforeTest
     fun setUp() {
         router = ModeRouter()
     }

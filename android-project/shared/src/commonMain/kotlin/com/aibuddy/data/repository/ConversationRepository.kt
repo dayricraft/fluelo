@@ -6,10 +6,12 @@ import com.aibuddy.data.mode.LanguagePreference
 import com.aibuddy.data.mode.LearningMode
 import com.aibuddy.data.mode.SessionModeState
 import com.aibuddy.data.tutor.TutorFeedback
+import com.aibuddy.util.currentTimeEpochMillis
+import com.aibuddy.util.randomUuidString
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import java.util.UUID
+import kotlin.concurrent.Volatile
 
 enum class TurnSender {
     USER,
@@ -22,11 +24,11 @@ enum class TurnModality {
 }
 
 data class ConversationTurn(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String = randomUuidString(),
     val sender: TurnSender,
     val text: String,
     val modality: TurnModality,
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = currentTimeEpochMillis(),
     val isFinal: Boolean = true,
     val feedback: TutorFeedback? = null
 )
@@ -47,7 +49,7 @@ class ConversationRepository private constructor() {
     val sessionModeState: StateFlow<SessionModeState> = _sessionModeState.asStateFlow()
 
     fun addTurn(
-        id: String = UUID.randomUUID().toString(),
+        id: String = randomUuidString(),
         sender: TurnSender,
         text: String,
         modality: TurnModality,

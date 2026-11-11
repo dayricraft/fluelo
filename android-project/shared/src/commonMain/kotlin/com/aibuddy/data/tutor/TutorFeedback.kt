@@ -1,7 +1,8 @@
 package com.aibuddy.data.tutor
 
 import kotlinx.serialization.Serializable
-import java.util.UUID
+import com.aibuddy.util.currentTimeEpochMillis
+import com.aibuddy.util.randomUuidString
 
 @Serializable
 enum class FeedbackCategory {
@@ -37,7 +38,7 @@ enum class FeedbackSeverity {
 
 @Serializable
 data class TutorFeedback(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String = randomUuidString(),
     val turnId: String,
     val originalText: String,
     val correctedText: String,
@@ -45,7 +46,7 @@ data class TutorFeedback(
     val category: FeedbackCategory = FeedbackCategory.GRAMMAR,
     val severity: FeedbackSeverity = FeedbackSeverity.MODERATE,
     val spokenNote: String? = null,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = currentTimeEpochMillis()
 )
 
 @Serializable
@@ -58,3 +59,4 @@ data class TutorAnalysisResponse(
     val severity: String? = null,
     val spokenNote: String? = null
 )
+

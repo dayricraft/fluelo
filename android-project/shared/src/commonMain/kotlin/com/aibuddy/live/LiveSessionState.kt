@@ -1,5 +1,8 @@
 package com.aibuddy.live
 
+import com.aibuddy.util.currentTimeEpochMillis
+import com.aibuddy.util.randomUuidString
+
 enum class AudioSessionState {
     IDLE,
     CONNECTING,
@@ -22,9 +25,10 @@ data class LiveSessionMetrics(
 )
 
 data class LiveTranscriptEntry(
-    val id: String = java.util.UUID.randomUUID().toString(),
+    val id: String = randomUuidString(),
     val sender: String, // "You" or "Buddy"
     val text: String,
-    val timestamp: Long = System.currentTimeMillis(),
+    val timestamp: Long = currentTimeEpochMillis(),
     val isFinal: Boolean = true
 )
+

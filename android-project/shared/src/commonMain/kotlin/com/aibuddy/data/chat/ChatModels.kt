@@ -1,13 +1,14 @@
 package com.aibuddy.data.chat
 
 import kotlinx.serialization.Serializable
-import java.util.UUID
+import com.aibuddy.util.currentTimeEpochMillis
+import com.aibuddy.util.randomUuidString
 
 data class ChatMessage(
-    val id: String = UUID.randomUUID().toString(),
+    val id: String = randomUuidString(),
     val text: String,
     val isUser: Boolean,
-    val timestamp: Long = System.currentTimeMillis()
+    val timestamp: Long = currentTimeEpochMillis()
 )
 
 @Serializable
@@ -55,3 +56,4 @@ data class GeminiApiError(
     val code: Int? = null,
     val message: String? = null
 )
+
