@@ -29,9 +29,6 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import aibuddy.shared.generated.resources.Res
-import aibuddy.shared.generated.resources.ic_app_logo
-import org.jetbrains.compose.resources.painterResource
 import com.aibuddy.data.chat.ChatMessage
 import com.aibuddy.data.mode.LearningMode
 import com.aibuddy.data.mode.SessionModeState
@@ -154,10 +151,9 @@ fun ChatScreen(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(10.dp)
                         ) {
-                            Image(
-                                painter = painterResource(Res.drawable.ic_app_logo),
-                                contentDescription = "Fluelo",
-                                modifier = Modifier.size(32.dp)
+                            BuddyAvatar(
+                                size = 32.dp,
+                                useNeonAccent = true
                             )
                             Column {
                                 Text(

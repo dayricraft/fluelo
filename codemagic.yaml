@@ -45,12 +45,13 @@ workflows:
             build
       - name: Package iOS Simulator Bundle for Appetize.io
         script: |
+          ROOT_DIR=$(pwd)
           APP_DIR="iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator/iosApp.app"
           if [ -d "$APP_DIR" ]; then
             echo "Packaging $APP_DIR into Fluelo-iOS-Simulator.zip..."
             cd iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator
-            zip -r -y ../../../../../Fluelo-iOS-Simulator.zip iosApp.app
-            cd ../../../../../
+            zip -r -y "$ROOT_DIR/Fluelo-iOS-Simulator.zip" iosApp.app
+            cd "$ROOT_DIR"
             ls -lh Fluelo-iOS-Simulator.zip
           else
             echo "ERROR: iosApp.app not found in $APP_DIR"

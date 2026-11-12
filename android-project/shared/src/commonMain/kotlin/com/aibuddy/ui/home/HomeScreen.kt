@@ -19,14 +19,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import aibuddy.shared.generated.resources.Res
-import aibuddy.shared.generated.resources.ic_app_logo
-import org.jetbrains.compose.resources.painterResource
 import com.aibuddy.data.history.PracticeSession
 import com.aibuddy.data.history.SessionModality
 import com.aibuddy.data.preferences.AppLanguage
 import com.aibuddy.data.preferences.UserPreferences
 import com.aibuddy.live.AudioSessionState
+import com.aibuddy.ui.components.BuddyAvatar
 import com.aibuddy.ui.components.BentoCard
 import com.aibuddy.ui.theme.NeonLime
 import com.aibuddy.ui.theme.SoftPink
@@ -72,10 +70,9 @@ fun HomeScreen(
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         modifier = Modifier.padding(top = 4.dp)
                     ) {
-                        Image(
-                            painter = painterResource(Res.drawable.ic_app_logo),
-                            contentDescription = "Fluelo",
-                            modifier = Modifier.size(32.dp)
+                        BuddyAvatar(
+                            size = 32.dp,
+                            useNeonAccent = true
                         )
                         Text(
                             text = "Fluelo",
