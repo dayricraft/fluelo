@@ -4,7 +4,9 @@ import com.aibuddy.live.AudioSessionState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import platform.AVFAudio.*
 import platform.AVFoundation.*
+import platform.Foundation.*
 
 /**
  * iOS Native Text-to-Speech manager implementing ITtsManager.
@@ -50,7 +52,7 @@ class IosFlashcardTtsManager(
 
     override fun stop() {
         try {
-            if (synthesizer.isSpeaking()) {
+            if (synthesizer.speaking) {
                 synthesizer.stopSpeakingAtBoundary(AVSpeechBoundary.AVSpeechBoundaryImmediate)
             }
         } catch (_: Exception) {}
@@ -61,3 +63,4 @@ class IosFlashcardTtsManager(
         stop()
     }
 }
+

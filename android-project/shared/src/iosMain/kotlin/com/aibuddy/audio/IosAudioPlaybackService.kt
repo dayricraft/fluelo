@@ -6,6 +6,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.cinterop.*
+import platform.AVFAudio.*
 import platform.AVFoundation.*
 import platform.Foundation.*
 import kotlin.math.sqrt
@@ -111,7 +112,7 @@ class IosAudioPlaybackService : IAudioPlaybackService {
 
                         val currentPlayer = playerNode
                         if (currentPlayer != null && isPlaying) {
-                            if (!currentPlayer.isPlaying()) {
+                            if (!currentPlayer.playing) {
                                 currentPlayer.play()
                             }
                             currentPlayer.scheduleBuffer(pcmBuffer, completionHandler = null)
@@ -166,7 +167,7 @@ class IosAudioPlaybackService : IAudioPlaybackService {
 
         try {
             playerNode?.stop()
-            if (audioEngine?.isRunning() == true) {
+            if (audioEngine?.running == true) {
                 audioEngine?.stop()
             }
             audioEngine?.reset()
@@ -181,3 +182,4 @@ class IosAudioPlaybackService : IAudioPlaybackService {
         _amplitude.value = 0f
     }
 }
+

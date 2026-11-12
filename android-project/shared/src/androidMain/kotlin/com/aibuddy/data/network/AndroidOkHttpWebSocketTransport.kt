@@ -69,3 +69,4 @@ class AndroidOkHttpWebSocketTransport(
 }
 
 actual fun createDefaultWebSocketTransport(): GeminiLiveWebSocketTransport = AndroidOkHttpWebSocketTransport()
+

@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.cinterop.*
+import platform.AVFAudio.*
 import platform.AVFoundation.*
 import platform.Foundation.*
 import kotlin.math.sqrt
@@ -178,7 +179,7 @@ class IosAudioCaptureService : IAudioCaptureService {
         isRecording = false
         try {
             audioEngine?.inputNode?.removeTapOnBus(0u)
-            if (audioEngine?.isRunning() == true) {
+            if (audioEngine?.running == true) {
                 audioEngine?.stop()
             }
             audioEngine?.reset()
@@ -189,3 +190,4 @@ class IosAudioCaptureService : IAudioCaptureService {
         _amplitude.value = 0f
     }
 }
+

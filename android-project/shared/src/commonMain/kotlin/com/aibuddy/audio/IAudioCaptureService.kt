@@ -22,3 +22,4 @@ interface IAudioCaptureService {
 
     fun stopCapture()
 }
+

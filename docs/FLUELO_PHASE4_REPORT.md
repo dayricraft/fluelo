@@ -179,3 +179,4 @@ Dijalankan melalui `./gradlew assembleDebug`:
 21. `android-project/app/src/main/java/com/aibuddy/audio/AudioPlaybackService.kt` *(Diperbarui dengan interface)*
 22. `android-project/app/src/main/java/com/aibuddy/audio/FlashcardTtsManager.kt` *(Diperbarui dengan interface)*
 23. `iosApp/iosApp/Info.plist` *(Diperbarui dengan NSMicrophoneUsageDescription)*
+

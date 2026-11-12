@@ -39,3 +39,4 @@ class NoOpTtsManager : ITtsManager {
 actual fun createAudioCaptureService(): IAudioCaptureService = NoOpAudioCaptureService()
 actual fun createAudioPlaybackService(): IAudioPlaybackService = NoOpAudioPlaybackService()
 actual fun createFlashcardTtsManager(getCurrentSessionState: () -> AudioSessionState): ITtsManager = NoOpTtsManager()
+
