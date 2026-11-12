@@ -36,6 +36,9 @@ import com.aibuddy.ui.history.*
 import com.aibuddy.ui.home.HomeScreen
 import com.aibuddy.ui.navigation.AppRoute
 import com.aibuddy.ui.settings.SettingsScreen
+import com.aibuddy.audio.*
+import com.aibuddy.data.network.createDefaultWebSocketTransport
+import com.aibuddy.live.GeminiLiveClient
 import com.aibuddy.ui.theme.FlueloTheme
 import com.aibuddy.ui.theme.NeonLime
 import com.aibuddy.ui.theme.SoftPurple
@@ -45,8 +48,9 @@ import kotlinx.coroutines.launch
 @Composable
 fun FlueloAppRoot(
     initialRoute: AppRoute = AppRoute.Home,
-    isVoiceSupportedOnPlatform: Boolean = false,
-    onPlatformVoiceCallRequested: () -> Unit = {}
+    audioCaptureService: IAudioCaptureService = remember { createAudioCaptureService() },
+    audioPlaybackService: IAudioPlaybackService = remember { createAudioPlaybackService() },
+    ttsManager: ITtsManager = remember { createFlashcardTtsManager() }
 ) {
     var userPreferences by remember {
         mutableStateOf(
@@ -80,8 +84,53 @@ fun FlueloAppRoot(
         }
     }
 
-    // Modal Voice Feasibility Notice (Transparently communicating Phase 4 schedule on iOS)
-    var showVoiceNoticeDialog by remember { mutableStateOf(false) }
+    val coroutineScope = rememberCoroutineScope()
+
+    val liveClient = remember {
+        GeminiLiveClient(
+            scope = coroutineScope,
+            transport = createDefaultWebSocketTransport(),
+            onAudioReceived = { pcmChunk ->
+                audioPlaybackService.enqueueAudio(pcmChunk)
+            },
+            onInterrupted = {
+                audioPlaybackService.clearAndInterrupt()
+            }
+        )
+    }
+
+    val liveSessionState by liveClient.sessionState.collectAsState()
+    val liveMetrics by liveClient.metrics.collectAsState()
+    val liveTranscripts by liveClient.transcripts.collectAsState()
+    val liveErrorMessage by liveClient.errorMessage.collectAsState()
+    val isTtsSpeaking by ttsManager.isSpeaking.collectAsState()
+
+    var showApiKeyPromptDialog by remember { mutableStateOf(false) }
+
+    fun toggleVoiceCall() {
+        if (liveSessionState == AudioSessionState.IDLE || liveSessionState == AudioSessionState.ERROR) {
+            if (userPreferences.geminiApiKey.isBlank()) {
+                showApiKeyPromptDialog = true
+            } else {
+                audioPlaybackService.startPlayback(coroutineScope)
+                audioCaptureService.startCapture(
+                    scope = coroutineScope,
+                    onSpeechStateChanged = { isSpeaking ->
+                        liveClient.onSpeechStateChanged(isSpeaking)
+                    },
+                    onAudioChunk = { chunk ->
+                        liveClient.sendAudioChunk(chunk)
+                    }
+                )
+                liveClient.connect(userPreferences.geminiApiKey, userPreferences.aiVoice)
+            }
+        } else {
+            liveClient.disconnect()
+            audioCaptureService.stopCapture()
+            audioPlaybackService.stopPlayback()
+        }
+    }
+
 
     // Sample data for initial multiplatform experience
     val initialPracticeSessions = remember {
@@ -119,7 +168,27 @@ fun FlueloAppRoot(
     val chatFeedbacks = remember { mutableStateMapOf<String, TutorFeedback>() }
     var isChatLoading by remember { mutableStateOf(false) }
     var chatSessionModeState by remember { mutableStateOf(SessionModeState(activeMode = LearningMode.FREE_CONVERSATION)) }
-    val coroutineScope = rememberCoroutineScope()
+
+    LaunchedEffect(liveTranscripts) {
+        if (liveTranscripts.isNotEmpty()) {
+            val lastEntry = liveTranscripts.last()
+            val existingIndex = chatMessages.indexOfFirst { it.id == lastEntry.id }
+            if (existingIndex != -1) {
+                chatMessages[existingIndex] = chatMessages[existingIndex].copy(
+                    text = lastEntry.text
+                )
+            } else {
+                chatMessages.add(
+                    ChatMessage(
+                        id = lastEntry.id,
+                        text = lastEntry.text,
+                        isUser = lastEntry.sender == "You",
+                        timestamp = lastEntry.timestamp
+                    )
+                )
+            }
+        }
+    }
 
     // Flashcard Screen State (Sample curated 3000-vocabulary items for UI)
     val flashcardDeck = remember {
@@ -216,14 +285,10 @@ fun FlueloAppRoot(
                     is AppRoute.Home -> {
                         HomeScreen(
                             userPreferences = userPreferences,
-                            sessionState = AudioSessionState.IDLE,
+                            sessionState = liveSessionState,
                             practiceSessions = initialPracticeSessions,
                             onNavigateToConversation = {
-                                if (isVoiceSupportedOnPlatform) {
-                                    onPlatformVoiceCallRequested()
-                                } else {
-                                    showVoiceNoticeDialog = true
-                                }
+                                toggleVoiceCall()
                             },
                             onNavigateToChat = { navigateTo(AppRoute.Chat) },
                             onNavigateToSettings = { navigateTo(AppRoute.Settings) },
@@ -329,10 +394,15 @@ fun FlueloAppRoot(
                                 reviewFilter = flashcardReviewFilter,
                                 reviewCards = reviewCards,
                                 reviewIndex = flashcardCurrentIndex.coerceIn(0, (reviewCards.size - 1).coerceAtLeast(0)),
-                                isSpeaking = false,
+                                isSpeaking = isTtsSpeaking,
                                 isFirstPassCompleted = false
                             ),
                             onBack = { navigateBack() },
+                            onSpeakHeadword = {
+                                activeFlashcard?.let { card ->
+                                    ttsManager.speak(card.headword)
+                                }
+                            },
                             onSelectMode = { mode ->
                                 flashcardActiveMode = mode
                                 flashcardCurrentIndex = 0
@@ -403,6 +473,9 @@ fun FlueloAppRoot(
                             onHapticFeedbackChange = { haptic ->
                                 userPreferences = userPreferences.copy(hapticFeedbackEnabled = haptic)
                             },
+                            onGeminiApiKeyChange = { key ->
+                                userPreferences = userPreferences.copy(geminiApiKey = key)
+                            },
                             onBack = { navigateBack() }
                         )
                     }
@@ -472,10 +545,10 @@ fun FlueloAppRoot(
                 }
             }
 
-            // Transparent Modal for iOS Audio Feasibility
-            if (showVoiceNoticeDialog) {
+            // Modal API Key Prompt for Voice Call
+            if (showApiKeyPromptDialog) {
                 AlertDialog(
-                    onDismissRequest = { showVoiceNoticeDialog = false },
+                    onDismissRequest = { showApiKeyPromptDialog = false },
                     icon = {
                         Icon(
                             imageVector = Icons.Outlined.Mic,
@@ -486,7 +559,10 @@ fun FlueloAppRoot(
                     },
                     title = {
                         Text(
-                            text = "Panggilan Suara Real-time",
+                            text = if (userPreferences.language == AppLanguage.INDONESIAN)
+                                "Aktifkan Panggilan Suara Live"
+                            else
+                                "Enable Live Voice Call",
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.Center
                         )
@@ -497,7 +573,10 @@ fun FlueloAppRoot(
                             horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                             Text(
-                                text = "Fitur streaming suara real-time (Gemini 3.8 Live bidirectional PCM) pada iOS dijadwalkan secara bertahap untuk Fase 4 (Native iOS Audio Transport).",
+                                text = if (userPreferences.language == AppLanguage.INDONESIAN)
+                                    "Untuk berbicara langsung secara bilingual dengan Buddy via audio real-time Gemini Live, silakan masukkan Gemini API Key Anda di Pengaturan."
+                                else
+                                    "To speak directly in real-time with Buddy via Gemini Live audio, please configure your Gemini API Key in Settings.",
                                 fontSize = 14.sp,
                                 lineHeight = 20.sp,
                                 textAlign = TextAlign.Center,
@@ -510,7 +589,10 @@ fun FlueloAppRoot(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp)
                             ) {
                                 Text(
-                                    text = "✨ Pada Fase 3 ini, seluruh fitur Chat Teks, 3.000 Flashcards interaktif, Bento Grid, dan Pengaturan telah aktif penuh di iOS!",
+                                    text = if (userPreferences.language == AppLanguage.INDONESIAN)
+                                        "🔒 Kunci Anda tersimpan aman hanya di penyimpanan lokal perangkat."
+                                    else
+                                        "🔒 Your key is securely stored only on your local device.",
                                     fontSize = 12.sp,
                                     lineHeight = 16.sp,
                                     color = SoftPurple,
@@ -523,18 +605,25 @@ fun FlueloAppRoot(
                     confirmButton = {
                         Button(
                             onClick = {
-                                showVoiceNoticeDialog = false
-                                navigateTo(AppRoute.Chat)
+                                showApiKeyPromptDialog = false
+                                navigateTo(AppRoute.Settings)
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = NeonLime),
                             shape = RoundedCornerShape(12.dp)
                         ) {
-                            Text("Buka Chat Teks", color = Color.Black, fontWeight = FontWeight.Bold)
+                            Text(
+                                text = if (userPreferences.language == AppLanguage.INDONESIAN) "Buka Pengaturan" else "Open Settings",
+                                color = Color.Black,
+                                fontWeight = FontWeight.Bold
+                            )
                         }
                     },
                     dismissButton = {
-                        TextButton(onClick = { showVoiceNoticeDialog = false }) {
-                            Text("Tutup", color = MaterialTheme.colorScheme.onSurface)
+                        TextButton(onClick = { showApiKeyPromptDialog = false }) {
+                            Text(
+                                text = if (userPreferences.language == AppLanguage.INDONESIAN) "Nanti Saja" else "Later",
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
                     }
                 )

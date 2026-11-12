@@ -21,7 +21,7 @@ import kotlin.math.sqrt
  * Routes audio through communication speakerphone and supports zero-latency buffer flushing.
  */
 @OptIn(ExperimentalCoroutinesApi::class)
-class AudioPlaybackService(private val context: Context) {
+class AudioPlaybackService(private val context: Context) : IAudioPlaybackService {
 
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var audioTrack: AudioTrack? = null
@@ -30,12 +30,12 @@ class AudioPlaybackService(private val context: Context) {
     private val audioChannel = Channel<ByteArray>(Channel.UNLIMITED)
 
     private val _amplitude = MutableStateFlow(0f)
-    val amplitude: StateFlow<Float> = _amplitude.asStateFlow()
+    override val amplitude: StateFlow<Float> = _amplitude.asStateFlow()
 
     private val _isSpeaking = MutableStateFlow(false)
-    val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
+    override val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
 
-    fun startPlayback(scope: CoroutineScope): Boolean {
+    override fun startPlayback(scope: CoroutineScope): Boolean {
         if (isPlaying.get()) return true
 
         val minBufferSize = AudioTrack.getMinBufferSize(
@@ -167,7 +167,7 @@ class AudioPlaybackService(private val context: Context) {
     /**
      * Enqueues incoming PCM chunk from Gemini Live API for playback.
      */
-    fun enqueueAudio(pcmChunk: ByteArray) {
+    override fun enqueueAudio(pcmChunk: ByteArray) {
         if (isPlaying.get()) {
             audioChannel.trySend(pcmChunk)
         } else {
@@ -179,7 +179,7 @@ class AudioPlaybackService(private val context: Context) {
      * CRITICAL BARGE-IN: Stops playback immediately, flushes native buffer,
      * discards queued unplayed audio, and resets AudioTrack for the next turn.
      */
-    fun clearAndInterrupt() {
+    override fun clearAndInterrupt() {
         while (audioChannel.tryReceive().isSuccess) {}
 
         try {
@@ -194,7 +194,7 @@ class AudioPlaybackService(private val context: Context) {
         _amplitude.value = 0f
     }
 
-    fun stopPlayback() {
+    override fun stopPlayback() {
         isPlaying.set(false)
         playbackJob?.cancel()
         playbackJob = null

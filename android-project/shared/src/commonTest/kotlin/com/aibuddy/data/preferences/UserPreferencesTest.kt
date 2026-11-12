@@ -16,6 +16,7 @@ class UserPreferencesTest {
         assertEquals("Teman", prefs.userName)
         assertFalse(prefs.reducedMotion)
         assertTrue(prefs.hapticFeedbackEnabled)
+        assertEquals("", prefs.geminiApiKey)
     }
 
     @Test

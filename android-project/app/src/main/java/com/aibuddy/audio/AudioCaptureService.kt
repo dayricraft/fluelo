@@ -14,32 +14,32 @@ import kotlin.math.sqrt
  * Captures microphone audio using 16kHz 16-bit mono PCM.
  * Uses VOICE_COMMUNICATION to enable hardware Acoustic Echo Cancellation (AEC).
  */
-class AudioCaptureService {
+class AudioCaptureService : IAudioCaptureService {
 
     private var audioRecord: AudioRecord? = null
     private val isRecording = AtomicBoolean(false)
     private var captureJob: Job? = null
 
     private val _amplitude = MutableStateFlow(0f)
-    val amplitude: StateFlow<Float> = _amplitude.asStateFlow()
+    override val amplitude: StateFlow<Float> = _amplitude.asStateFlow()
 
     private val _isMuted = MutableStateFlow(false)
-    val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
+    override val isMuted: StateFlow<Boolean> = _isMuted.asStateFlow()
 
     private val isBuddySpeaking = AtomicBoolean(false)
 
-    fun setMuted(muted: Boolean) {
+    override fun setMuted(muted: Boolean) {
         _isMuted.value = muted
     }
 
-    fun setIsBuddySpeaking(speaking: Boolean) {
+    override fun setIsBuddySpeaking(speaking: Boolean) {
         isBuddySpeaking.set(speaking)
     }
 
     @SuppressLint("MissingPermission")
-    fun startCapture(
+    override fun startCapture(
         scope: CoroutineScope,
-        onSpeechStateChanged: (Boolean) -> Unit = {},
+        onSpeechStateChanged: (Boolean) -> Unit,
         onAudioChunk: (ByteArray) -> Unit
     ): Boolean {
         if (isRecording.get()) return true
@@ -135,7 +135,7 @@ class AudioCaptureService {
         }
     }
 
-    fun stopCapture() {
+    override fun stopCapture() {
         isRecording.set(false)
         captureJob?.cancel()
         captureJob = null

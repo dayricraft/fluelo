@@ -23,7 +23,8 @@ data class UserPreferences(
     val aiVoice: String = "Puck",
     val userName: String = "Teman",
     val reducedMotion: Boolean = false,
-    val hapticFeedbackEnabled: Boolean = true
+    val hapticFeedbackEnabled: Boolean = true,
+    val geminiApiKey: String = ""
 )
 
 class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
@@ -35,6 +36,7 @@ class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
         val USER_NAME = stringPreferencesKey("user_name")
         val REDUCED_MOTION = booleanPreferencesKey("reduced_motion")
         val HAPTIC_FEEDBACK = booleanPreferencesKey("haptic_feedback")
+        val GEMINI_API_KEY = stringPreferencesKey("gemini_api_key")
     }
 
     val userPreferencesFlow: Flow<UserPreferences> = dataStore.data
@@ -60,6 +62,7 @@ class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
             val userName = preferences[PreferencesKeys.USER_NAME] ?: "Teman"
             val reducedMotion = preferences[PreferencesKeys.REDUCED_MOTION] ?: false
             val hapticFeedback = preferences[PreferencesKeys.HAPTIC_FEEDBACK] ?: true
+            val geminiApiKey = preferences[PreferencesKeys.GEMINI_API_KEY] ?: ""
 
             UserPreferences(
                 themeMode = themeMode,
@@ -67,7 +70,8 @@ class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
                 aiVoice = aiVoice,
                 userName = userName,
                 reducedMotion = reducedMotion,
-                hapticFeedbackEnabled = hapticFeedback
+                hapticFeedbackEnabled = hapticFeedback,
+                geminiApiKey = geminiApiKey
             )
         }
 
@@ -104,6 +108,12 @@ class UserPreferencesRepository(private val dataStore: DataStore<Preferences>) {
     suspend fun setHapticFeedback(enabled: Boolean) {
         dataStore.edit { preferences ->
             preferences[PreferencesKeys.HAPTIC_FEEDBACK] = enabled
+        }
+    }
+
+    suspend fun setGeminiApiKey(apiKey: String) {
+        dataStore.edit { preferences ->
+            preferences[PreferencesKeys.GEMINI_API_KEY] = apiKey.trim()
         }
     }
 }

@@ -16,3 +16,6 @@ interface GeminiLiveWebSocketTransport {
     val isConnected: Boolean
 }
 
+expect fun createDefaultWebSocketTransport(): GeminiLiveWebSocketTransport
+
+

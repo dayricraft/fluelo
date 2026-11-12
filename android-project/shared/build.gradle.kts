@@ -42,6 +42,7 @@ kotlin {
         }
         androidMain.dependencies {
             implementation(libs.kotlinx.coroutines.android)
+            implementation(libs.okhttp)
         }
         iosMain.dependencies {
         }

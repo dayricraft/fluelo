@@ -1,7 +1,10 @@
 package com.aibuddy.live
 
+import com.aibuddy.data.network.GeminiLiveWebSocketListener
+import com.aibuddy.data.network.GeminiLiveWebSocketTransport
+import com.aibuddy.data.network.createDefaultWebSocketTransport
 import com.aibuddy.util.Base64Util
-import android.util.Log
+import com.aibuddy.util.currentTimeEpochMillis
 import kotlinx.coroutines.*
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -9,12 +12,15 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import okhttp3.*
-import java.util.concurrent.TimeUnit
-import java.util.concurrent.atomic.AtomicBoolean
 
+/**
+ * Multiplatform Gemini Live Client running identically on Android and iOS.
+ * Handles WebSocket communication, bidi streaming, auto-reconnect,
+ * transcript buffering, and dynamic activity steering.
+ */
 class GeminiLiveClient(
     private val scope: CoroutineScope,
+    private val transport: GeminiLiveWebSocketTransport = createDefaultWebSocketTransport(),
     private val onAudioReceived: (ByteArray) -> Unit,
     private val onInterrupted: () -> Unit
 ) {
@@ -28,18 +34,14 @@ class GeminiLiveClient(
         encodeDefaults = true
     }
 
-    private val client = OkHttpClient.Builder()
-        .readTimeout(0, TimeUnit.MILLISECONDS)
-        .writeTimeout(30, TimeUnit.SECONDS)
-        .pingInterval(30, TimeUnit.SECONDS)
-        .retryOnConnectionFailure(true)
-        .build()
-
-    private var webSocket: WebSocket? = null
-    private val isConnected = AtomicBoolean(false)
-    private val isConnectingOrConnected = AtomicBoolean(false)
-    private val isReadyForAudio = AtomicBoolean(false)
-    private val isManualDisconnect = AtomicBoolean(false)
+    @kotlin.concurrent.Volatile
+    private var isConnected = false
+    @kotlin.concurrent.Volatile
+    private var isConnectingOrConnected = false
+    @kotlin.concurrent.Volatile
+    private var isReadyForAudio = false
+    @kotlin.concurrent.Volatile
+    private var isManualDisconnect = false
 
     private var resumptionHandle: String? = null
     private var reconnectAttempts = 0
@@ -72,12 +74,12 @@ class GeminiLiveClient(
     private var isBuddyTurnActive = false
     private var isUserTurnActive = false
 
-    fun isReady(): Boolean = isConnected.get() && isReadyForAudio.get()
+    fun isReady(): Boolean = isConnected && isReadyForAudio
 
     fun connect(apiKey: String, voiceName: String = "Puck") {
         currentApiKey = apiKey
         currentVoiceName = voiceName
-        isManualDisconnect.set(false)
+        isManualDisconnect = false
         reconnectAttempts = 0
         connectInternal(apiKey, voiceName, isReconnect = false)
     }
@@ -85,22 +87,23 @@ class GeminiLiveClient(
     private fun connectInternal(apiKey: String, voiceName: String, isReconnect: Boolean) {
         if (apiKey.isBlank()) {
             _sessionState.value = AudioSessionState.ERROR
-            _errorMessage.value = "Gemini API Key is empty. Configure GEMINI_API_KEY in local.properties."
-            Log.e(TAG, "API Key is empty!")
+            _errorMessage.value = "Gemini API Key is empty. Configure it in Settings."
+            println("[$TAG] API Key is empty!")
             return
         }
 
-        if (!isConnectingOrConnected.compareAndSet(false, true)) {
-            Log.w(TAG, "connect() ignored: already connecting or connected")
+        if (isConnectingOrConnected) {
+            println("[$TAG] connect() ignored: already connecting or connected")
             return
         }
+        isConnectingOrConnected = true
 
         _sessionState.value = if (isReconnect) AudioSessionState.RECONNECTING else AudioSessionState.CONNECTING
         if (!isReconnect) {
             _errorMessage.value = null
         }
-        isReadyForAudio.set(false)
-        connectionStartTime = System.currentTimeMillis()
+        isReadyForAudio = false
+        connectionStartTime = currentTimeEpochMillis()
 
         // Initialize single FIFO reader for strictly ordered message handling
         messageProcessingJob?.cancel()
@@ -116,17 +119,15 @@ class GeminiLiveClient(
         }
 
         val url = "wss://generativelanguage.googleapis.com/ws/google.ai.generativelanguage.v1beta.GenerativeService.BidiGenerateContent?key=$apiKey"
-        Log.d(TAG, "Connecting to Gemini Live WebSocket endpoint (isReconnect=$isReconnect)...")
-        val request = Request.Builder().url(url).build()
+        println("[$TAG] Connecting to Gemini Live WebSocket endpoint (isReconnect=$isReconnect)...")
 
-        webSocket = client.newWebSocket(request, object : WebSocketListener() {
-            override fun onOpen(ws: WebSocket, response: Response) {
-                isConnected.set(true)
-                val connectDuration = System.currentTimeMillis() - connectionStartTime
+        transport.connect(url, object : GeminiLiveWebSocketListener {
+            override fun onOpen() {
+                isConnected = true
+                val connectDuration = currentTimeEpochMillis() - connectionStartTime
                 _metrics.value = _metrics.value.copy(connectionLatencyMs = connectDuration)
-                Log.d(TAG, "WebSocket opened in ${connectDuration}ms. Sending setup frame...")
+                println("[$TAG] WebSocket opened in ${connectDuration}ms. Sending setup frame...")
 
-                // Send setup frame with session resumption handle if available
                 val setupMessage = LiveClientSetup(
                     setup = LiveSetupConfig(
                         model = "models/gemini-3.8-live",
@@ -141,7 +142,7 @@ class GeminiLiveClient(
                         inputAudioTranscription = LiveAudioTranscriptionConfig(),
                         outputAudioTranscription = LiveAudioTranscriptionConfig(),
                         sessionResumption = resumptionHandle?.let {
-                            Log.d(TAG, "Resuming session with token: $it")
+                            println("[$TAG] Resuming session with token: $it")
                             LiveSessionResumptionConfig(handle = it)
                         } ?: LiveSessionResumptionConfig(),
                         systemInstruction = LiveContent(
@@ -155,38 +156,37 @@ class GeminiLiveClient(
                 )
 
                 val setupJson = json.encodeToString(setupMessage)
-                ws.send(setupJson)
-                Log.d(TAG, "Setup frame sent, awaiting setupComplete...")
+                transport.send(setupJson)
+                println("[$TAG] Setup frame sent, awaiting setupComplete...")
             }
 
-            override fun onMessage(ws: WebSocket, text: String) {
+            override fun onMessage(text: String) {
                 incomingMessageChannel.trySend(text)
             }
 
-            override fun onMessage(ws: WebSocket, bytes: okio.ByteString) {
-                incomingMessageChannel.trySend(bytes.utf8())
+            override fun onBinaryMessage(bytes: ByteArray) {
+                incomingMessageChannel.trySend(bytes.decodeToString())
             }
 
-            override fun onClosing(ws: WebSocket, code: Int, reason: String) {
-                Log.d(TAG, "WebSocket closing: code=$code, reason=$reason")
-                isConnected.set(false)
-                isConnectingOrConnected.set(false)
-                isReadyForAudio.set(false)
-                if (code != 1000 && !isManualDisconnect.get()) {
+            override fun onClosing(code: Int, reason: String) {
+                println("[$TAG] WebSocket closing: code=$code, reason=$reason")
+                isConnected = false
+                isConnectingOrConnected = false
+                isReadyForAudio = false
+                if (code != 1000 && !isManualDisconnect) {
                     triggerAutoReconnect("Kode $code: $reason")
                 } else {
                     _sessionState.value = AudioSessionState.IDLE
                 }
             }
 
-            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
-                Log.e(TAG, "WebSocket failure: ${t.message}", t)
-                isConnected.set(false)
-                isConnectingOrConnected.set(false)
-                isReadyForAudio.set(false)
-                val httpDetail = response?.let { " (HTTP ${it.code}: ${it.message})" } ?: ""
-                val errReason = "${t.localizedMessage ?: "Gangguan koneksi"}$httpDetail"
-                if (!isManualDisconnect.get()) {
+            override fun onFailure(throwable: Throwable, response: String?) {
+                println("[$TAG] WebSocket failure: ${throwable.message}")
+                isConnected = false
+                isConnectingOrConnected = false
+                isReadyForAudio = false
+                val errReason = "${throwable.message ?: "Gangguan koneksi"}${response ?: ""}"
+                if (!isManualDisconnect) {
                     triggerAutoReconnect(errReason)
                 } else {
                     _sessionState.value = AudioSessionState.ERROR
@@ -197,29 +197,28 @@ class GeminiLiveClient(
     }
 
     private fun triggerAutoReconnect(reason: String) {
-        if (isManualDisconnect.get()) return
+        if (isManualDisconnect) return
         if (reconnectAttempts >= MAX_RECONNECT_ATTEMPTS) {
             _sessionState.value = AudioSessionState.ERROR
-            _errorMessage.value = "Koneksi terputus ($reason). Silakan ketuk tombol panggilan untuk menghubungkan ulang."
-            Log.e(TAG, "Max reconnect attempts reached ($MAX_RECONNECT_ATTEMPTS). Stopping retry.")
+            _errorMessage.value = "Koneksi terputus ($reason). Silakan ketuk tombol mikrofon untuk menghubungkan ulang."
+            println("[$TAG] Max reconnect attempts reached ($MAX_RECONNECT_ATTEMPTS). Stopping retry.")
             return
         }
 
         reconnectAttempts++
         _sessionState.value = AudioSessionState.RECONNECTING
         _errorMessage.value = "Koneksi terganggu. Menghubungkan ulang ($reconnectAttempts/$MAX_RECONNECT_ATTEMPTS)..."
-        Log.w(TAG, "Auto-reconnect attempt $reconnectAttempts/$MAX_RECONNECT_ATTEMPTS in progress (cause: $reason)")
+        println("[$TAG] Auto-reconnect attempt $reconnectAttempts/$MAX_RECONNECT_ATTEMPTS in progress (cause: $reason)")
 
         reconnectJob?.cancel()
-        reconnectJob = scope.launch(Dispatchers.IO) {
+        reconnectJob = scope.launch(Dispatchers.Default) {
             val backoffMs = (1000L * reconnectAttempts).coerceAtMost(4000L)
             delay(backoffMs)
-            if (!isActive || isManualDisconnect.get()) return@launch
+            if (!isActive || isManualDisconnect) return@launch
 
-            // Reset connection flags before reconnecting
-            isConnected.set(false)
-            isConnectingOrConnected.set(false)
-            isReadyForAudio.set(false)
+            isConnected = false
+            isConnectingOrConnected = false
+            isReadyForAudio = false
 
             connectInternal(currentApiKey, currentVoiceName, isReconnect = true)
         }
@@ -233,8 +232,8 @@ class GeminiLiveClient(
             val serverError = message.error
             if (serverError != null) {
                 val err = "Server error ${serverError.code ?: ""}: ${serverError.message ?: "Unknown"}"
-                Log.e(TAG, err)
-                if (!isManualDisconnect.get() && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
+                println("[$TAG] $err")
+                if (!isManualDisconnect && reconnectAttempts < MAX_RECONNECT_ATTEMPTS) {
                     triggerAutoReconnect(err)
                 } else {
                     _errorMessage.value = err
@@ -247,40 +246,39 @@ class GeminiLiveClient(
             message.sessionResumptionUpdate?.let { update ->
                 if (!update.newHandle.isNullOrBlank()) {
                     resumptionHandle = update.newHandle
-                    Log.d(TAG, "Saved session resumption handle: ${update.newHandle}")
+                    println("[$TAG] Saved session resumption handle: ${update.newHandle}")
                 }
             }
 
             // Check for setupComplete
             if (message.setupComplete != null) {
-                Log.d(TAG, "Received setupComplete from server! Ready for live conversation.")
-                isReadyForAudio.set(true)
+                println("[$TAG] Received setupComplete from server! Ready for live conversation.")
+                isReadyForAudio = true
                 _sessionState.value = AudioSessionState.LISTENING
                 reconnectAttempts = 0
                 _errorMessage.value = null
 
                 if (!isReconnect) {
-                    // Trigger Buddy to greet the user with spoken voice
                     sendGreetingPrompt()
                 } else {
-                    Log.d(TAG, "Resumed existing session without re-greeting.")
+                    println("[$TAG] Resumed existing session without re-greeting.")
                 }
                 return
             }
 
             // Check for server voice activity signals
             message.voiceActivity?.type?.let { type ->
-                Log.d(TAG, "Server voiceActivity event: $type")
+                println("[$TAG] Server voiceActivity event: $type")
                 if (type == "ACTIVITY_START") {
                     if (_sessionState.value == AudioSessionState.BUDDY_SPEAKING) {
-                        Log.d(TAG, "Server detected user speech during Buddy turn -> barge-in")
+                        println("[$TAG] Server detected user speech during Buddy turn -> barge-in")
                         onInterrupted()
                         isBuddyTurnActive = false
                     }
                     _sessionState.value = AudioSessionState.USER_SPEAKING
                 } else if (type == "ACTIVITY_END") {
                     _sessionState.value = AudioSessionState.PROCESSING
-                    lastUserTurnEndTimestamp = System.currentTimeMillis()
+                    lastUserTurnEndTimestamp = currentTimeEpochMillis()
                     isAwaitingFirstAudio = true
                     isUserTurnActive = false
                 }
@@ -290,7 +288,7 @@ class GeminiLiveClient(
 
             // 1. Interruption handling (User barge-in detected by server)
             if (content.interrupted == true) {
-                Log.d(TAG, "Server detected barge-in interruption!")
+                println("[$TAG] Server detected barge-in interruption!")
                 _sessionState.value = AudioSessionState.INTERRUPTED
                 isAwaitingFirstAudio = false
                 isBuddyTurnActive = false
@@ -312,9 +310,9 @@ class GeminiLiveClient(
                     val base64Data = part.inlineData?.data
                     if (!base64Data.isNullOrBlank()) {
                         if (isAwaitingFirstAudio && lastUserTurnEndTimestamp > 0) {
-                            val ttfa = System.currentTimeMillis() - lastUserTurnEndTimestamp
+                            val ttfa = currentTimeEpochMillis() - lastUserTurnEndTimestamp
                             _metrics.value = _metrics.value.copy(timeToFirstAudioMs = ttfa)
-                            Log.d(TAG, "Time to First Audio (TTFA): ${ttfa}ms")
+                            println("[$TAG] Time to First Audio (TTFA): ${ttfa}ms")
                             isAwaitingFirstAudio = false
                         }
 
@@ -328,29 +326,28 @@ class GeminiLiveClient(
                 }
             }
 
-            // 3. Transcription handling (Turn-based accumulation into single bubbles)
+            // 3. Transcription handling
             content.inputTranscription?.text?.let { userText ->
                 if (userText.isNotBlank()) {
-                    Log.d(TAG, "User input transcript: $userText")
+                    println("[$TAG] User input transcript: $userText")
                     appendTranscript("You", userText)
                 }
             }
 
             content.outputTranscription?.text?.let { buddyText ->
                 if (buddyText.isNotBlank()) {
-                    Log.d(TAG, "Buddy output transcript: $buddyText")
+                    println("[$TAG] Buddy output transcript: $buddyText")
                     appendTranscript("Buddy", buddyText)
                 }
             }
 
             // 4. Turn complete
             if (content.turnComplete == true) {
-                Log.d(TAG, "Turn complete. Session listening for next input.")
+                println("[$TAG] Turn complete. Session listening for next input.")
                 _sessionState.value = AudioSessionState.LISTENING
                 isAwaitingFirstAudio = false
                 isBuddyTurnActive = false
 
-                // Finalize latest transcript entry if present
                 val current = _transcripts.value.toMutableList()
                 if (current.isNotEmpty() && !current.last().isFinal) {
                     val lastIdx = current.lastIndex
@@ -359,33 +356,26 @@ class GeminiLiveClient(
                 }
             }
         } catch (e: Exception) {
-            Log.w(TAG, "Error parsing server message: ${e.message}", e)
+            println("[$TAG] Error parsing server message: ${e.message}")
         }
     }
 
-    /**
-     * Sends a text message directly through the active Gemini Live WebSocket session.
-     * Buddy will process the text and respond with spoken audio + output transcript in the same session.
-     */
     fun sendTextMessage(text: String): Boolean {
         val trimmed = text.trim()
-        if (trimmed.isBlank() || !isConnected.get() || !isReadyForAudio.get() || webSocket == null) {
-            Log.w(TAG, "sendTextMessage ignored: session not ready or text blank")
+        if (trimmed.isBlank() || !isConnected || !isReadyForAudio) {
+            println("[$TAG] sendTextMessage ignored: session not ready or text blank")
             return false
         }
 
         try {
-            // Signal audio stream end if mic was previously active
             notifyAudioStreamEnd()
 
-            // Record user message into transcripts as a finalized turn
             val current = _transcripts.value.toMutableList()
             current.add(LiveTranscriptEntry(sender = "You", text = trimmed, isFinal = true))
             _transcripts.value = current
             isUserTurnActive = false
             isBuddyTurnActive = false
 
-            // Send LiveClientContentMessage over active WebSocket
             val textMsg = LiveClientContentMessage(
                 clientContent = LiveClientContent(
                     turns = listOf(
@@ -398,26 +388,22 @@ class GeminiLiveClient(
                 )
             )
             val jsonStr = json.encodeToString(textMsg)
-            webSocket?.send(jsonStr)
-            Log.d(TAG, "Sent user text turn to Gemini Live: $trimmed")
+            transport.send(jsonStr)
+            println("[$TAG] Sent user text turn to Gemini Live: $trimmed")
 
             _sessionState.value = AudioSessionState.PROCESSING
-            lastUserTurnEndTimestamp = System.currentTimeMillis()
+            lastUserTurnEndTimestamp = currentTimeEpochMillis()
             isAwaitingFirstAudio = true
             return true
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send text message", e)
+            println("[$TAG] Failed to send text message: ${e.message}")
             return false
         }
     }
 
-    /**
-     * Sends an in-call mode or exercise steering instruction directly over the active WebSocket,
-     * guiding Buddy to immediately adapt to mode transitions without reconnecting.
-     */
     fun sendSystemSteeringMessage(directive: String): Boolean {
-        if (!isConnected.get() || !isReadyForAudio.get() || webSocket == null) {
-            Log.w(TAG, "sendSystemSteeringMessage ignored: session not ready")
+        if (!isConnected || !isReadyForAudio) {
+            println("[$TAG] sendSystemSteeringMessage ignored: session not ready")
             return false
         }
 
@@ -435,23 +421,20 @@ class GeminiLiveClient(
                 )
             )
             val jsonStr = json.encodeToString(steeringMsg)
-            webSocket?.send(jsonStr)
-            Log.d(TAG, "Sent system steering directive to Gemini Live: $directive")
+            transport.send(jsonStr)
+            println("[$TAG] Sent system steering directive: $directive")
             _sessionState.value = AudioSessionState.PROCESSING
-            lastUserTurnEndTimestamp = System.currentTimeMillis()
+            lastUserTurnEndTimestamp = currentTimeEpochMillis()
             isAwaitingFirstAudio = true
             return true
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send steering directive", e)
+            println("[$TAG] Failed to send steering directive: ${e.message}")
             return false
         }
     }
 
-    /**
-     * Sends an initial turn to prompt Buddy to greet the user concisely upon connecting.
-     */
     private fun sendGreetingPrompt() {
-        if (!isConnected.get() || webSocket == null) return
+        if (!isConnected) return
 
         try {
             val greetingMsg = LiveClientContentMessage(
@@ -470,19 +453,15 @@ class GeminiLiveClient(
                 )
             )
             val jsonStr = json.encodeToString(greetingMsg)
-            webSocket?.send(jsonStr)
-            Log.d(TAG, "Sent greeting prompt to activate Buddy's voice.")
+            transport.send(jsonStr)
+            println("[$TAG] Sent greeting prompt to activate Buddy's voice.")
             isAwaitingFirstAudio = true
-            lastUserTurnEndTimestamp = System.currentTimeMillis()
+            lastUserTurnEndTimestamp = currentTimeEpochMillis()
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to send greeting prompt", e)
+            println("[$TAG] Failed to send greeting prompt: ${e.message}")
         }
     }
 
-    /**
-     * Appends streaming transcription chunks to the current turn's bubble,
-     * creating a new bubble only when the speaker changes or a new conversational turn starts.
-     */
     private fun appendTranscript(sender: String, text: String) {
         val current = _transcripts.value.toMutableList()
         val isSameTurn = if (sender == "Buddy") isBuddyTurnActive else isUserTurnActive
@@ -509,19 +488,17 @@ class GeminiLiveClient(
     }
 
     fun onSpeechStateChanged(isSpeaking: Boolean) {
-        if (!isConnected.get() || !isReadyForAudio.get()) return
+        if (!isConnected || !isReadyForAudio) return
 
         if (isSpeaking) {
-            // Avoid self-interruption from speaker acoustic leakage when Buddy is speaking.
-            // Let Google server-side VAD (interrupted == true) or manual barge-in button handle it.
             if (_sessionState.value == AudioSessionState.LISTENING || _sessionState.value == AudioSessionState.INTERRUPTED) {
                 _sessionState.value = AudioSessionState.USER_SPEAKING
             }
         } else {
             if (_sessionState.value == AudioSessionState.USER_SPEAKING) {
-                Log.d(TAG, "Client VAD: User finished speaking -> sending audioStreamEnd")
+                println("[$TAG] Client VAD: User finished speaking -> sending audioStreamEnd")
                 _sessionState.value = AudioSessionState.PROCESSING
-                lastUserTurnEndTimestamp = System.currentTimeMillis()
+                lastUserTurnEndTimestamp = currentTimeEpochMillis()
                 isAwaitingFirstAudio = true
                 isUserTurnActive = false
                 notifyAudioStreamEnd()
@@ -530,7 +507,7 @@ class GeminiLiveClient(
     }
 
     fun notifyAudioStreamEnd() {
-        if (!isConnected.get() || !isReadyForAudio.get() || webSocket == null) return
+        if (!isConnected || !isReadyForAudio) return
 
         try {
             val streamEndInput = LiveRealtimeInput(
@@ -539,15 +516,15 @@ class GeminiLiveClient(
                 )
             )
             val jsonStr = json.encodeToString(streamEndInput)
-            webSocket?.send(jsonStr)
-            Log.d(TAG, "Sent audioStreamEnd signal to Gemini Live")
+            transport.send(jsonStr)
+            println("[$TAG] Sent audioStreamEnd signal")
         } catch (e: Exception) {
-            Log.w(TAG, "Failed to send audioStreamEnd", e)
+            println("[$TAG] Failed to send audioStreamEnd: ${e.message}")
         }
     }
 
     fun sendAudioChunk(pcmChunk: ByteArray) {
-        if (!isConnected.get() || !isReadyForAudio.get() || webSocket == null) {
+        if (!isConnected || !isReadyForAudio) {
             return
         }
 
@@ -560,7 +537,7 @@ class GeminiLiveClient(
         )
 
         val inputJson = json.encodeToString(realtimeInput)
-        webSocket?.send(inputJson)
+        transport.send(inputJson)
 
         _metrics.value = _metrics.value.copy(
             chunksSent = _metrics.value.chunksSent + 1
@@ -568,7 +545,7 @@ class GeminiLiveClient(
     }
 
     fun manualBargeIn() {
-        Log.d(TAG, "Manual barge-in triggered")
+        println("[$TAG] Manual barge-in triggered")
         isBuddyTurnActive = false
         isUserTurnActive = false
         val current = _transcripts.value.toMutableList()
@@ -582,26 +559,24 @@ class GeminiLiveClient(
     }
 
     fun disconnect() {
-        isManualDisconnect.set(true)
+        isManualDisconnect = true
         reconnectJob?.cancel()
         reconnectJob = null
         resumptionHandle = null
         reconnectAttempts = 0
-        isConnected.set(false)
-        isConnectingOrConnected.set(false)
-        isReadyForAudio.set(false)
+        isConnected = false
+        isConnectingOrConnected = false
+        isReadyForAudio = false
         messageProcessingJob?.cancel()
         messageProcessingJob = null
         while (incomingMessageChannel.tryReceive().isSuccess) {}
         try {
-            webSocket?.close(1000, "User disconnected")
+            transport.close(1000, "User disconnected")
         } catch (e: Exception) {
-            Log.w(TAG, "Error closing websocket", e)
+            println("[$TAG] Error closing transport: ${e.message}")
         }
-        webSocket = null
         _sessionState.value = AudioSessionState.IDLE
         _errorMessage.value = null
-        Log.d(TAG, "Session disconnected")
+        println("[$TAG] Session disconnected")
     }
 }
-

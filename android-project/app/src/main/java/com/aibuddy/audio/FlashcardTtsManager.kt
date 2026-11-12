@@ -16,16 +16,16 @@ import java.util.Locale
 class FlashcardTtsManager(
     private val context: Context,
     private val getCurrentSessionState: () -> AudioSessionState = { AudioSessionState.IDLE }
-) : TextToSpeech.OnInitListener {
+) : TextToSpeech.OnInitListener, ITtsManager {
 
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private var textToSpeech: TextToSpeech? = null
 
     private val _isReady = MutableStateFlow(false)
-    val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
+    override val isReady: StateFlow<Boolean> = _isReady.asStateFlow()
 
     private val _isSpeaking = MutableStateFlow(false)
-    val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
+    override val isSpeaking: StateFlow<Boolean> = _isSpeaking.asStateFlow()
 
     private var audioFocusRequest: AudioFocusRequest? = null
 
@@ -63,7 +63,7 @@ class FlashcardTtsManager(
      * Speaks the target English text.
      * Safely guards against active Gemini Live calls so speech does not corrupt low-latency audio stream.
      */
-    fun speak(text: String, onBlockedByCall: () -> Unit = {}): Boolean {
+    override fun speak(text: String, onBlockedByCall: () -> Unit): Boolean {
         if (getCurrentSessionState() != AudioSessionState.IDLE) {
             onBlockedByCall()
             return false
@@ -79,13 +79,13 @@ class FlashcardTtsManager(
         return result == TextToSpeech.SUCCESS
     }
 
-    fun stop() {
+    override fun stop() {
         textToSpeech?.stop()
         _isSpeaking.value = false
         releaseAudioFocus()
     }
 
-    fun release() {
+    override fun release() {
         stop()
         textToSpeech?.shutdown()
         textToSpeech = null

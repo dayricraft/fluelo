@@ -11,7 +11,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -19,6 +19,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aibuddy.data.preferences.AppLanguage
@@ -36,10 +38,13 @@ fun SettingsScreen(
     onAiVoiceChange: (String) -> Unit,
     onReducedMotionChange: (Boolean) -> Unit = {},
     onHapticFeedbackChange: (Boolean) -> Unit = {},
+    onGeminiApiKeyChange: (String) -> Unit = {},
     onNavigateToDiagnostic: () -> Unit = {},
     onBack: () -> Unit
 ) {
     val isIndonesian = userPreferences.language == AppLanguage.INDONESIAN
+    var apiKeyInput by remember(userPreferences.geminiApiKey) { mutableStateOf(userPreferences.geminiApiKey) }
+    var showApiKey by remember { mutableStateOf(false) }
 
     Scaffold(
         containerColor = MaterialTheme.colorScheme.background,
@@ -315,7 +320,82 @@ fun SettingsScreen(
                 }
             }
 
-            // 5. Informasi Versi
+            // 5. API Key & Koneksi AI (BYOK)
+            item {
+                SettingsSectionHeader(
+                    title = if (isIndonesian) "Koneksi AI (Gemini Live)" else "AI Connection (Gemini Live)",
+                    icon = Icons.Outlined.Key
+                )
+
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surfaceVariant
+                    )
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp)
+                    ) {
+                        Text(
+                            text = "Gemini API Key",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+
+                        Text(
+                            text = if (isIndonesian)
+                                "Kunci ini digunakan untuk menghubungkan panggilan suara live dengan Gemini. Kunci disimpan aman hanya di perangkat lokal Anda."
+                            else
+                                "This key connects live voice calls with Gemini. Stored securely only on your local device.",
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp,
+                            lineHeight = 16.sp
+                        )
+
+                        OutlinedTextField(
+                            value = apiKeyInput,
+                            onValueChange = {
+                                apiKeyInput = it
+                                onGeminiApiKeyChange(it)
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = {
+                                Text(
+                                    text = "AIzaSy...",
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.5f)
+                                )
+                            },
+                            visualTransformation = if (showApiKey) VisualTransformation.None else PasswordVisualTransformation(),
+                            trailingIcon = {
+                                IconButton(onClick = { showApiKey = !showApiKey }) {
+                                    Icon(
+                                        imageVector = if (showApiKey) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                                        contentDescription = if (showApiKey) "Sembunyikan" else "Tampilkan",
+                                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            singleLine = true,
+                            colors = OutlinedTextFieldDefaults.colors(
+                                focusedBorderColor = NeonLime,
+                                unfocusedBorderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f),
+                                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                                unfocusedTextColor = MaterialTheme.colorScheme.onSurface
+                            ),
+                            shape = RoundedCornerShape(12.dp)
+                        )
+                    }
+                }
+            }
+
+            // 6. Informasi Versi
             item {
                 Box(
                     modifier = Modifier
@@ -324,7 +404,7 @@ fun SettingsScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = "Fluelo v1.0.0 • Compose Multiplatform",
+                        text = "Fluelo v2.0.0 • Compose Multiplatform",
                         color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
                         fontSize = 12.sp
                     )
