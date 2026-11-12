@@ -138,14 +138,17 @@ fluelo/
   - `Shared.framework` untuk `iosSimulatorArm64` (Release): **PASS** (8,025,472 bytes).
   - Swift/Objective-C Headers (`Shared.h`): **PASS** (166,493 bytes).
 
-### C. Codemagic Cloud Pipeline
-File `codemagic.yaml` berhasil dijalankan pada Codemagic macOS M2 runner:
+### C. Codemagic Cloud Pipeline & Live Simulator Testing
+File `codemagic.yaml` berhasil dijalankan pada Codemagic macOS M2 runner (Build #5):
 - **Build Status:** **BUILD SUCCESSFUL (PASS)**
 - **Artefak yang Dihasilkan:**
-  * `iosApp.app.zip` (17.30 MB) — Bundle aplikasi simulator iOS unsigned.
-  * `fluelo_4_artifacts.zip` (75.99 MB) — Framework binaries dan build logs.
+  * `Fluelo-iOS-Simulator.zip` (17.20 MB) — Bundle aplikasi simulator iOS unsigned.
+  * `iosApp.app.zip` (17.20 MB) — Bundle aplikasi simulator iOS.
+  * `fluelo_5_artifacts.zip` (75.99 MB) — Framework binaries dan build logs.
 - **Arsitektur:** `arm64` (Apple Silicon iPhone Simulator).
-- **Testing Simulator:** Artefak `iosApp.app.zip` siap diunggah ke [Appetize.io](https://appetize.io/upload) untuk simulasi dan validasi visual UI langsung di web browser.
+- **Pengujian Live Simulator:** **PASS & VERIFIED**
+  * Diuji langsung di browser via **Appetize.io** pada perangkat virtual **iPhone 14 Pro (iOS 17.2)**.
+  * Aplikasi berhasil terbuka ke layar utama (Bento Grid Home), seluruh transisi navigasi dan elemen UI Compose Multiplatform berjalan mulus tanpa crash.
 
 ---
 
