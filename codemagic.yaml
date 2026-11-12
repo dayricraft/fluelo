@@ -37,6 +37,8 @@ workflows:
             -configuration Debug \
             -destination 'generic/platform=iOS Simulator' \
             -derivedDataPath iosApp/build/DerivedData \
+            ARCHS="arm64" \
+            ONLY_ACTIVE_ARCH=YES \
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
