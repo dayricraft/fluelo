@@ -139,12 +139,13 @@ fluelo/
   - Swift/Objective-C Headers (`Shared.h`): **PASS** (166,493 bytes).
 
 ### C. Codemagic Cloud Pipeline
-File `codemagic.yaml` diperbarui dengan alur kerja baru:
-- `ios-simulator-app-build`:
-  1. Menjalankan verifikasi lingkungan Java 17 dan Xcode.
-  2. Mengompilasi `Shared.framework` untuk iOS Simulator (`linkDebugFrameworkIosSimulatorArm64`).
-  3. Mengompilasi target `iosApp.app` melalui `xcodebuild` tanpa code signing (`CODE_SIGNING_ALLOWED=NO`).
-  4. Mengompresi artefak aplikasi simulator menjadi `Fluelo-iOS-Simulator.zip` yang siap diunggah ke [Appetize.io](https://appetize.io) untuk pengujian berbasis browser.
+File `codemagic.yaml` berhasil dijalankan pada Codemagic macOS M2 runner:
+- **Build Status:** **BUILD SUCCESSFUL (PASS)**
+- **Artefak yang Dihasilkan:**
+  * `iosApp.app.zip` (17.30 MB) — Bundle aplikasi simulator iOS unsigned.
+  * `fluelo_4_artifacts.zip` (75.99 MB) — Framework binaries dan build logs.
+- **Arsitektur:** `arm64` (Apple Silicon iPhone Simulator).
+- **Testing Simulator:** Artefak `iosApp.app.zip` siap diunggah ke [Appetize.io](https://appetize.io/upload) untuk simulasi dan validasi visual UI langsung di web browser.
 
 ---
 
