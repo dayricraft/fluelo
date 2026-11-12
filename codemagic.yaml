@@ -8,12 +8,12 @@ workflows:
     instance_type: mac_mini_m2
     working_directory: android-project
     environment:
-      vars:
-        JAVA_VERSION: "17"
+      java: 17
+      xcode: latest
     scripts:
-      - name: Select Java 17
+      - name: Verify Java and Environment
         script: |
-          jdk-select 17
+          java -version
       - name: Verify Gradle Wrapper Permissions
         script: |
           chmod +x ./gradlew
@@ -30,10 +30,3 @@ workflows:
       - android-project/shared/build/bin/iosSimulatorArm64/releaseFramework/**
       - shared/build/bin/iosArm64/releaseFramework/**
       - shared/build/bin/iosSimulatorArm64/releaseFramework/**
-
-  # Workflow ini disiapkan untuk Fase 5 (TestFlight Release) ketika Apple Developer Account ($99/thn) telah aktif
-  # ios-testflight-release:
-  #   name: Fluelo iOS TestFlight Release
-  #   instance_type: mac_mini_m2
-  #   working_directory: android-project
-  #   ...
