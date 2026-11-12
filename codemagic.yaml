@@ -2,6 +2,63 @@
 # Validation & Build Configuration for macOS M2 Cloud Runner
 
 workflows:
+  ios-simulator-app-build:
+    name: Fluelo iOS Simulator App Build (No Code Signing Required)
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+    environment:
+      java: 17
+      xcode: latest
+    scripts:
+      - name: Verify Environment & Java 17
+        script: |
+          java -version
+          xcodebuild -version
+      - name: Verify Gradle Wrapper Permissions
+        script: |
+          chmod +x android-project/gradlew
+      - name: Run KMP Unit Tests
+        script: |
+          cd android-project
+          ./gradlew :shared:testDebugUnitTest
+      - name: Compile Kotlin/Native Framework for iOS Simulator
+        script: |
+          cd android-project
+          ./gradlew :shared:linkDebugFrameworkIosSimulatorArm64
+      - name: Verify Compiled Shared Framework
+        script: |
+          ls -la android-project/shared/build/bin/iosSimulatorArm64/debugFramework/
+      - name: Build Unsigned iOS Simulator Application
+        script: |
+          # Build .app bundle for iPhone Simulator without code signing or Apple Developer Account
+          xcodebuild -project iosApp/iosApp.xcodeproj \
+            -scheme iosApp \
+            -sdk iphonesimulator \
+            -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -derivedDataPath iosApp/build/DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGN_IDENTITY="" \
+            build
+      - name: Package iOS Simulator Bundle for Appetize.io
+        script: |
+          APP_DIR="iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator/iosApp.app"
+          if [ -d "$APP_DIR" ]; then
+            echo "Packaging $APP_DIR into Fluelo-iOS-Simulator.zip..."
+            cd iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator
+            zip -r -y ../../../../../Fluelo-iOS-Simulator.zip iosApp.app
+            cd ../../../../../
+            ls -lh Fluelo-iOS-Simulator.zip
+          else
+            echo "ERROR: iosApp.app not found in $APP_DIR"
+            exit 1
+          fi
+    artifacts:
+      - Fluelo-iOS-Simulator.zip
+      - iosApp/build/DerivedData/Build/Products/Debug-iphonesimulator/iosApp.app
+      - android-project/shared/build/bin/iosSimulatorArm64/debugFramework/**
+
   ios-shared-framework-validation:
     name: Fluelo iOS Shared Framework Validation (No Code Signing Required)
     max_build_duration: 20
@@ -22,11 +79,7 @@ workflows:
           ./gradlew :shared:testDebugUnitTest
       - name: Compile Kotlin/Native Framework for iOS Device & Simulator
         script: |
-          # Compiles native iOS arm64 and simulatorArm64 frameworks via Darwin ld64 toolchain
-          # Zero code signing, zero provisioning profiles, zero Apple account needed
           ./gradlew :shared:linkReleaseFrameworkIosArm64 :shared:linkReleaseFrameworkIosSimulatorArm64
     artifacts:
       - android-project/shared/build/bin/iosArm64/releaseFramework/**
       - android-project/shared/build/bin/iosSimulatorArm64/releaseFramework/**
-      - shared/build/bin/iosArm64/releaseFramework/**
-      - shared/build/bin/iosSimulatorArm64/releaseFramework/**
