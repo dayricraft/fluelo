@@ -7,3 +7,8 @@ fun MainViewController(): UIViewController = ComposeUIViewController {
     FlueloAppRoot()
 }
 
+class FlueloViewControllerProvider {
+    fun createViewController(): UIViewController = ComposeUIViewController {
+        FlueloAppRoot()
+    }
+}

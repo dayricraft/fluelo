@@ -165,3 +165,4 @@ Fondasi KMP dan antarmuka Compose Multiplatform telah rampung 100%. Fase 4 dapat
 1. Mengabstraksikan antarmuka audio transport (`AudioRecorder` dan `AudioTrack`) ke dalam platform-specific `expect`/`actual`.
 2. Mengimplementasikan `AVAudioEngine` / `AVAudioSession` pada target `iosMain`.
 3. Menghubungkan streaming audio duplex 16kHz PCM ke endpoint WebSocket Gemini 3.8 Live API di iOS.
+
