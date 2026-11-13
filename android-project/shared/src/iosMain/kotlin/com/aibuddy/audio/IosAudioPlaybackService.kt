@@ -94,10 +94,7 @@ class IosAudioPlaybackService : IAudioPlaybackService {
 
                         // Create AVAudioPCMBuffer
                         val currentFormat = playbackFormat ?: continue
-                        val pcmBuffer = AVAudioPCMBuffer(
-                            pcmFormat = currentFormat,
-                            frameCapacity = sampleCount.toUInt()
-                        )
+                        val pcmBuffer = AVAudioPCMBuffer(currentFormat, sampleCount.toUInt())
                         pcmBuffer.frameLength = sampleCount.toUInt()
 
                         val floatData = pcmBuffer.floatChannelData ?: continue
