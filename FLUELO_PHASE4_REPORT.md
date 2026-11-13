@@ -113,6 +113,15 @@ Dijalankan melalui `./gradlew assembleDebug`:
 - **Build Status:** SUCCESSFUL
 - **Actionable Tasks:** 86 tasks (16 executed, 70 up-to-date)
 
+### B. iOS Simulator Cloud Build (Codemagic macOS M2 Runner)
+- **Codemagic Build:** Build #8 (Commit `15e048c`)
+- **Target SDK:** `iphonesimulator` (Architecture: `arm64`)
+- **Status:** **SUCCESSFUL**
+- **Artefak yang Dihasilkan:**
+  1. `Fluelo-iOS-Simulator.zip` (17.52 MB) — Bundle aplikasi iOS siap dijalankan di simulator iOS / Appetize.io
+  2. `iosApp.app.zip` (17.52 MB)
+  3. `fluelo_8_artifacts.zip` (76.18 MB) — Termasuk biner `Shared.framework` debugFramework
+
 ---
 
 ## 4. Panduan Pengujian untuk Pengguna & iPhone Fisik
